@@ -44,11 +44,11 @@ export function LogoDark({ className, size = 40 }: LogoProps) {
 
 export function Logo({ className, size = 40, showName = false }: LogoProps) {
   return (
-    <span className="flex items-center gap-2">
+    <span className="items-base flex gap-2">
       <LogoLight size={size} className={cn("dark:hidden", className)} />
       <LogoDark size={size} className={cn("hidden dark:block", className)} />
       {showName && (
-        <span className="font-heading text-xl font-light tracking-tight">
+        <span className="dark:font-base hidden font-heading text-xl font-light tracking-tight tab:inline-block">
           Techlumous
         </span>
       )}

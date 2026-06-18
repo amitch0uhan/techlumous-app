@@ -1,12 +1,16 @@
-import { Geist_Mono, Inter, Google_Sans_Flex } from "next/font/google"
+import { Geist_Mono, Inter_Tight, Google_Sans_Flex } from "next/font/google"
 
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils"
 
-const googleSanHeading = Google_Sans_Flex({subsets:['latin'],variable:'--font-heading'});
+const googleSanHeading = Google_Sans_Flex({
+  subsets: ["latin"],
+  variable: "--font-heading",
+  adjustFontFallback: false,
+})
 
-const inter = Inter({subsets:['latin'],variable:'--font-sans'})
+const inter = Inter_Tight({ subsets: ["latin"], variable: "--font-sans" })
 
 const fontMono = Geist_Mono({
   subsets: ["latin"],
@@ -16,13 +20,18 @@ const fontMono = Geist_Mono({
 export default function RootLayout({
   children,
 }: Readonly<{
-  children: React.ReactNode 
+  children: React.ReactNode
 }>) {
   return (
     <html
       lang="en"
       suppressHydrationWarning
-      className={cn("antialiased", fontMono.variable, "font-sans", inter.variable, googleSanHeading.variable)}
+      className={cn(
+        "antialiased",
+        fontMono.variable,
+        inter.variable,
+        googleSanHeading.variable
+      )}
     >
       <body>
         <ThemeProvider>{children}</ThemeProvider>

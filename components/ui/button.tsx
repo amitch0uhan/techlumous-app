@@ -1,5 +1,6 @@
 import { Button as ButtonPrimitive } from "@base-ui/react/button"
 import { cva, type VariantProps } from "class-variance-authority"
+import { ArrowUpRightIcon } from "@phosphor-icons/react/ssr"
 
 import { cn } from "@/lib/utils"
 
@@ -53,4 +54,37 @@ function Button({
   )
 }
 
-export { Button, buttonVariants }
+/**
+ * A pill-shaped button with a trailing arrow inside a circular badge.
+ * Renders as a <button> by default; pass `render={<a … />}` for links.
+ * Control the badge circle with `badgeClassName` (background / text color).
+ */
+function ArrowButton({
+  className,
+  badgeClassName,
+  variant = "default",
+  size = "lg",
+  children,
+  ...props
+}: ButtonPrimitive.Props &
+  VariantProps<typeof buttonVariants> & { badgeClassName?: string }) {
+  return (
+    <Button
+      data-slot="arrow-button"
+      variant={variant}
+      size={size}
+      className={cn(
+        "group/arrow gap-2 rounded-full py-4 pr-2 pl-3 text-sm",
+        className
+      )}
+      {...props}
+    >
+      {children}
+      <span className={cn("inline-block rounded-full p-1", badgeClassName)}>
+        <ArrowUpRightIcon className="size-3 transition-all group-hover/arrow:rotate-45" />
+      </span>
+    </Button>
+  )
+}
+
+export { Button, ArrowButton, buttonVariants }
