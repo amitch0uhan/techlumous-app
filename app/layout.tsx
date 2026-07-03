@@ -2,6 +2,7 @@ import { Geist_Mono, Inter_Tight, Google_Sans_Flex } from "next/font/google"
 
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
+import { Toaster } from "@/components/ui/sonner"
 import { cn } from "@/lib/utils"
 
 const googleSanHeading = Google_Sans_Flex({
@@ -35,6 +36,7 @@ export default function RootLayout({
     >
       <body>
         <ThemeProvider>{children}</ThemeProvider>
+        <Toaster />
       </body>
     </html>
   )
