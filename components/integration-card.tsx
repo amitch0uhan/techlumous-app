@@ -1,10 +1,15 @@
+"use client"
+
 import Image from "next/image"
+import { useActionState, useEffect } from "react"
+import { toast } from "sonner"
 
 import { Badge } from "@/components/ui/badge"
 import { ArrowButton } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import { cn } from "@/lib/utils"
+import { ActionState } from "@/types/integration"
 
 type IntegrationStatus = "none" | "connected" | "disconnected"
 
@@ -12,12 +17,14 @@ interface IntegrationCardProps {
   name: string
   description: string
   status?: IntegrationStatus
-  action?: () => void | Promise<void>
+  action?: (prevState: ActionState, formData: FormData) => Promise<ActionState>
   onConnect?: () => void
   onDisconnect?: () => void
   onReconnect?: () => void
   className?: string
 }
+
+export const initialActionState: ActionState = { error: null }
 
 const STATUS_BADGE = {
   connected: { label: "Connected", variant: "success" },
@@ -46,6 +53,12 @@ const ACTION = {
   },
 } as const
 
+// useActionState must be called unconditionally; stand in for cards
+// rendered without a form `action` (e.g. onConnect/onDisconnect handlers).
+async function noopAction(state: ActionState): Promise<ActionState> {
+  return state
+}
+
 export function IntegrationCard({
   name,
   description,
@@ -65,12 +78,22 @@ export function IntegrationCard({
         ? onReconnect
         : onConnect
 
+  const [state, formAction, isPending] = useActionState(
+    action ?? noopAction,
+    initialActionState
+  )
+
+  useEffect(() => {
+    if (state.error && !isPending) toast.error(state.error)
+  }, [isPending, state.error])
+
   const button = (
     <ArrowButton
       type={action ? "submit" : undefined}
       variant={cta.variant}
       badgeClassName={cta.badge}
       onClick={action ? undefined : handler}
+      disabled={action ? isPending : undefined}
       className={cn(cta.extra)}
     >
       {cta.label}
@@ -108,7 +131,7 @@ export function IntegrationCard({
 
       <Separator />
 
-      <div>{action ? <form action={action}>{button}</form> : button}</div>
+      <div>{action ? <form action={formAction}>{button}</form> : button}</div>
     </Card>
   )
 }

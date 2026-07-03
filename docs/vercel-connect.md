@@ -138,3 +138,5 @@ Notes:
 
 - `GET /api/auth/vercel/status` and a Disconnect action. The integrations page
   reads connection state server-side; disconnect + live-status wiring is a follow-up.
+
+https://vercel.com/docs/integrations

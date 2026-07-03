@@ -52,6 +52,18 @@ export async function exchangeVercelCode(
   return token
 }
 
+export async function verifyVercelToken(token: string): Promise<boolean> {
+  const res = await fetch("https://api.vercel.com/v2/user", {
+    headers: { Authorization: `Bearer ${token}` },
+  })
+
+  if (res.ok) return true
+  if (res.status === 401) return false
+
+  const detail = await res.text()
+  throw new Error(`Vercel token verification failed (${res.status}): ${detail}`)
+}
+
 export function buildVercelCredentials(
   token: VercelTokenResponse,
   cb: VercelCallbackParams

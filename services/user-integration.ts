@@ -38,16 +38,10 @@ export async function listUserIntegrations(): Promise<UserIntegration[]> {
   return data
 }
 
-export async function getUserIntegration(
-  id: string
-): Promise<UserIntegration | null> {
+export async function getUserIntegration(): Promise<UserIntegration | null> {
   const supabase = await createClient()
 
-  const { data, error } = await supabase
-    .from(TABLE)
-    .select()
-    .eq("id", id)
-    .maybeSingle()
+  const { data, error } = await supabase.from(TABLE).select().maybeSingle()
 
   if (error) throw new Error(`Failed to get integration: ${error.message}`)
 
@@ -84,10 +78,10 @@ export async function updateUserIntegration(
   return data
 }
 
-export async function deleteUserIntegration(id: string): Promise<void> {
+export async function deleteUserIntegration(): Promise<void> {
   const supabase = await createClient()
 
-  const { error } = await supabase.from(TABLE).delete().eq("id", id)
+  const { error } = await supabase.from(TABLE).delete()
 
   if (error) throw new Error(`Failed to delete integration: ${error.message}`)
 }

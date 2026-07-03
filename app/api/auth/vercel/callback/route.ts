@@ -68,8 +68,6 @@ export async function GET(request: Request) {
     return redirectClearing("/integration?error=token_exchange_failed")
   }
 
-  console.log("Vercel credentials:", token)
-
   // 5. Assemble non-secret metadata for the credentials column.
   const credentials = buildVercelCredentials(token, {
     configurationId,

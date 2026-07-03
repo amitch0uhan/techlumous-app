@@ -1,4 +1,5 @@
 import { connectVercel } from "@/app/api/auth/vercel/actions"
+import { disconnectIntegration } from "./actions"
 import { IntegrationCard } from "@/components/integration-card"
 import { createClient } from "@/lib/supabase/server"
 import { getUserIntegrationByProvider } from "@/services/user-integration"
@@ -31,7 +32,7 @@ export default async function Page() {
           name="Vercel"
           description="Deploy and manage your projects on Vercel."
           status={status}
-          action={status === "connected" ? undefined : connectVercel}
+          action={status === "connected" ? disconnectIntegration : connectVercel}
         />
       </div>
     </div>
