@@ -1,0 +1,38 @@
+@import "tailwindcss";
+
+/* This template's entire design system — kept in-folder so nothing leaks into
+   the engine. Token names are distinct so they don't clobber Tailwind's
+   default scales (e.g. `neon` instead of `lime`). */
+@theme {
+  --color-ink: #0a0a0a;
+  --color-paper: #f5f5f5;
+  --color-muted: #8a8a8a;
+  --color-faint: #5c5c5c;
+  --color-dim: #3a3a3a;
+  --color-flame: #ff3b1e;
+  --color-neon: #c6f24e;
+
+  --font-display: "Archivo", sans-serif;
+  --font-black: "Archivo Black", sans-serif;
+  --font-jb: "JetBrains Mono", monospace;
+  --font-sans: "Inter", system-ui, sans-serif;
+
+  --animate-drift: lm-drift 9s ease-in-out infinite;
+  --animate-dash: lm-dash 1.6s ease-out forwards 0.2s;
+}
+
+@keyframes lm-drift {
+  0%,
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.08);
+  }
+}
+
+@keyframes lm-dash {
+  to {
+    stroke-dashoffset: 0;
+  }
+}

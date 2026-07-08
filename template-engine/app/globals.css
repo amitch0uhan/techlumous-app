@@ -1,4 +1,6 @@
-/* Tiny reset so full-bleed templates aren't boxed in by default margins. */
+/* Tiny reset so full-bleed templates aren't boxed in by default margins.
+   Tailwind and all design tokens live inside each template's own folder — the
+   engine stays free of any template-specific style. */
 * {
   box-sizing: border-box;
 }
