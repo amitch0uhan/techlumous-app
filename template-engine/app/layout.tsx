@@ -3,8 +3,9 @@ import type { ReactNode } from "react"
 import "./globals.css"
 
 /**
- * Minimal shell. Templates are fully self-contained (inline styles, no shared
- * CSS), so the layout only provides the document scaffolding plus a tiny reset.
+ * Minimal shell. `globals.css` is only a tiny reset — each template owns its
+ * entire style (its own Tailwind entry, `@theme` tokens, keyframes, and fonts)
+ * inside its own folder, so nothing template-specific lives in the engine.
  */
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (

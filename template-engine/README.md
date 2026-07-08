@@ -30,6 +30,13 @@ template-engine/
 
 - `templates/` lives **inside** this app, so the build compiles it with plain
   Turbopack — no copy, no webpack, no external-dir workaround.
+- Styling: each template owns its **entire** style inside its own folder — a
+  `styles.css` with `@import "tailwindcss"`, its `@theme` design tokens, and
+  keyframes, imported by the template's `Template.tsx`. The engine's
+  `app/globals.css` is only a tiny reset; **no template-specific style lives in
+  the engine**. Templates also load their own web fonts, so a deployed
+  single-template build is fully self-contained. (Generic build tooling —
+  `postcss.config.mjs` and the Tailwind dependency — stays at the engine root.)
 - `app/page.tsx` reads `TEMPLATE_SLUG`, looks the template up in the registry,
   fetches the site's content via `lib/content.ts`, and renders the template.
 - Content comes from the `site` table in Supabase, addressed by env pointers:
@@ -80,6 +87,9 @@ npm run build
 Create a folder under `templates/` with `meta.ts`, `schema.ts`, `Template.tsx`,
 and an `index.ts` that exports `template: TemplateModule<...>` (the uniform
 export name is required — the deploy pipeline generates a single-template
-registry from it). Register it in `templates/registry.ts`; the studio picks it
-up automatically. An unknown `TEMPLATE_SLUG` fails the build with a message
-listing the valid slugs.
+registry from it). If the template uses Tailwind, add a `styles.css`
+(`@import "tailwindcss"` + its own `@theme` tokens and keyframes) and import it
+from `Template.tsx` — keep every style concern in the folder so nothing leaks
+into the engine. Register it in `templates/registry.ts`; the studio picks it up
+automatically. An unknown `TEMPLATE_SLUG` fails the build with a message listing
+the valid slugs.
