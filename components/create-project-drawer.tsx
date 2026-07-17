@@ -4,6 +4,7 @@ import * as React from "react"
 import { toast } from "sonner"
 
 import { createProjectAction } from "@/actions/project"
+import type { Template } from "@/services/template.schema"
 import {
   initialCreateProjectState,
   type CreateProjectState,
@@ -27,6 +28,13 @@ import {
   FieldLabel,
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { PlusIcon } from "@phosphor-icons/react"
 
 // Create Project form. Only the fields a user supplies per insertProjectSchema
@@ -35,8 +43,10 @@ import { PlusIcon } from "@phosphor-icons/react"
 // createProjectAction server action, which revalidates the projects page.
 export function CreateProjectDrawer({
   buttonVariant = "default",
+  templates = [],
 }: {
   buttonVariant?: "default" | "icon"
+  templates?: Template[]
 }) {
   const [open, setOpen] = React.useState(false)
   const [name, setName] = React.useState("")
@@ -110,15 +120,35 @@ export function CreateProjectDrawer({
 
               {/* template_id — optional */}
               <Field data-invalid={!!state.fieldErrors?.template_id}>
-                <FieldLabel htmlFor="project-template">Template ID</FieldLabel>
-                <Input
+                <FieldLabel htmlFor="project-template">Template</FieldLabel>
+                <Select
                   id="project-template"
                   name="template_id"
-                  placeholder="Optional template UUID"
+                  defaultValue={null}
                   aria-invalid={!!state.fieldErrors?.template_id}
-                />
+                >
+                  <SelectTrigger
+                    className="w-full"
+                    aria-invalid={!!state.fieldErrors?.template_id}
+                  >
+                    <SelectValue>
+                      {(value) =>
+                        templates.find((template) => template.id === value)
+                          ?.name ?? "Select a template (optional)"
+                      }
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    {templates.map((template) => (
+                      <SelectItem key={template.id} value={template.id}>
+                        {template.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <FieldDescription>
-                  Leave blank to start from a blank project.
+                  Selecting a template is optional. Preview the templates first,
+                  then choose the one that best fits this project.
                 </FieldDescription>
                 <FieldError>{state.fieldErrors?.template_id}</FieldError>
               </Field>

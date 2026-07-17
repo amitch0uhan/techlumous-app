@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server"
 import { cn } from "@/lib/utils"
 import { listProjects } from "@/services/project"
 import { type Project } from "@/services/project.schema"
+import { listTemplates } from "@/services/template"
 import { redirect } from "next/navigation"
 
 const STATIC_IMAGES = [
@@ -40,12 +41,15 @@ export default async function Page() {
   if (!data?.claims) redirect("/login")
 
   const projects = await listProjects()
+  const templates = await listTemplates()
 
   return (
     <div className="page">
       <div className="flex items-center justify-between">
         <h1 className="max-sm:pl-2">Projects</h1>
-        {projects.length > 0 && <CreateProjectDrawer buttonVariant="icon" />}
+        {projects.length > 0 && (
+          <CreateProjectDrawer buttonVariant="icon" templates={templates} />
+        )}
       </div>
       {projects.length === 0 ? (
         <div className="mt-8 flex flex-col items-center justify-center gap-10 overflow-x-clip">
@@ -64,7 +68,7 @@ export default async function Page() {
             <p className="text-muted-foreground/60 max-sm:pl-2">
               No projects yet. How about creating a project to get started?
             </p>
-            <CreateProjectDrawer />
+            <CreateProjectDrawer templates={templates} />
           </div>
         </div>
       ) : (
