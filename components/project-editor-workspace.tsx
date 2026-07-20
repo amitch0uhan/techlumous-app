@@ -1,12 +1,31 @@
 "use client"
 
-import { useCallback, useMemo, useState, useSyncExternalStore } from "react"
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  useSyncExternalStore,
+} from "react"
+import { useRouter } from "next/navigation"
+import { toast } from "sonner"
 
+import { saveProjectContentAction } from "@/actions/project"
 import { TemplateAutoHeightPreview } from "@/components/template-auto-height-preview"
 import {
   TemplateSchemaEditForm,
   type TemplateSchemaEditFormPosition,
 } from "@/components/template-schema-edit-form"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { cn } from "@/lib/utils"
 import { getTemplateContentSchema } from "@/templates/schema-registry"
 
@@ -59,7 +78,98 @@ export function ProjectEditorWorkspace({
   const [content, setContent] = useState<unknown>(
     () => template?.initialContent
   )
+  const [savedContent, setSavedContent] = useState<unknown>(
+    () => template?.initialContent
+  )
+  const [isSaving, setIsSaving] = useState(false)
+  const [pendingHref, setPendingHref] = useState<string | null>(null)
+  const [showLeaveDialog, setShowLeaveDialog] = useState(false)
   const [formReady, setFormReady] = useState(false)
+  const router = useRouter()
+  const isDirty = useMemo(
+    () => JSON.stringify(content) !== JSON.stringify(savedContent),
+    [content, savedContent]
+  )
+
+  const handleSave = useCallback(async () => {
+    setIsSaving(true)
+    const result = await saveProjectContentAction(projectId, content)
+    setIsSaving(false)
+
+    if (result.status === "success") {
+      setSavedContent(content)
+      toast.success(result.message)
+    } else {
+      toast.error(result.message)
+    }
+  }, [content, projectId])
+
+  useEffect(() => {
+    const editorUrl = window.location.href
+
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      if (!isDirty) return
+      event.preventDefault()
+      event.returnValue = ""
+    }
+
+    const handlePopState = () => {
+      if (!isDirty) return
+
+      const destination =
+        window.location.pathname + window.location.search + window.location.hash
+      window.history.pushState(
+        { ...(window.history.state ?? {}), unsavedChangesGuard: true },
+        "",
+        editorUrl
+      )
+      setPendingHref(destination)
+      setShowLeaveDialog(true)
+    }
+
+    const handleDocumentClick = (event: MouseEvent) => {
+      if (!isDirty || event.defaultPrevented || event.button !== 0) return
+
+      const target = event.target
+      if (!(target instanceof Element)) return
+      const link = target.closest("a")
+      if (!link || link.target === "_blank" || link.hasAttribute("download")) {
+        return
+      }
+
+      const href = link.href
+      if (!href || new URL(href).origin !== window.location.origin) return
+      if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+        return
+      }
+
+      event.preventDefault()
+      setPendingHref(new URL(href).pathname + new URL(href).search)
+      setShowLeaveDialog(true)
+    }
+
+    window.addEventListener("beforeunload", handleBeforeUnload)
+    if (isDirty) {
+      window.history.pushState(
+        { ...(window.history.state ?? {}), unsavedChangesGuard: true },
+        "",
+        editorUrl
+      )
+      window.addEventListener("popstate", handlePopState)
+    }
+    document.addEventListener("click", handleDocumentClick, true)
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload)
+      window.removeEventListener("popstate", handlePopState)
+      document.removeEventListener("click", handleDocumentClick, true)
+    }
+  }, [isDirty])
+
+  const leavePage = () => {
+    if (pendingHref) router.push(pendingHref)
+    setPendingHref(null)
+    setShowLeaveDialog(false)
+  }
 
   const handleFormReady = useCallback(() => {
     setFormReady(true)
@@ -112,8 +222,30 @@ export function ProjectEditorWorkspace({
           value={content}
           onChange={setContent}
           onReady={handleFormReady}
+          onSave={handleSave}
+          isDirty={isDirty}
+          isSaving={isSaving}
         />
       </div>
+
+      <AlertDialog open={showLeaveDialog} onOpenChange={setShowLeaveDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-accent-foreground!">
+              Leave without saving?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Your changes will be lost if you leave this page.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setPendingHref(null)}>
+              Stay
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={leavePage}>Leave</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </section>
   )
 }

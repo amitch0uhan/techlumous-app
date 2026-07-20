@@ -4,7 +4,8 @@ import { useEffect } from "react"
 import type { ZodType } from "zod"
 import { TextAlignLeftIcon, TextAlignRightIcon } from "@phosphor-icons/react"
 
-import { Card, CardTitle } from "@/components/ui/card"
+import { Card, CardFooter, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
 import { Switcher, type SwitcherOption } from "@/components/ui/switcher"
 import { SchemaForm } from "@/lib/schema-form"
 import { cn } from "@/lib/utils"
@@ -33,6 +34,9 @@ interface TemplateSchemaEditFormProps {
   value?: unknown
   onChange: (next: unknown) => void
   onReady?: () => void
+  onSave: () => void
+  isDirty: boolean
+  isSaving: boolean
   className?: string
 }
 
@@ -43,6 +47,9 @@ export function TemplateSchemaEditForm({
   value,
   onChange,
   onReady,
+  onSave,
+  isDirty,
+  isSaving,
   className,
 }: TemplateSchemaEditFormProps) {
   useEffect(() => {
@@ -83,6 +90,12 @@ export function TemplateSchemaEditForm({
           </p>
         )}
       </div>
+
+      <CardFooter className="justify-end border-t border-accent-foreground/20 pt-2!">
+        <Button onClick={onSave} disabled={!isDirty || isSaving}>
+          {isSaving ? "Saving…" : "Save"}
+        </Button>
+      </CardFooter>
     </Card>
   )
 }
