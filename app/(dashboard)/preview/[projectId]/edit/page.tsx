@@ -32,7 +32,10 @@ export default async function ProjectEditorPage({
             ? {
                 name: template.name,
                 slug: template.slug,
-                initialContent: template.default_content ?? {},
+                initialContent:
+                  project.content && Object.keys(project.content).length > 0
+                    ? project.content
+                    : (template.default_content ?? {}),
               }
             : null
         }

@@ -12,6 +12,37 @@ const selectTemplateSchema = z.object({
   templateId: z.uuid(),
 })
 
+const saveProjectContentSchema = z.object({
+  projectId: z.uuid(),
+  content: z.record(z.string(), z.unknown()),
+})
+
+export type SaveProjectContentState =
+  { status: "success"; message: string } | { status: "error"; message: string }
+
+export async function saveProjectContentAction(
+  projectId: string,
+  content: unknown
+): Promise<SaveProjectContentState> {
+  const parsed = saveProjectContentSchema.safeParse({ projectId, content })
+  if (!parsed.success) {
+    return { status: "error", message: "Invalid project content" }
+  }
+
+  try {
+    await updateProject(parsed.data.projectId, { content: parsed.data.content })
+    revalidatePath(`/preview/${parsed.data.projectId}/edit`)
+    revalidatePath("/")
+    return { status: "success", message: "Content saved" }
+  } catch (err) {
+    console.error("Failed to save project content", err)
+    return {
+      status: "error",
+      message: "Failed to save content",
+    }
+  }
+}
+
 export async function createProjectAction(
   _prevState: CreateProjectState,
   formData: FormData
