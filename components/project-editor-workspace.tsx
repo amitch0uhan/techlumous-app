@@ -17,6 +17,7 @@ import {
   type DeploymentActionSnapshot,
 } from "@/actions/deploy"
 import { saveProjectContentAction } from "@/actions/project"
+import { EditorTopBar } from "@/components/editor-top-bar"
 import { TemplateAutoHeightPreview } from "@/components/template-auto-height-preview"
 import {
   TemplateSchemaEditForm,
@@ -313,46 +314,54 @@ export function ProjectEditorWorkspace({
     >
       <div aria-hidden="true" className="editor-workspace-grid" />
 
-      <div className="relative z-10 mx-auto flex min-h-[calc(100dvh-4.2rem)] w-full max-w-7xl items-start gap-3 p-3">
-        <div
-          className={cn(
-            "min-h-[calc(100dvh-6rem)] min-w-0 flex-1 overflow-hidden bg-white",
-            panelPosition === "left" && "order-2"
-          )}
-        >
-          {template ? (
-            <TemplateAutoHeightPreview
-              slug={template.slug}
-              name={template.name}
-              content={content}
-              formReady={formReady}
-            />
-          ) : (
-            <div className="flex size-full items-center justify-center bg-card px-6 text-center text-sm text-muted-foreground">
-              Select a template to start editing this project.
-            </div>
-          )}
-        </div>
-
-        <TemplateSchemaEditForm
-          position={panelPosition}
-          onPositionChange={updatePanelPosition}
-          schema={contentSchema}
-          value={content}
-          onChange={setContent}
-          onReady={handleFormReady}
-          onSave={handleSave}
-          onDeploy={handleDeploy}
-          onRetry={handleDeploy}
-          onReconnect={handleReconnect}
-          isDirty={isDirty}
-          isSaving={isSaving}
-          isDeploying={isDeploying}
-          canDeploy={canDeploy}
-          deployDisabledReason={deployDisabledReason}
-          deployment={deployment}
-          needsVercelReconnect={needsVercelReconnect}
+      <div className="relative z-10 mx-auto flex min-h-[calc(100dvh-4.2rem)] w-full max-w-7xl flex-col gap-3 p-3">
+        <EditorTopBar
+          projectName={projectName}
+          projectStatus={deployment.status}
+          liveUrl={deployment.liveUrl}
         />
+
+        <div className="flex w-full min-w-0 flex-1 items-start gap-3">
+          <div
+            className={cn(
+              "min-h-[calc(100dvh-6rem)] min-w-0 flex-1 overflow-hidden bg-white",
+              panelPosition === "left" && "order-2"
+            )}
+          >
+            {template ? (
+              <TemplateAutoHeightPreview
+                slug={template.slug}
+                name={template.name}
+                content={content}
+                formReady={formReady}
+              />
+            ) : (
+              <div className="flex size-full items-center justify-center bg-card px-6 text-center text-sm text-muted-foreground">
+                Select a template to start editing this project.
+              </div>
+            )}
+          </div>
+
+          <TemplateSchemaEditForm
+            position={panelPosition}
+            onPositionChange={updatePanelPosition}
+            schema={contentSchema}
+            value={content}
+            onChange={setContent}
+            onReady={handleFormReady}
+            onSave={handleSave}
+            onDeploy={handleDeploy}
+            onRetry={handleDeploy}
+            onReconnect={handleReconnect}
+            isDirty={isDirty}
+            isSaving={isSaving}
+            isDeploying={isDeploying}
+            canDeploy={canDeploy}
+            deployDisabledReason={deployDisabledReason}
+            deployment={deployment}
+            needsVercelReconnect={needsVercelReconnect}
+          />
+        </div>
       </div>
 
       <AlertDialog open={showLeaveDialog} onOpenChange={setShowLeaveDialog}>
