@@ -2,10 +2,17 @@
 
 import * as React from "react"
 import type { ZodType } from "zod"
-import { PlusIcon, TrashSimpleIcon } from "@phosphor-icons/react"
+import { PlusIcon, TrashIcon } from "@phosphor-icons/react"
 
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
+import { Separator } from "@/components/ui/separator"
 import { cn } from "@/lib/utils"
 
 import { normalize } from "./normalize"
@@ -35,92 +42,215 @@ function blankValue(field: FieldDescriptor): unknown {
   }
 }
 
+function schemaGroupStyle(level: number): React.CSSProperties | undefined {
+  if (level === 0) return undefined
+
+  return {
+    backgroundColor: "var(--editor-nested-group-overlay)",
+  }
+}
+
 interface FieldProps {
   field: FieldDescriptor
   value: unknown
   onChange: (next: unknown) => void
+  layout?: SchemaFieldLayout
+  className?: string
+  trailingAction?: React.ReactNode
+  groupLevel?: number
+  isRoot?: boolean
 }
 
-export function Field({ field, value, onChange }: FieldProps) {
+export type SchemaFieldLayout = "above" | "beside"
+
+export function Field({
+  field,
+  value,
+  onChange,
+  layout = "above",
+  className = "",
+  trailingAction,
+  groupLevel = 0,
+  isRoot = false,
+}: FieldProps) {
   const widget = resolveWidget(field)
 
   if (widget === "group") {
     const obj = (value ?? {}) as Record<string, unknown>
-    return (
-      <fieldset className="space-y-3 border-border/40 not-first:border-t">
-        {field.label && (
-          <Label className="pt-2 text-lg text-foreground">{field.label}</Label>
-        )}
-        {field.fields?.map((child) => (
+    const isVisibleGroup = !isRoot && Boolean(field.label)
+    const childGroupLevel = isVisibleGroup ? groupLevel + 1 : groupLevel
+    const fields = (
+      <>
+        {field.fields?.map((child, index) => (
           <Field
             key={child.key}
             field={child}
             value={obj[child.key]}
             onChange={(next) => onChange({ ...obj, [child.key]: next })}
+            layout={layout}
+            groupLevel={childGroupLevel}
+            trailingAction={
+              !isVisibleGroup && index === 0 ? trailingAction : undefined
+            }
           />
         ))}
-      </fieldset>
+      </>
+    )
+
+    if (!isVisibleGroup) {
+      return (
+        <div className="flex flex-col last:mb-1">
+          {fields}
+          {!field.fields?.length && trailingAction && (
+            <div className="flex h-7 items-center justify-end px-1">
+              {trailingAction}
+            </div>
+          )}
+        </div>
+      )
+    }
+
+    return (
+      <Accordion variant="schema" defaultValue={[field.key]}>
+        <AccordionItem
+          variant="schema"
+          value={field.key}
+          style={schemaGroupStyle(groupLevel)}
+        >
+          <AccordionTrigger
+            className="px-3"
+            variant="schema"
+            action={trailingAction}
+          >
+            {field.label}
+          </AccordionTrigger>
+          <AccordionContent variant="schema" className="last:mb-1">
+            {fields}
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
     )
   }
 
   if (widget === "array") {
     const arr = (value ?? []) as unknown[]
     const item = field.item
+    const label = field.label ?? "Items"
+
     return (
-      <div className="space-y-2 border-border/40 not-first:border-t">
-        {field.label && (
-          <Label className="pt-2 text-lg text-foreground">{field.label}</Label>
-        )}
-        {arr.map((entry, index) => (
-          <div
-            key={index}
-            className="relative rounded-md border border-border/60 p-3"
+      <Accordion variant="schema" defaultValue={[field.key]}>
+        <AccordionItem
+          variant="schema"
+          value={field.key}
+          style={schemaGroupStyle(groupLevel)}
+        >
+          <AccordionTrigger
+            variant="schema"
+            className="px-3"
+            action={
+              item || trailingAction ? (
+                <div className="flex items-center">
+                  {item && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon-sm"
+                      aria-label={`Add ${label} item`}
+                      onClick={(event) => {
+                        event.stopPropagation()
+                        onChange([...arr, blankValue(item)])
+                      }}
+                      className="rounded-none text-muted-foreground hover:text-foreground"
+                    >
+                      <PlusIcon />
+                    </Button>
+                  )}
+                  {trailingAction}
+                </div>
+              ) : null
+            }
           >
-            <div className="flex-1 pr-4">
-              {item && (
-                <Field
-                  field={item}
-                  value={entry}
-                  onChange={(next) =>
-                    onChange(arr.map((it, i) => (i === index ? next : it)))
-                  }
-                />
-              )}
+            <span className="flex-1">{label}</span>
+          </AccordionTrigger>
+          <AccordionContent variant="schema" className="last:mb-1">
+            <div className="flex flex-col gap-1">
+              {arr.map((entry, index) => (
+                <React.Fragment key={index}>
+                  {index > 0 && (
+                    <Separator className="mx-3 data-horizontal:w-auto" />
+                  )}
+                  <div className="relative">
+                    {item && (
+                      <Field
+                        field={item}
+                        value={entry}
+                        onChange={(next) =>
+                          onChange(
+                            arr.map((it, i) => (i === index ? next : it))
+                          )
+                        }
+                        layout={layout}
+                        groupLevel={groupLevel + 1}
+                        trailingAction={
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon-xs"
+                            aria-label="Remove item"
+                            onClick={() =>
+                              onChange(arr.filter((_, i) => i !== index))
+                            }
+                            className="rounded-none text-foreground/40! hover:bg-destructive/5! hover:text-destructive!"
+                          >
+                            <TrashIcon />
+                          </Button>
+                        }
+                      />
+                    )}
+                  </div>
+                </React.Fragment>
+              ))}
             </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              aria-label="Remove item"
-              onClick={() => onChange(arr.filter((_, i) => i !== index))}
-              className="absolute top-1 right-1 rounded-full text-foreground/40! hover:bg-destructive/5! hover:text-destructive!"
-            >
-              <TrashSimpleIcon />
-            </Button>
-          </div>
-        ))}
-        {item && (
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => onChange([...arr, blankValue(item)])}
-          >
-            <PlusIcon /> Add
-          </Button>
-        )}
-      </div>
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
     )
   }
 
   const Widget = widgets[widget] ?? widgets.text
   return (
-    <div className={cn("space-y-1")}>
+    <div
+      className={cn(
+        "relative px-3 py-1",
+        className,
+        layout === "above" || !field.label
+          ? "space-y-1"
+          : "grid grid-cols-[minmax(0,2fr)_minmax(0,3fr)] items-center gap-2"
+      )}
+    >
       {field.label && (
-        <Label className="pl-1 text-xs text-muted-foreground">
+        <Label
+          className={cn(
+            "pl-1 font-mono text-xs text-muted-foreground",
+            layout === "beside" && "self-start pt-1.5"
+          )}
+        >
           {field.label}
         </Label>
       )}
-      <Widget field={field} value={value} onChange={onChange} />
+      <div className={cn("min-w-0", trailingAction && "pr-7")}>
+        <Widget field={field} value={value} onChange={onChange} />
+      </div>
+      {trailingAction && (
+        <div
+          className={cn(
+            "absolute right-1",
+            layout === "beside" ? "top-1/2 -translate-y-1/2" : "top-1"
+          )}
+        >
+          {trailingAction}
+        </div>
+      )}
     </div>
   )
 }
@@ -129,11 +259,21 @@ export function SchemaForm({
   schema,
   value,
   onChange,
+  layout = "above",
 }: {
   schema: ZodType
   value: unknown
   onChange: (next: unknown) => void
+  layout?: SchemaFieldLayout
 }) {
   const root = React.useMemo(() => normalize(schema), [schema])
-  return <Field field={root} value={value} onChange={onChange} />
+  return (
+    <Field
+      field={root}
+      value={value}
+      onChange={onChange}
+      layout={layout}
+      isRoot
+    />
+  )
 }
