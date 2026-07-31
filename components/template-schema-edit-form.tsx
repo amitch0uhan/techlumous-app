@@ -4,7 +4,7 @@ import { useEffect } from "react"
 import type { ZodType } from "zod"
 import {
   CircleNotchIcon,
-  RocketLaunchIcon,
+  ArrowCircleUpRightIcon,
   TextAlignLeftIcon,
   TextAlignRightIcon,
 } from "@phosphor-icons/react"
@@ -86,7 +86,7 @@ export function TemplateSchemaEditForm({
         className
       )}
     >
-      <CardTitle className="flex items-center justify-between gap-2 p-3 text-sm font-medium">
+      <CardTitle className="flex items-center justify-between gap-2 p-3 text-base font-medium">
         Edit Content
         <div className="flex shrink-0 justify-end">
           <span id="schema-form-position-label" className="sr-only">
@@ -109,7 +109,12 @@ export function TemplateSchemaEditForm({
       >
         <div className="pt-3">
           {schema ? (
-            <SchemaForm schema={schema} value={value} onChange={onChange} />
+            <SchemaForm
+              schema={schema}
+              value={value}
+              onChange={onChange}
+              layout="beside"
+            />
           ) : (
             <p className="text-sm text-muted-foreground">
               Select a template to edit its content.
@@ -118,32 +123,22 @@ export function TemplateSchemaEditForm({
         </div>
       </SchemaFormScrollArea>
 
-      <CardFooter className="flex-col items-stretch gap-2 border-t border-accent-foreground/20 pt-2!">
-        <DeploymentStatus
-          status={deployment.status}
-          liveUrl={deployment.liveUrl}
-          inspectorUrl={deployment.inspectorUrl}
-          lastDeployedAt={deployment.lastDeployedAt}
-          errorText={deployment.errorText}
-          onRetry={
-            ["error", "canceled", "timeout"].includes(deployment.status)
-              ? onRetry
-              : undefined
-          }
-          onReconnect={needsVercelReconnect ? onReconnect : undefined}
-          retryPending={isDeploying}
-          controlsDisabled={isSaving}
-        />
-
+      <CardFooter className="flex-col items-stretch gap-2 border-t border-accent-foreground/20 p-3 pt-3!">
         <div className="flex justify-end gap-2">
-          <Button onClick={onSave} disabled={!isDirty || isSaving}>
+          <Button
+            onClick={onSave}
+            disabled={!isDirty || isSaving}
+            className="rounded-full px-3"
+          >
             {isSaving ? "Saving..." : "Save"}
           </Button>
           <IconButton
             type="button"
-            icon={isDeploying ? CircleNotchIcon : RocketLaunchIcon}
-            iconPosition="start"
+            // variant="secondary"
+            icon={isDeploying ? CircleNotchIcon : ArrowCircleUpRightIcon}
+            iconPosition="end"
             iconClassName={cn(isDeploying && "animate-spin")}
+            className="rounded-full pl-3"
             onClick={onDeploy}
             disabled={!canDeploy || isDeploying}
             aria-busy={isDeploying}

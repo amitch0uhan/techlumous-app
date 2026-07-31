@@ -21,7 +21,7 @@ function Accordion({
       className={cn(
         "flex w-full flex-col overflow-hidden rounded-md border",
         variant === "schema" &&
-          "rounded-none border-x-0 border-t border-b-0 border-border/60 bg-background first:border-t-0",
+          "rounded-none border-x-0 border-t border-b-0 border-border/60 bg-transparent first:border-t-0",
         className
       )}
       {...props}
@@ -41,7 +41,7 @@ function AccordionItem({
       className={cn(
         "not-last:border-b data-open:bg-muted/50",
         variant === "schema" &&
-          "border-0 bg-background data-open:bg-background",
+          "border-0 bg-transparent data-open:bg-transparent",
         className
       )}
       {...props}
@@ -92,7 +92,7 @@ function AccordionTrigger({
         data-slot="accordion-trigger"
         data-variant={variant}
         className={cn(
-          "group/accordion-trigger relative flex flex-1 items-start justify-between gap-6 border border-transparent p-2 text-left text-xs/relaxed font-medium transition-all outline-none hover:underline aria-disabled:pointer-events-none aria-disabled:opacity-50 **:data-[slot=accordion-trigger-icon]:ml-auto **:data-[slot=accordion-trigger-icon]:size-4 **:data-[slot=accordion-trigger-icon]:text-muted-foreground",
+          "group/accordion-trigger relative flex flex-1 items-start justify-between gap-6 border border-transparent p-2 text-left text-xs/relaxed font-medium transition-all outline-none hover:underline focus-visible:z-10 focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 focus-visible:ring-inset aria-disabled:pointer-events-none aria-disabled:opacity-50 **:data-[slot=accordion-trigger-icon]:ml-auto **:data-[slot=accordion-trigger-icon]:size-4 **:data-[slot=accordion-trigger-icon]:text-muted-foreground",
           variant === "schema" &&
             "h-9 items-center justify-start gap-1.5 px-0 py-0 font-mono font-medium text-foreground/80 hover:bg-muted/30 hover:text-foreground hover:no-underline **:data-[slot=accordion-trigger-icon]:ml-0 **:data-[slot=accordion-trigger-icon]:size-3",
           className
