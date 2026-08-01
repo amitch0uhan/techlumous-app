@@ -9,8 +9,6 @@ import {
   TextAlignRightIcon,
 } from "@phosphor-icons/react"
 
-import type { DeploymentActionSnapshot } from "@/actions/deploy"
-import { DeploymentStatus } from "@/components/deployment-status"
 import { SchemaFormScrollArea } from "@/components/schema-form-scroll-area"
 import { Button, IconButton } from "@/components/ui/button"
 import { Card, CardFooter, CardTitle } from "@/components/ui/card"
@@ -42,15 +40,12 @@ interface TemplateSchemaEditFormProps {
   onReady?: () => void
   onSave: () => void
   onDeploy: () => void
-  onRetry: () => void
-  onReconnect: () => void
   isDirty: boolean
   isSaving: boolean
   isDeploying: boolean
+  operation: "deploy" | "publish"
   canDeploy: boolean
   deployDisabledReason?: string
-  deployment: DeploymentActionSnapshot
-  needsVercelReconnect: boolean
   className?: string
 }
 
@@ -63,15 +58,12 @@ export function TemplateSchemaEditForm({
   onReady,
   onSave,
   onDeploy,
-  onRetry,
-  onReconnect,
   isDirty,
   isSaving,
   isDeploying,
+  operation,
   canDeploy,
   deployDisabledReason,
-  deployment,
-  needsVercelReconnect,
   className,
 }: TemplateSchemaEditFormProps) {
   useEffect(() => {
@@ -130,7 +122,7 @@ export function TemplateSchemaEditForm({
             disabled={!isDirty || isSaving}
             className="rounded-full px-3"
           >
-            {isSaving ? "Saving..." : "Save"}
+            {isSaving ? "Saving..." : "Save draft"}
           </Button>
           <IconButton
             type="button"
@@ -144,7 +136,13 @@ export function TemplateSchemaEditForm({
             aria-busy={isDeploying}
             title={deployDisabledReason}
           >
-            {isDeploying ? "Deploying..." : "Deploy"}
+            {isDeploying
+              ? operation === "publish"
+                ? "Publishing..."
+                : "Deploying..."
+              : operation === "publish"
+                ? "Publish changes"
+                : "Deploy"}
           </IconButton>
         </div>
       </CardFooter>
