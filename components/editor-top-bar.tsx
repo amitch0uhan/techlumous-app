@@ -1,6 +1,5 @@
 "use client"
 
-import { useState } from "react"
 import {
   DeviceMobileCameraIcon,
   DeviceTabletCameraIcon,
@@ -15,6 +14,8 @@ import {
 import { IconButton } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Switcher, type SwitcherOption } from "@/components/ui/switcher"
+
+export type PreviewViewport = "desktop" | "tablet" | "mobile" | "custom"
 
 const viewportOptions: readonly SwitcherOption[] = [
   {
@@ -38,14 +39,17 @@ interface EditorTopBarProps {
   projectName: string
   projectStatus: string
   liveUrl?: string | null
+  viewport: PreviewViewport
+  onViewportChange: (viewport: Exclude<PreviewViewport, "custom">) => void
 }
 
 export function EditorTopBar({
   projectName,
   projectStatus,
   liveUrl,
+  viewport,
+  onViewportChange,
 }: EditorTopBarProps) {
-  const [viewport, setViewport] = useState("desktop")
   const deploymentState = resolveDeploymentState(projectStatus)
   const normalizedLiveUrl = normalizeDeploymentUrl(liveUrl)
   const isLive = deploymentState === "ready" && normalizedLiveUrl
@@ -64,7 +68,9 @@ export function EditorTopBar({
         aria-label="Preview viewport"
         value={viewport}
         options={viewportOptions}
-        onValueChange={setViewport}
+        onValueChange={(value) =>
+          onViewportChange(value as Exclude<PreviewViewport, "custom">)
+        }
         className="absolute left-1/2 -translate-x-1/2"
       />
 

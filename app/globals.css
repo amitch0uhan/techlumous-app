@@ -214,3 +214,13 @@
   background-size: 36px 36px;
   mask-image: linear-gradient(to bottom, transparent 0, black 8rem, black 100%);
 }
+
+.template-resize-mesh {
+  background-color: color-mix(in oklab, var(--card) 55%, var(--background));
+  background-image: radial-gradient(
+    circle,
+    color-mix(in oklab, var(--foreground) 22%, transparent) 1px,
+    transparent 1px
+  );
+  background-size: 24px 24px;
+}
