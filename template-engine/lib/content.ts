@@ -3,7 +3,7 @@ import { createClient } from "@supabase/supabase-js"
 /**
  * Fetches this project's published content from Supabase using the anon key.
  * Row access is enforced by RLS (anon may only read published rows) and
- * column grants (anon may only read id/content/status).
+ * column grants (anon may only read id/published_content/status).
  *
  * Returns null when the env pointers are absent (local dev — caller falls
  * back to the template's defaultContent). Throws when the fetch fails so a
@@ -20,10 +20,10 @@ export async function fetchProjectContent(): Promise<unknown | null> {
 
   const supabase = createClient(url, key, { auth: { persistSession: false } })
 
-  // Select only `content` — broader selects hit the anon column grant.
+  // Select only published content; saved drafts must never reach the live site.
   const { data, error } = await supabase
     .from("projects")
-    .select("content")
+    .select("published_content")
     .eq("id", projectId)
     .eq("status", "published")
     .single()
@@ -32,5 +32,5 @@ export async function fetchProjectContent(): Promise<unknown | null> {
     throw new Error(`[template-engine] content fetch failed: ${error.message}`)
   }
 
-  return data.content
+  return data.published_content
 }

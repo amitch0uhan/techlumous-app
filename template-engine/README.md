@@ -5,9 +5,10 @@ It owns the shared `templates/` library and acts as the renderer for published
 sites.
 
 The template is chosen at build time by the `TEMPLATE_SLUG` environment
-variable. The site's content lives in Supabase and is fetched at runtime with
-ISR (`revalidate = 60`), so content edits in the studio go live within a
-minute — **no redeploy**.
+variable. The site's published content lives in Supabase and is fetched at
+runtime with ISR (`revalidate = 60`). Saving a draft does not affect the live
+site. Publishing the draft makes it visible within approximately one minute
+without a Vercel redeployment.
 
 ## Layout
 
@@ -39,10 +40,10 @@ template-engine/
   `postcss.config.mjs` and the Tailwind dependency — stays at the engine root.)
 - `app/page.tsx` reads `TEMPLATE_SLUG`, looks the template up in the registry,
   fetches the site's content via `lib/content.ts`, and renders the template.
-- Content comes from the `site` table in Supabase, addressed by env pointers:
-  `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SITE_ID`. The anon key is public by
-  design; RLS lets it read **only published rows**, and column grants restrict
-  it to the content columns.
+- Content comes from the `projects.published_content` column in Supabase,
+  addressed by `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and `PROJECT_ID`. The anon
+  key is public by design; RLS lets it read **only published rows**, and column
+  grants allow access to published content but not saved drafts.
 - Failure semantics: if the env pointers are absent (local dev) the template
   renders its `defaultContent`. If they are present but the fetch fails, the
   page **throws** — at build time the deploy fails loudly, at runtime a failed
@@ -65,6 +66,10 @@ file-upload API (`lib/vercel/collect-files.ts` + `lib/vercel/deploy.ts` in the
 repo root) — no Git connection; Vercel runs the build. Only the selected
 template's folder is uploaded, along with a generated single-template
 `registry.ts`. The env pointers above are passed per deployment.
+
+The first deployment uploads and builds the template engine. Later content
+changes only require publishing the saved draft in Supabase; the live engine
+will pick up the new `published_content` on revalidation.
 
 ## Usage
 
