@@ -4,8 +4,8 @@ import { getTemplate, listTemplates } from "@/templates/registry"
 
 import { fetchProjectContent } from "../lib/content"
 
-// Re-fetch the project's content from Supabase at most once a minute; content
-// edits in the studio go live without a redeploy.
+// Re-fetch the project's published content from Supabase at most once a minute.
+// Saving a draft does not affect the live site; publishing does not redeploy it.
 export const revalidate = 60
 
 function resolveTemplate() {
