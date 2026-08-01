@@ -17,8 +17,8 @@ import {
   type DeploymentActionSnapshot,
 } from "@/actions/deploy"
 import { saveProjectContentAction } from "@/actions/project"
-import { EditorTopBar } from "@/components/editor-top-bar"
-import { TemplateAutoHeightPreview } from "@/components/template-auto-height-preview"
+import { EditorTopBar, type PreviewViewport } from "@/components/editor-top-bar"
+import { ResizableTemplatePreview } from "@/components/resizable-template-preview"
 import {
   TemplateSchemaEditForm,
   type TemplateSchemaEditFormPosition,
@@ -103,6 +103,7 @@ export function ProjectEditorWorkspace({
   const [pendingHref, setPendingHref] = useState<string | null>(null)
   const [showLeaveDialog, setShowLeaveDialog] = useState(false)
   const [formReady, setFormReady] = useState(false)
+  const [viewport, setViewport] = useState<PreviewViewport>("desktop")
   const router = useRouter()
   const isDirty = useMemo(
     () => JSON.stringify(content) !== JSON.stringify(savedContent),
@@ -306,6 +307,14 @@ export function ProjectEditorWorkspace({
     router.push("/integration")
   }, [router])
 
+  const updateViewport = (nextViewport: Exclude<PreviewViewport, "custom">) => {
+    setViewport(nextViewport)
+  }
+
+  const markViewportAsCustom = () => {
+    setViewport("custom")
+  }
+
   return (
     <section
       aria-label={`${projectName} editor workspace`}
@@ -319,21 +328,26 @@ export function ProjectEditorWorkspace({
           projectName={projectName}
           projectStatus={deployment.status}
           liveUrl={deployment.liveUrl}
+          viewport={viewport}
+          onViewportChange={updateViewport}
         />
 
         <div className="flex w-full min-w-0 flex-1 items-start gap-3">
           <div
             className={cn(
-              "min-h-[calc(100dvh-6rem)] min-w-0 flex-1 overflow-hidden bg-white",
+              "min-h-[calc(100dvh-6rem)] min-w-0 flex-1 overflow-hidden",
               panelPosition === "left" && "order-2"
             )}
           >
             {template ? (
-              <TemplateAutoHeightPreview
+              <ResizableTemplatePreview
                 slug={template.slug}
                 name={template.name}
                 content={content}
                 formReady={formReady}
+                viewport={viewport}
+                formPosition={panelPosition}
+                onManualResize={markViewportAsCustom}
               />
             ) : (
               <div className="flex size-full items-center justify-center bg-card px-6 text-center text-sm text-muted-foreground">

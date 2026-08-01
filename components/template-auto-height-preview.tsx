@@ -147,6 +147,7 @@ export function TemplateAutoHeightPreview({
 
       let disposed = false
       let animationFrame: number | null = null
+      let previousFrameWidth = frame.getBoundingClientRect().width
       const scheduleResize = () => {
         if (disposed || animationFrame !== null) return
         animationFrame = window.requestAnimationFrame(() => {
@@ -163,6 +164,15 @@ export function TemplateAutoHeightPreview({
         subtree: true,
       })
 
+      // Resizing an editor panel changes the iframe viewport without changing
+      // the outer window. Re-measure after width-driven template reflow.
+      const resizeObserver = new ResizeObserver(([entry]) => {
+        if (!entry || entry.contentRect.width === previousFrameWidth) return
+        previousFrameWidth = entry.contentRect.width
+        scheduleResize()
+      })
+      resizeObserver.observe(frame)
+
       doc.addEventListener("load", scheduleResize, true)
       doc.addEventListener("transitionend", scheduleResize, true)
       window.addEventListener("resize", scheduleResize)
@@ -173,6 +183,7 @@ export function TemplateAutoHeightPreview({
       cleanupRef.current = () => {
         disposed = true
         mutationObserver.disconnect()
+        resizeObserver.disconnect()
         doc.removeEventListener("load", scheduleResize, true)
         doc.removeEventListener("transitionend", scheduleResize, true)
         window.removeEventListener("resize", scheduleResize)
