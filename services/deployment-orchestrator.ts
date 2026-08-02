@@ -122,12 +122,27 @@ function isContentRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value)
 }
 
-function projectContent(project: Project, defaultContent: unknown) {
-  if (project.content && Object.keys(project.content).length > 0) {
-    return project.content
+function projectDraftContent(project: Project, defaultContent: unknown) {
+  if (project.draft_content && Object.keys(project.draft_content).length > 0) {
+    return project.draft_content
+  }
+
+  if (
+    project.published_content &&
+    Object.keys(project.published_content).length > 0
+  ) {
+    return project.published_content
   }
 
   return defaultContent
+}
+
+function hasLiveDeployment(deployment: DeploymentState): boolean {
+  return Boolean(
+    deployment.deploy_status === "ready" &&
+    deployment.vercel_project_id &&
+    deployment.deployment_url
+  )
 }
 
 function vercelProjectName(project: Project): string {
@@ -262,17 +277,34 @@ export async function orchestrateProjectDeployment(
   if (!schema) return failure("MISSING_TEMPLATE", existingDeployment)
 
   const parsedContent = schema.safeParse(
-    projectContent(project, template.default_content)
+    projectDraftContent(project, template.default_content)
   )
   if (!parsedContent.success || !isContentRecord(parsedContent.data)) {
     return failure("INVALID_CONTENT", existingDeployment)
   }
 
-  // Stage 4: Publish the validated content for the deployed template.
+  const isLive = hasLiveDeployment(existingDeployment)
+
+  // Stage 4: Publish the validated draft. The first deployment also persists
+  // template defaults as the initial draft.
   await dependencies.updateProject(project.id, {
-    content: parsedContent.data,
+    ...(!isLive && { draft_content: parsedContent.data }),
+    published_content: parsedContent.data,
     status: "published",
   })
+
+  // A live template reads published content from Supabase and revalidates it
+  // periodically, so content-only changes do not require another Vercel build.
+  if (isLive) {
+    return {
+      ok: true,
+      code: null,
+      message:
+        "Changes published. The live site will update within one minute.",
+      deployment: await currentDeployment(dependencies, project.id, userId),
+      inspectorUrl: null,
+    }
+  }
 
   // Stage 5: Load the connected Vercel account and credentials.
   const integration = await dependencies.getUserIntegrationByProvider()

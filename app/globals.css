@@ -39,6 +39,7 @@
   --sidebar-ring: oklch(0.705 0.015 286.067);
   --shadow-card: 0 4px 14px 0
     color-mix(in oklab, var(--card-foreground) 25%, transparent);
+  --editor-nested-group-overlay: oklch(0 0 0 / 4%);
 }
 
 .dark {
@@ -75,6 +76,7 @@
   --sidebar-ring: oklch(0.552 0.016 285.938);
   --shadow-card: 0 4px 14px 0
     color-mix(in oklab, var(--card-foreground) 6%, transparent);
+  --editor-nested-group-overlay: oklch(1 0 0 / 4%);
 }
 
 @theme inline {
@@ -211,4 +213,14 @@
     );
   background-size: 36px 36px;
   mask-image: linear-gradient(to bottom, transparent 0, black 8rem, black 100%);
+}
+
+.template-resize-mesh {
+  background-color: color-mix(in oklab, var(--card) 55%, var(--background));
+  background-image: radial-gradient(
+    circle,
+    color-mix(in oklab, var(--foreground) 22%, transparent) 1px,
+    transparent 1px
+  );
+  background-size: 24px 24px;
 }

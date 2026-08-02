@@ -39,6 +39,8 @@ function getScrollMetrics(viewport: HTMLDivElement): ScrollMetrics {
 function SchemaFormScrollArea({
   children,
   className,
+  "aria-label": ariaLabel,
+  "aria-labelledby": ariaLabelledBy,
   ...props
 }: React.ComponentProps<"div">) {
   const viewportRef = React.useRef<HTMLDivElement>(null)
@@ -140,9 +142,12 @@ function SchemaFormScrollArea({
     <div className={cn("relative min-h-0", className)} {...props}>
       <div
         ref={viewportRef}
+        role="region"
+        aria-label={ariaLabel}
+        aria-labelledby={ariaLabelledBy}
         tabIndex={0}
         onScroll={showTemporarily}
-        className="h-full scrollbar-none overflow-y-auto overscroll-contain focus-visible:outline-none [&::-webkit-scrollbar]:hidden"
+        className="no-scrollbar h-full overflow-y-auto overscroll-contain outline-none focus-visible:ring-2 focus-visible:ring-ring/30 focus-visible:ring-inset"
       >
         <div ref={contentRef}>{children}</div>
       </div>

@@ -17,7 +17,8 @@ import {
   type DeploymentActionSnapshot,
 } from "@/actions/deploy"
 import { saveProjectContentAction } from "@/actions/project"
-import { TemplateAutoHeightPreview } from "@/components/template-auto-height-preview"
+import { EditorTopBar, type PreviewViewport } from "@/components/editor-top-bar"
+import { ResizableTemplatePreview } from "@/components/resizable-template-preview"
 import {
   TemplateSchemaEditForm,
   type TemplateSchemaEditFormPosition,
@@ -47,6 +48,8 @@ interface ProjectEditorWorkspaceProps {
     initialContent: unknown
   } | null
   initialDeployment: DeploymentActionSnapshot
+  hasLiveDeployment: boolean
+  initialPublishedContent: unknown
   isVercelConnected: boolean
 }
 
@@ -79,6 +82,8 @@ export function ProjectEditorWorkspace({
   projectName,
   template,
   initialDeployment,
+  hasLiveDeployment: initialHasLiveDeployment,
+  initialPublishedContent,
   isVercelConnected,
 }: ProjectEditorWorkspaceProps) {
   const contentSchema = useMemo(
@@ -92,6 +97,9 @@ export function ProjectEditorWorkspace({
   const [savedContent, setSavedContent] = useState<unknown>(
     () => template?.initialContent
   )
+  const [publishedContent, setPublishedContent] = useState<unknown>(
+    () => initialPublishedContent
+  )
   const [isSaving, setIsSaving] = useState(false)
   const [isDeploying, setIsDeploying] = useState(false)
   const [deployment, setDeployment] =
@@ -102,6 +110,7 @@ export function ProjectEditorWorkspace({
   const [pendingHref, setPendingHref] = useState<string | null>(null)
   const [showLeaveDialog, setShowLeaveDialog] = useState(false)
   const [formReady, setFormReady] = useState(false)
+  const [viewport, setViewport] = useState<PreviewViewport>("desktop")
   const router = useRouter()
   const isDirty = useMemo(
     () => JSON.stringify(content) !== JSON.stringify(savedContent),
@@ -111,6 +120,14 @@ export function ProjectEditorWorkspace({
     () => !!contentSchema?.safeParse(content).success,
     [content, contentSchema]
   )
+  const hasLiveDeployment =
+    initialHasLiveDeployment ||
+    (deployment.status === "ready" && !!deployment.liveUrl)
+  const releaseOperation = hasLiveDeployment ? "publish" : "deploy"
+  const hasUnpublishedChanges = useMemo(
+    () => JSON.stringify(savedContent) !== JSON.stringify(publishedContent),
+    [publishedContent, savedContent]
+  )
   const hasActiveDeployment = isActiveDeploymentStatus(deployment.status)
   const canDeploy =
     !!template &&
@@ -118,21 +135,34 @@ export function ProjectEditorWorkspace({
     !isDirty &&
     !isSaving &&
     !hasActiveDeployment &&
-    !needsVercelReconnect
+    (releaseOperation === "publish"
+      ? hasUnpublishedChanges
+      : !needsVercelReconnect)
+
   const deployDisabledReason = useMemo(() => {
-    if (!template) return "Select a template before deploying"
-    if (!isContentValid) return "Fix invalid content before deploying"
-    if (isDirty) return "Save changes before deploying"
+    const operationLabel =
+      releaseOperation === "publish" ? "publishing" : "deploying"
+
+    if (!template) return `Select a template before ${operationLabel}`
+    if (!isContentValid) return `Fix invalid content before ${operationLabel}`
+    if (isDirty) return `Save changes before ${operationLabel}`
     if (isSaving) return "Wait for saving to finish"
     if (hasActiveDeployment) return "A deployment is already in progress"
-    if (needsVercelReconnect) return "Reconnect Vercel before deploying"
+    if (releaseOperation === "publish" && !hasUnpublishedChanges) {
+      return "No unpublished changes"
+    }
+    if (releaseOperation === "deploy" && needsVercelReconnect) {
+      return "Reconnect Vercel before deploying"
+    }
     return undefined
   }, [
     hasActiveDeployment,
+    hasUnpublishedChanges,
     isContentValid,
     isDirty,
     isSaving,
     needsVercelReconnect,
+    releaseOperation,
     template,
   ])
 
@@ -153,13 +183,16 @@ export function ProjectEditorWorkspace({
     if (deployingRef.current) return
     deployingRef.current = true
 
+    const isPublishing = releaseOperation === "publish"
     const previousDeployment = deployment
     setIsDeploying(true)
-    setDeployment((current) => ({
-      ...current,
-      status: "preparing",
-      errorText: null,
-    }))
+    if (!isPublishing) {
+      setDeployment((current) => ({
+        ...current,
+        status: "preparing",
+        errorText: null,
+      }))
+    }
 
     try {
       const result = await deployProjectAction(projectId)
@@ -175,23 +208,28 @@ export function ProjectEditorWorkspace({
         setDeployment(previousDeployment)
       }
 
-      if (result.code === "VERCEL_RECONNECT_REQUIRED") {
+      if (!isPublishing && result.code === "VERCEL_RECONNECT_REQUIRED") {
         setNeedsVercelReconnect(true)
       }
 
       if (result.status === "success") {
+        setPublishedContent(savedContent)
         toast.success(result.message)
       } else {
         toast.error(result.message)
       }
     } catch {
       setDeployment(previousDeployment)
-      toast.error("Failed to start the deployment.")
+      toast.error(
+        isPublishing
+          ? "Failed to publish changes."
+          : "Failed to start the deployment."
+      )
     } finally {
       deployingRef.current = false
       setIsDeploying(false)
     }
-  }, [deployment, projectId])
+  }, [deployment, projectId, releaseOperation, savedContent])
 
   useEffect(() => {
     if (!isActiveDeploymentStatus(deployment.status)) return
@@ -301,9 +339,13 @@ export function ProjectEditorWorkspace({
     window.dispatchEvent(new Event(PANEL_POSITION_EVENT))
   }
 
-  const handleReconnect = useCallback(() => {
-    router.push("/integration")
-  }, [router])
+  const updateViewport = (nextViewport: Exclude<PreviewViewport, "custom">) => {
+    setViewport(nextViewport)
+  }
+
+  const markViewportAsCustom = () => {
+    setViewport("custom")
+  }
 
   return (
     <section
@@ -313,46 +355,56 @@ export function ProjectEditorWorkspace({
     >
       <div aria-hidden="true" className="editor-workspace-grid" />
 
-      <div className="relative z-10 mx-auto flex min-h-[calc(100dvh-4.2rem)] w-full max-w-7xl items-start gap-3 p-3">
-        <div
-          className={cn(
-            "min-h-[calc(100dvh-6rem)] min-w-0 flex-1 overflow-hidden bg-white",
-            panelPosition === "left" && "order-2"
-          )}
-        >
-          {template ? (
-            <TemplateAutoHeightPreview
-              slug={template.slug}
-              name={template.name}
-              content={content}
-              formReady={formReady}
-            />
-          ) : (
-            <div className="flex size-full items-center justify-center bg-card px-6 text-center text-sm text-muted-foreground">
-              Select a template to start editing this project.
-            </div>
-          )}
-        </div>
-
-        <TemplateSchemaEditForm
-          position={panelPosition}
-          onPositionChange={updatePanelPosition}
-          schema={contentSchema}
-          value={content}
-          onChange={setContent}
-          onReady={handleFormReady}
-          onSave={handleSave}
-          onDeploy={handleDeploy}
-          onRetry={handleDeploy}
-          onReconnect={handleReconnect}
-          isDirty={isDirty}
-          isSaving={isSaving}
-          isDeploying={isDeploying}
-          canDeploy={canDeploy}
-          deployDisabledReason={deployDisabledReason}
-          deployment={deployment}
-          needsVercelReconnect={needsVercelReconnect}
+      <div className="relative z-10 mx-auto flex min-h-[calc(100dvh-4.2rem)] w-full max-w-7xl flex-col gap-3 p-3">
+        <EditorTopBar
+          projectName={projectName}
+          projectStatus={deployment.status}
+          liveUrl={deployment.liveUrl}
+          viewport={viewport}
+          onViewportChange={updateViewport}
         />
+
+        <div className="flex w-full min-w-0 flex-1 items-start gap-3">
+          <div
+            className={cn(
+              "min-h-[calc(100dvh-6rem)] min-w-0 flex-1 overflow-hidden",
+              panelPosition === "left" && "order-2"
+            )}
+          >
+            {template ? (
+              <ResizableTemplatePreview
+                slug={template.slug}
+                name={template.name}
+                content={content}
+                formReady={formReady}
+                viewport={viewport}
+                formPosition={panelPosition}
+                onManualResize={markViewportAsCustom}
+              />
+            ) : (
+              <div className="flex size-full items-center justify-center bg-card px-6 text-center text-sm text-muted-foreground">
+                Select a template to start editing this project.
+              </div>
+            )}
+          </div>
+
+          <TemplateSchemaEditForm
+            position={panelPosition}
+            onPositionChange={updatePanelPosition}
+            schema={contentSchema}
+            value={content}
+            onChange={setContent}
+            onReady={handleFormReady}
+            onSave={handleSave}
+            onDeploy={handleDeploy}
+            isDirty={isDirty}
+            isSaving={isSaving}
+            isDeploying={isDeploying}
+            operation={releaseOperation}
+            canDeploy={canDeploy}
+            deployDisabledReason={deployDisabledReason}
+          />
+        </div>
       </div>
 
       <AlertDialog open={showLeaveDialog} onOpenChange={setShowLeaveDialog}>
