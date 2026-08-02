@@ -64,7 +64,9 @@ export const contentSchema = z.object({
       statementMuted: z
         .string()
         .meta({ label: "Statement (muted)", widget: "textarea" }),
-      imageUrl: z.string().meta({ label: "Image URL", format: "url" }),
+      imageUrl: z
+        .string()
+        .meta({ label: "Image", widget: "image", labelLayout: "above" }),
       imageAlt: z.string().meta({ label: "Image alt" }),
     })
     .meta({ label: "About" }),
@@ -147,7 +149,7 @@ export const defaultContent: LumousMarkOneContent = {
     statementMuted:
       "from the first pixel to the launch that moves the number that matters.",
     imageUrl:
-      "https://jspqdyqdbczgwyorxcvi.supabase.co/storage/v1/object/public/Techlumous%20Template/lumous-mark-one-image-1.jpg",
+      "https://jspqdyqdbczgwyorxcvi.supabase.co/storage/v1/object/public/techlumous/templates/lumous-mark-one/lumous-mark-one-image-1.jpg",
     imageAlt: "Studio at work",
   },
   contact: {
