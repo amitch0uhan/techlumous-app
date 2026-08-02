@@ -1,14 +1,10 @@
 export type WidgetId =
-  | "text"
-  | "textarea"
-  | "url"
-  | "select"
-  | "group"
-  | "array"
+  "text" | "textarea" | "url" | "image" | "select" | "group" | "array"
 
 export interface FieldDescriptor {
   key: string
   label?: string
+  labelLayout?: "above" | "beside"
   kind: "string" | "number" | "boolean" | "object" | "array" | "enum"
   widget?: WidgetId
   format?: string

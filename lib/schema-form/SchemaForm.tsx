@@ -87,7 +87,7 @@ export function Field({
             field={child}
             value={obj[child.key]}
             onChange={(next) => onChange({ ...obj, [child.key]: next })}
-            layout={layout}
+            layout={field.labelLayout ?? layout}
             groupLevel={childGroupLevel}
             trailingAction={
               !isVisibleGroup && index === 0 ? trailingAction : undefined
@@ -189,7 +189,7 @@ export function Field({
                             arr.map((it, i) => (i === index ? next : it))
                           )
                         }
-                        layout={layout}
+                        layout={field.labelLayout ?? layout}
                         groupLevel={groupLevel + 1}
                         trailingAction={
                           <Button
@@ -218,12 +218,13 @@ export function Field({
   }
 
   const Widget = widgets[widget] ?? widgets.text
+  const labelLayout = field.labelLayout ?? layout
   return (
     <div
       className={cn(
         "relative px-3 py-1",
         className,
-        layout === "above" || !field.label
+        labelLayout === "above" || !field.label
           ? "space-y-1"
           : "grid grid-cols-[minmax(0,2fr)_minmax(0,3fr)] items-center gap-2"
       )}
@@ -232,7 +233,7 @@ export function Field({
         <Label
           className={cn(
             "pl-1 font-mono text-xs text-muted-foreground",
-            layout === "beside" && "self-start pt-1.5"
+            labelLayout === "beside" && "self-start pt-1.5"
           )}
         >
           {field.label}
@@ -245,7 +246,7 @@ export function Field({
         <div
           className={cn(
             "absolute right-1",
-            layout === "beside" ? "top-1/2 -translate-y-1/2" : "top-1"
+            labelLayout === "beside" ? "top-1/2 -translate-y-1/2" : "top-1"
           )}
         >
           {trailingAction}
