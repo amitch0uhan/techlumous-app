@@ -6,6 +6,7 @@ interface FieldMeta {
   label?: string
   widget?: WidgetId
   format?: string
+  labelLayout?: "above" | "beside"
 }
 
 export function normalize(schema: ZodType, key = ""): FieldDescriptor {
@@ -17,6 +18,7 @@ export function normalize(schema: ZodType, key = ""): FieldDescriptor {
     label: meta.label,
     widget: meta.widget,
     format: meta.format,
+    labelLayout: meta.labelLayout,
   }
 
   switch (def.type as string) {

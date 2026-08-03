@@ -52,6 +52,8 @@ function schemaGroupStyle(level: number): React.CSSProperties | undefined {
 
 interface FieldProps {
   field: FieldDescriptor
+  fieldPath?: string[]
+  projectId?: string
   value: unknown
   onChange: (next: unknown) => void
   layout?: SchemaFieldLayout
@@ -65,6 +67,8 @@ export type SchemaFieldLayout = "above" | "beside"
 
 export function Field({
   field,
+  fieldPath = [],
+  projectId,
   value,
   onChange,
   layout = "above",
@@ -85,9 +89,11 @@ export function Field({
           <Field
             key={child.key}
             field={child}
+            fieldPath={[...fieldPath, child.key]}
+            projectId={projectId}
             value={obj[child.key]}
             onChange={(next) => onChange({ ...obj, [child.key]: next })}
-            layout={layout}
+            layout={child.labelLayout ?? layout}
             groupLevel={childGroupLevel}
             trailingAction={
               !isVisibleGroup && index === 0 ? trailingAction : undefined
@@ -183,13 +189,15 @@ export function Field({
                     {item && (
                       <Field
                         field={item}
+                        fieldPath={[...fieldPath, String(index)]}
+                        projectId={projectId}
                         value={entry}
                         onChange={(next) =>
                           onChange(
                             arr.map((it, i) => (i === index ? next : it))
                           )
                         }
-                        layout={layout}
+                        layout={field.labelLayout ?? layout}
                         groupLevel={groupLevel + 1}
                         trailingAction={
                           <Button
@@ -218,12 +226,13 @@ export function Field({
   }
 
   const Widget = widgets[widget] ?? widgets.text
+  const labelLayout = field.labelLayout ?? layout
   return (
     <div
       className={cn(
         "relative px-3 py-1",
         className,
-        layout === "above" || !field.label
+        labelLayout === "above" || !field.label
           ? "space-y-1"
           : "grid grid-cols-[minmax(0,2fr)_minmax(0,3fr)] items-center gap-2"
       )}
@@ -232,20 +241,26 @@ export function Field({
         <Label
           className={cn(
             "pl-1 font-mono text-xs text-muted-foreground",
-            layout === "beside" && "self-start pt-1.5"
+            labelLayout === "beside" && "self-start pt-1.5"
           )}
         >
           {field.label}
         </Label>
       )}
       <div className={cn("min-w-0", trailingAction && "pr-7")}>
-        <Widget field={field} value={value} onChange={onChange} />
+        <Widget
+          field={field}
+          fieldPath={fieldPath}
+          projectId={projectId}
+          value={value}
+          onChange={onChange}
+        />
       </div>
       {trailingAction && (
         <div
           className={cn(
             "absolute right-1",
-            layout === "beside" ? "top-1/2 -translate-y-1/2" : "top-1"
+            labelLayout === "beside" ? "top-1/2 -translate-y-1/2" : "top-1"
           )}
         >
           {trailingAction}
@@ -257,11 +272,13 @@ export function Field({
 
 export function SchemaForm({
   schema,
+  projectId,
   value,
   onChange,
   layout = "above",
 }: {
   schema: ZodType
+  projectId?: string
   value: unknown
   onChange: (next: unknown) => void
   layout?: SchemaFieldLayout
@@ -270,6 +287,7 @@ export function SchemaForm({
   return (
     <Field
       field={root}
+      projectId={projectId}
       value={value}
       onChange={onChange}
       layout={layout}

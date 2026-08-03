@@ -389,6 +389,7 @@ export function ProjectEditorWorkspace({
           </div>
 
           <TemplateSchemaEditForm
+            projectId={projectId}
             position={panelPosition}
             onPositionChange={updatePanelPosition}
             schema={contentSchema}

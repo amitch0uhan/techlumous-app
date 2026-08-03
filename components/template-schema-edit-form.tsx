@@ -32,6 +32,7 @@ const positionOptions: readonly SwitcherOption[] = [
 ]
 
 interface TemplateSchemaEditFormProps {
+  projectId: string
   position: TemplateSchemaEditFormPosition
   onPositionChange: (position: TemplateSchemaEditFormPosition) => void
   schema?: ZodType
@@ -50,6 +51,7 @@ interface TemplateSchemaEditFormProps {
 }
 
 export function TemplateSchemaEditForm({
+  projectId,
   position,
   onPositionChange,
   schema,
@@ -103,6 +105,7 @@ export function TemplateSchemaEditForm({
           {schema ? (
             <SchemaForm
               schema={schema}
+              projectId={projectId}
               value={value}
               onChange={onChange}
               layout="beside"
