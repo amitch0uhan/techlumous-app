@@ -10,7 +10,11 @@ import {
   type DeploymentActionSnapshot,
 } from "@/actions/deploy"
 import { saveProjectContentAction } from "@/actions/project"
-import { EditorTopBar, type PreviewViewport } from "@/components/editor-top-bar"
+import {
+  EditorTopBar,
+  type PreviewViewport,
+  type PreviewViewportPreset,
+} from "@/components/editor-top-bar"
 import { ResizableTemplatePreview } from "@/components/resizable-template-preview"
 import { TemplateSchemaEditForm } from "@/components/template-schema-edit-form"
 import {
@@ -293,7 +297,7 @@ export function ProjectEditorWorkspace({
     setFormReady(true)
   }, [])
 
-  const updateViewport = (nextViewport: Exclude<PreviewViewport, "custom">) => {
+  const updateViewport = (nextViewport: PreviewViewportPreset) => {
     setViewport(nextViewport)
   }
 
@@ -311,7 +315,7 @@ export function ProjectEditorWorkspace({
 
       <div className="relative z-10 mx-auto flex min-h-[calc(100dvh-4.2rem)] w-full max-w-7xl flex-col gap-3 p-3">
         <EditorTopBar
-          projectName={projectName}
+          title={projectName}
           projectStatus={deployment.status}
           liveUrl={deployment.liveUrl}
           viewport={viewport}
