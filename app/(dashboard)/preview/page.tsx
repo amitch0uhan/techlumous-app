@@ -18,22 +18,25 @@ export default async function Page({
   if (!data?.claims) redirect("/login")
 
   const emptyState = (slug?: string) => (
-    <div className="page">
-      <div className="flex h-[70vh] flex-col items-center justify-center gap-4 px-6 text-center">
-        <WarningOctagonIcon
-          weight="duotone"
-          className="size-14 text-muted-foreground"
-        />
-        <p className="max-w-75 text-sm/6 text-card-foreground">
-          {slug
-            ? `The "${slug}" template could not be found. Choose another from the template library.`
-            : "No template is selected for this preview. Choose one from the template library."}
-        </p>
-        <Link href="/templates" className={cn(buttonVariants())}>
-          View Templates
-        </Link>
+    <section className="relative isolate min-h-[calc(100dvh-4.2rem)] sm:-m-4 lg:-m-6">
+      <div aria-hidden="true" className="editor-workspace-grid" />
+      <div className="relative z-10 flex min-h-[calc(100dvh-4.2rem)] items-center justify-center p-3">
+        <div className="flex flex-col items-center justify-center gap-4 px-6 text-center">
+          <WarningOctagonIcon
+            weight="duotone"
+            className="size-14 text-muted-foreground"
+          />
+          <p className="max-w-75 text-sm/6 text-card-foreground">
+            {slug
+              ? `The "${slug}" template could not be found. Choose another from the template library.`
+              : "No template is selected for this preview. Choose one from the template library."}
+          </p>
+          <Link href="/templates" className={cn(buttonVariants())}>
+            View Templates
+          </Link>
+        </div>
       </div>
-    </div>
+    </section>
   )
 
   const { template: requested } = await searchParams
@@ -48,8 +51,10 @@ export default async function Page({
   }
 
   return (
-    <div className="page">
-      <TemplatePreviewWindow slug={template.slug} name={template.name} />
-    </div>
+    <TemplatePreviewWindow
+      slug={template.slug}
+      name={template.name}
+      content={template.default_content}
+    />
   )
 }
