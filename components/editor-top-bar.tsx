@@ -4,6 +4,7 @@ import {
   DeviceMobileCameraIcon,
   DeviceTabletCameraIcon,
   MonitorIcon,
+  SidebarSimpleIcon,
 } from "@phosphor-icons/react"
 
 import {
@@ -41,6 +42,8 @@ interface EditorTopBarProps {
   liveUrl?: string | null
   viewport: PreviewViewport
   onViewportChange: (viewport: Exclude<PreviewViewport, "custom">) => void
+  isSchemaFormOpen: boolean
+  onToggleSchemaForm: () => void
 }
 
 export function EditorTopBar({
@@ -49,6 +52,8 @@ export function EditorTopBar({
   liveUrl,
   viewport,
   onViewportChange,
+  isSchemaFormOpen,
+  onToggleSchemaForm,
 }: EditorTopBarProps) {
   const deploymentState = resolveDeploymentState(projectStatus)
   const normalizedLiveUrl = normalizeDeploymentUrl(liveUrl)
@@ -74,24 +79,38 @@ export function EditorTopBar({
         className="absolute left-1/2 -translate-x-1/2"
       />
 
-      {isLive && (
+      <div className="flex shrink-0 items-center gap-2">
+        {isLive && (
+          <IconButton
+            render={
+              <a
+                href={normalizedLiveUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+              />
+            }
+            // icon={ArrowSquareOutIcon}
+            iconPosition="end"
+            variant="outline"
+            size="sm"
+            className="shrink-0 rounded-full"
+          >
+            Visit website
+          </IconButton>
+        )}
         <IconButton
-          render={
-            <a
-              href={normalizedLiveUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-            />
-          }
-          // icon={ArrowSquareOutIcon}
-          iconPosition="end"
-          variant="outline"
-          size="sm"
-          className="shrink-0 rounded-full"
-        >
-          Visit website
-        </IconButton>
-      )}
+          type="button"
+          icon={SidebarSimpleIcon}
+          variant="ghost"
+          size="icon"
+          className="rounded-full"
+          iconClassName="text-foreground/70 rotate-180"
+          onClick={onToggleSchemaForm}
+          aria-label="Toggle edit content sidebar"
+          aria-expanded={isSchemaFormOpen}
+          title="Toggle edit content sidebar"
+        />
+      </div>
     </Card>
   )
 }
