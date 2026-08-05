@@ -75,7 +75,7 @@
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.552 0.016 285.938);
   --shadow-card: 0 4px 14px 0
-    color-mix(in oklab, var(--card-foreground) 6%, transparent);
+    color-mix(in oklab, var(--card-foreground) 15%, transparent);
   --editor-nested-group-overlay: oklch(1 0 0 / 4%);
 }
 
