@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation"
 import Link from "next/link"
-import { WarningOctagonIcon } from "@phosphor-icons/react/ssr"
 
+import { PreviewSkeleton } from "@/components/preview-skeleton"
 import { TemplatePreviewWindow } from "@/components/template-preview-window"
 import { buttonVariants } from "@/components/ui/button"
 import { createClient } from "@/lib/supabase/server"
@@ -18,15 +18,13 @@ export default async function Page({
   if (!data?.claims) redirect("/login")
 
   const emptyState = (slug?: string) => (
-    <section className="relative isolate min-h-[calc(100dvh-4.2rem)] sm:-m-4 lg:-m-6">
-      <div aria-hidden="true" className="editor-workspace-grid" />
-      <div className="relative z-10 flex min-h-[calc(100dvh-4.2rem)] items-center justify-center p-3">
-        <div className="flex flex-col items-center justify-center gap-4 px-6 text-center">
-          <WarningOctagonIcon
-            weight="duotone"
-            className="size-14 text-muted-foreground"
-          />
-          <p className="max-w-75 text-sm/6 text-card-foreground">
+    <div className="page">
+      <div className="mt-8 flex flex-col items-center justify-center gap-10 overflow-x-clip">
+        <div className="flex w-full justify-center pt-20">
+          <PreviewSkeleton />
+        </div>
+        <div className="flex flex-col items-center gap-4 text-center">
+          <p className="max-w-75 text-muted-foreground/60 max-sm:pl-2">
             {slug
               ? `The "${slug}" template could not be found. Choose another from the template library.`
               : "No template is selected for this preview. Choose one from the template library."}
@@ -36,7 +34,7 @@ export default async function Page({
           </Link>
         </div>
       </div>
-    </section>
+    </div>
   )
 
   const { template: requested } = await searchParams
