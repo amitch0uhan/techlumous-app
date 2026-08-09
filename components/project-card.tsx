@@ -30,6 +30,7 @@ import {
   normalizeDeploymentUrl,
 } from "@/components/deployment-status"
 import { cn } from "@/lib/utils"
+import Image from "next/image"
 
 interface ProjectCardProps {
   projectId: string
@@ -185,7 +186,7 @@ export function ProjectCard({
       )}
     >
       <div className="group relative aspect-video w-full shrink-0 overflow-hidden rounded-2xl lg:w-64 lg:basis-1/3">
-        <img src={image} alt={name} className="size-full object-cover" />
+        <Image src={image} alt={name} fill className="size-full object-cover" />
 
         {normalizedWebsiteUrl && (
           <a
