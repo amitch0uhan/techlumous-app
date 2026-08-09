@@ -6,12 +6,8 @@ import { cn } from "@/lib/utils"
 import { listProjects } from "@/services/project"
 import { type Project } from "@/services/project.schema"
 import { listTemplates } from "@/services/template"
+import { Template } from "@/services/template.schema"
 import { redirect } from "next/navigation"
-
-const STATIC_IMAGES = [
-  "/assets/static-test/template-1.jpg",
-  "/assets/static-test/template-2.jpg",
-]
 
 const SKELETON_TRANSFORMS = [
   "-rotate-3 z-10",
@@ -39,6 +35,17 @@ export default async function Page() {
 
   const projects = await listProjects()
   const templates = await listTemplates()
+
+  const selectedTemplateForProject = (projects || []).reduce(
+    (acc, project) => {
+      const template = templates.find((t) => t.id === project.template_id)
+      if (template) {
+        acc[project.id] = template
+      }
+      return acc
+    },
+    {} as Record<string, Template | undefined>
+  )
 
   return (
     <div className="page">
@@ -75,7 +82,10 @@ export default async function Page() {
               key={project.id}
               projectId={project.id}
               isTemplateSelected={!!project.template_id}
-              image={STATIC_IMAGES[index % STATIC_IMAGES.length]}
+              image={
+                selectedTemplateForProject[project.id]?.thumbnail ||
+                "/assets/project_default.png"
+              }
               name={project.name}
               url={project.deployment_url ?? "Not deployed"}
               status={cardStatus(project.deploy_status)}
