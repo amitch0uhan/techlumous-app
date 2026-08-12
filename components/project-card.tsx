@@ -11,7 +11,10 @@ import {
 } from "@phosphor-icons/react/ssr"
 
 import { Button, buttonVariants, IconButton } from "@/components/ui/button"
-import { deleteProjectAction } from "@/actions/project"
+import {
+  deleteProjectAction,
+  deleteProjectFromAppAction,
+} from "@/actions/project"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -102,14 +105,38 @@ function DeleteProjectDialog({
 }) {
   const router = useRouter()
   const [isPending, startTransition] = React.useTransition()
+  const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false)
+  const [appOnlyDialogOpen, setAppOnlyDialogOpen] = React.useState(false)
+  const [vercelError, setVercelError] = React.useState("")
+
+  function finishDelete(message: string) {
+    setDeleteDialogOpen(false)
+    setAppOnlyDialogOpen(false)
+    toast.success(message)
+    onDelete?.()
+    router.refresh()
+  }
 
   function handleDelete() {
     startTransition(async () => {
       const result = await deleteProjectAction(projectId)
       if (result.status === "success") {
-        toast.success(result.message)
-        onDelete?.()
-        router.refresh()
+        finishDelete(result.message)
+      } else if (result.status === "vercel_error") {
+        setDeleteDialogOpen(false)
+        setVercelError(result.message)
+        setAppOnlyDialogOpen(true)
+      } else {
+        toast.error(result.message)
+      }
+    })
+  }
+
+  function handleAppOnlyDelete() {
+    startTransition(async () => {
+      const result = await deleteProjectFromAppAction(projectId)
+      if (result.status === "success") {
+        finishDelete(result.message)
       } else {
         toast.error(result.message)
       }
@@ -117,39 +144,71 @@ function DeleteProjectDialog({
   }
 
   return (
-    <AlertDialog>
-      <AlertDialogTrigger
-        render={
-          <Button
-            variant="ghost"
-            size="icon"
-            aria-label={`Delete ${name}`}
-            className={cn(
-              "rounded-full text-foreground/40! hover:bg-destructive/10! hover:text-destructive!",
-              className
-            )}
-          />
-        }
-      >
-        <TrashSimpleIcon />
-      </AlertDialogTrigger>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle className="text-foreground">
-            Delete project?
-          </AlertDialogTitle>
-          <AlertDialogDescription>
-            Are you sure you want to delete the project &quot;{name}&quot;?
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction onClick={handleDelete} disabled={isPending}>
-            {isPending ? "Deleting..." : "Delete Project"}
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+    <>
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogTrigger
+          render={
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label={`Delete ${name}`}
+              className={cn(
+                "rounded-full text-foreground/40! hover:bg-destructive/10! hover:text-destructive!",
+                className
+              )}
+            />
+          }
+        >
+          <TrashSimpleIcon />
+        </AlertDialogTrigger>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-foreground">
+              Delete project?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              This will delete &quot;{name}&quot; from Techlumous and any linked
+              Vercel project.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isPending}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} disabled={isPending}>
+              {isPending ? "Deleting..." : "Delete Project"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={appOnlyDialogOpen} onOpenChange={setAppOnlyDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-foreground">
+              Delete only from Techlumous?
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-2">
+              <span className="block">{vercelError}</span>
+              <span className="block">
+                The website may remain live on Vercel with its last published
+                version, but you will no longer be able to edit or manage it
+                from Techlumous.
+              </span>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isPending}>
+              Keep Project
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleAppOnlyDelete}
+              disabled={isPending}
+            >
+              {isPending ? "Deleting..." : "Delete Only From Techlumous"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   )
 }
 
