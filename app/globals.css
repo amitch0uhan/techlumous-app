@@ -183,16 +183,14 @@
 .integration-card-glow {
   box-shadow:
     var(--shadow-card),
-    inset 30px -10px 100px 0px
-      color-mix(in oklab, var(--primary) 10%, transparent);
-  transition: box-shadow 300ms ease-in-out;
+    inset 0px color-mix(in oklab, var(--primary) 10%, transparent);
+  transition: box-shadow 500ms ease-in-out;
 }
 
 .integration-card-glow:hover {
   box-shadow:
     var(--shadow-card),
-    inset 0px -10px 100px 0px
-      color-mix(in oklab, var(--primary) 30%, transparent);
+    inset 0px -8px 75px 0px color-mix(in oklab, var(--primary) 30%, transparent);
 }
 
 .editor-workspace-grid {
