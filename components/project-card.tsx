@@ -32,6 +32,7 @@ import {
   DeploymentStatus,
   normalizeDeploymentUrl,
 } from "@/components/deployment-status"
+import { useTemplateById } from "@/components/templates-provider"
 import { cn } from "@/lib/utils"
 import Image from "next/image"
 
@@ -39,7 +40,7 @@ interface ProjectCardProps {
   projectId: string
   name: string
   url: string
-  image: string
+  templateId?: string | null
   status?: string | null
   createdAt: string
   websiteUrl?: string | null
@@ -51,7 +52,6 @@ interface ProjectCardProps {
   deploymentControlsDisabled?: boolean
   onDelete?: () => void
   className?: string
-  isTemplateSelected?: boolean
 }
 
 function InfoItem({
@@ -216,7 +216,7 @@ export function ProjectCard({
   projectId,
   name,
   url,
-  image,
+  templateId,
   status,
   createdAt,
   websiteUrl,
@@ -228,8 +228,10 @@ export function ProjectCard({
   deploymentControlsDisabled,
   onDelete,
   className,
-  isTemplateSelected,
 }: ProjectCardProps) {
+  const template = useTemplateById(templateId)
+  const image = template?.thumbnail ?? "/assets/project_default.png"
+  const isTemplateSelected = !!templateId
   const normalizedWebsiteUrl = normalizeDeploymentUrl(websiteUrl)
   const normalizedProjectUrl = normalizeDeploymentUrl(url)
   const vercelProjectName = normalizedProjectUrl

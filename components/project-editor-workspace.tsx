@@ -17,6 +17,7 @@ import {
 } from "@/components/editor-top-bar"
 import { ResizableTemplatePreview } from "@/components/resizable-template-preview"
 import { TemplateSchemaEditForm } from "@/components/template-schema-edit-form"
+import { useTemplateById } from "@/components/templates-provider"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -34,36 +35,47 @@ import { cn } from "@/lib/utils"
 interface ProjectEditorWorkspaceProps {
   projectId: string
   projectName: string
-  template?: {
-    name: string
-    slug: string
-    initialContent: unknown
-  } | null
+  templateId?: string | null
+  initialDraftContent: unknown
   initialDeployment: DeploymentActionSnapshot
   hasLiveDeployment: boolean
   initialPublishedContent: unknown
   isVercelConnected: boolean
 }
 
+function hasContent(value: unknown): value is Record<string, unknown> {
+  return (
+    value !== null && typeof value === "object" && Object.keys(value).length > 0
+  )
+}
+
 export function ProjectEditorWorkspace({
   projectId,
   projectName,
-  template,
+  templateId,
+  initialDraftContent,
   initialDeployment,
   hasLiveDeployment: initialHasLiveDeployment,
   initialPublishedContent,
   isVercelConnected,
 }: ProjectEditorWorkspaceProps) {
+  const template = useTemplateById(templateId)
   const contentSchema = useMemo(
     () => (template ? getTemplateContentSchema(template.slug) : undefined),
     [template]
   )
 
-  const [content, setContent] = useState<unknown>(
-    () => template?.initialContent
+  const initialContent = useMemo(
+    () =>
+      [initialDraftContent, initialPublishedContent].find(hasContent) ??
+      template?.default_content ??
+      {},
+    [initialDraftContent, initialPublishedContent, template]
   )
+
+  const [content, setContent] = useState<unknown>(() => initialContent)
   const [savedContent, setSavedContent] = useState<unknown>(
-    () => template?.initialContent
+    () => initialContent
   )
   const [publishedContent, setPublishedContent] = useState<unknown>(
     () => initialPublishedContent
