@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation"
 import Link from "next/link"
-import { WarningOctagonIcon } from "@phosphor-icons/react/ssr"
 
+import { PreviewSkeleton } from "@/components/preview-skeleton"
 import { TemplatePreviewWindow } from "@/components/template-preview-window"
 import { buttonVariants } from "@/components/ui/button"
 import { createClient } from "@/lib/supabase/server"
@@ -19,19 +19,20 @@ export default async function Page({
 
   const emptyState = (slug?: string) => (
     <div className="page">
-      <div className="flex h-[70vh] flex-col items-center justify-center gap-4 px-6 text-center">
-        <WarningOctagonIcon
-          weight="duotone"
-          className="size-14 text-muted-foreground"
-        />
-        <p className="max-w-75 text-sm/6 text-card-foreground">
-          {slug
-            ? `The "${slug}" template could not be found. Choose another from the template library.`
-            : "No template is selected for this preview. Choose one from the template library."}
-        </p>
-        <Link href="/templates" className={cn(buttonVariants())}>
-          View Templates
-        </Link>
+      <div className="mt-8 flex flex-col items-center justify-center gap-10 overflow-x-clip">
+        <div className="flex w-full justify-center pt-20">
+          <PreviewSkeleton />
+        </div>
+        <div className="flex flex-col items-center gap-4 text-center">
+          <p className="max-w-75 text-muted-foreground/60 max-sm:pl-2">
+            {slug
+              ? `The "${slug}" template could not be found. Choose another from the template library.`
+              : "No template is selected for this preview. Choose one from the template library."}
+          </p>
+          <Link href="/templates" className={cn(buttonVariants())}>
+            View Templates
+          </Link>
+        </div>
       </div>
     </div>
   )
@@ -48,8 +49,10 @@ export default async function Page({
   }
 
   return (
-    <div className="page">
-      <TemplatePreviewWindow slug={template.slug} name={template.name} />
-    </div>
+    <TemplatePreviewWindow
+      slug={template.slug}
+      name={template.name}
+      content={template.default_content}
+    />
   )
 }
