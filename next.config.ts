@@ -1,6 +1,7 @@
 import type { NextConfig } from "next"
 
 const nextConfig: NextConfig = {
+  cacheComponents: true,
   experimental: {
     serverActions: {
       // The Storage bucket accepts 5 MB images; allow multipart overhead too.
