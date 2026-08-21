@@ -1,6 +1,8 @@
 "use server"
 
-import { createClient } from "@/lib/supabase/server"
+import { cacheLife } from "next/cache"
+
+import { createAdminClient, createClient } from "@/lib/supabase/server"
 import type { Template } from "./template.schema"
 
 const TABLE = "templates"
@@ -9,7 +11,17 @@ const TABLE = "templates"
 // Writes are service_role only, so this fetching service exposes reads exclusively.
 
 export async function listTemplates(): Promise<Template[]> {
-  const supabase = await createClient()
+  "use cache"
+  cacheLife({
+    stale: 6 * 60 * 60,
+    revalidate: 6 * 60 * 60,
+    expire: 24 * 60 * 60,
+  })
+
+  // This shared list must not read request cookies inside the cached scope.
+  const supabase = await createAdminClient()
+
+  console.log("Fetching templates from Supabase")
 
   const { data, error } = await supabase
     .from(TABLE)
