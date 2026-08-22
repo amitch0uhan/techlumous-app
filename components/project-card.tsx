@@ -4,10 +4,12 @@ import Link from "next/link"
 import * as React from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
+import { fetchDeploymentStatusAction } from "@/actions/deploy"
 import {
   ArrowUpRightIcon,
   NotePencilIcon,
   TrashSimpleIcon,
+  ArrowClockwiseIcon,
 } from "@phosphor-icons/react/ssr"
 
 import { Button, buttonVariants, IconButton } from "@/components/ui/button"
@@ -41,6 +43,7 @@ interface ProjectCardProps {
   url: string
   image: string
   status?: string | null
+  deploymentId?: string | null
   createdAt: string
   websiteUrl?: string | null
   lastDeployedAt?: string | null
@@ -218,6 +221,7 @@ export function ProjectCard({
   url,
   image,
   status,
+  deploymentId,
   createdAt,
   websiteUrl,
   lastDeployedAt,
@@ -230,6 +234,15 @@ export function ProjectCard({
   className,
   isTemplateSelected,
 }: ProjectCardProps) {
+  const [isFetchingStatus, startFetchingStatus] = React.useTransition()
+  const statusCooldownUntilRef = React.useRef(0)
+  const isDeploymentInProgress = [
+    "preparing",
+    "uploading",
+    "queued",
+    "initializing",
+    "building",
+  ].includes(status?.toLowerCase() ?? "")
   const normalizedWebsiteUrl = normalizeDeploymentUrl(websiteUrl)
   const normalizedProjectUrl = normalizeDeploymentUrl(url)
   const vercelProjectName = normalizedProjectUrl
@@ -337,6 +350,31 @@ export function ProjectCard({
             reconnectPending={reconnectPending}
             disabled={deploymentControlsDisabled}
           />
+          {isDeploymentInProgress && deploymentId && (
+            <IconButton
+              type="button"
+              icon={ArrowClockwiseIcon}
+              iconClassName={cn(isFetchingStatus && "animate-spin")}
+              variant="outline"
+              size="lg"
+              className="rounded-full px-3"
+              disabled={isFetchingStatus}
+              onClick={() =>
+                startFetchingStatus(async () => {
+                  if (Date.now() < statusCooldownUntilRef.current) return
+                  statusCooldownUntilRef.current = Date.now() + 60_000
+                  const result = await fetchDeploymentStatusAction(projectId)
+                  if (result.status === "error") {
+                    toast.error(result.message)
+                    return
+                  }
+                  console.log("Vercel deployment status", result.response)
+                })
+              }
+            >
+              {isFetchingStatus ? "Fetching status..." : "Fetch status"}
+            </IconButton>
+          )}
         </div>
       </div>
 
