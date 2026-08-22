@@ -12,6 +12,7 @@ export const projectSchema = z.object({
   published_content: z.record(z.string(), z.unknown()).nullable(),
   status: z.string().nullable(),
   vercel_project_id: z.string().nullable(),
+  vercel_deployment_id: z.string().nullable(),
   deployment_url: z.string().nullable(),
   deploy_status: deploymentStatusSchema.nullable(),
   deploy_error: z.string().nullable(),

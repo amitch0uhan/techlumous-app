@@ -70,7 +70,19 @@ interface VercelDeployment {
   inspectorUrl?: string
   errorMessage?: string
   errorCode?: string
+  buildContainerFinishedAt?: number | null
 }
+
+export type DeploymentStatusResult = Pick<
+  VercelDeployment,
+  | "id"
+  | "url"
+  | "readyState"
+  | "inspectorUrl"
+  | "errorMessage"
+  | "errorCode"
+  | "buildContainerFinishedAt"
+>
 
 const DEFAULT_TIMEOUT_MS = 10 * 60_000
 const DEFAULT_POLL_INTERVAL_MS = 5000
@@ -81,7 +93,12 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 const isTerminal = (state: VercelReadyState) =>
   state === "READY" || state === "ERROR" || state === "CANCELED"
 
-const apiOptions = (params: DeployFilesParams) => ({
+type VercelRequestParams = Pick<
+  DeployFilesParams,
+  "token" | "teamId" | "requestTimeoutMs" | "maxRetries"
+>
+
+const apiOptions = (params: VercelRequestParams) => ({
   token: params.token,
   teamId: params.teamId,
   requestTimeoutMs: params.requestTimeoutMs,
@@ -199,7 +216,10 @@ async function createDeployment(
 }
 
 async function getDeployment(
-  params: DeployFilesParams,
+  params: Pick<
+    DeployFilesParams,
+    "token" | "teamId" | "requestTimeoutMs" | "maxRetries"
+  >,
   id: string
 ): Promise<VercelDeployment> {
   const response = await vercelRequest({
@@ -209,6 +229,17 @@ async function getDeployment(
   })
 
   return readDeployment(response)
+}
+
+/** Fetch the current status of an existing Vercel deployment. */
+export async function getDeploymentStatus(
+  params: Pick<
+    DeployFilesParams,
+    "token" | "teamId" | "requestTimeoutMs" | "maxRetries"
+  >,
+  deploymentId: string
+): Promise<DeploymentStatusResult> {
+  return getDeployment(params, deploymentId)
 }
 
 /**

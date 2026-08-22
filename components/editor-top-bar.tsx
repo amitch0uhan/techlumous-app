@@ -41,6 +41,9 @@ interface EditorTopBarProps {
   title: string
   projectStatus?: string
   liveUrl?: string | null
+  isDeploymentInProgress?: boolean
+  onFetchStatus?: () => void | Promise<void>
+  fetchStatusPending?: boolean
   viewport: PreviewViewport
   onViewportChange: (viewport: PreviewViewportPreset) => void
   isSchemaFormOpen?: boolean
@@ -51,6 +54,9 @@ export function EditorTopBar({
   title,
   projectStatus,
   liveUrl,
+  isDeploymentInProgress = false,
+  onFetchStatus,
+  fetchStatusPending = false,
   viewport,
   onViewportChange,
   isSchemaFormOpen,
@@ -85,7 +91,19 @@ export function EditorTopBar({
       />
 
       <div className="flex shrink-0 items-center gap-2">
-        {isLive && (
+        {isDeploymentInProgress && onFetchStatus ? (
+          <IconButton
+            type="button"
+            onClick={onFetchStatus}
+            disabled={fetchStatusPending}
+            aria-busy={fetchStatusPending}
+            variant="outline"
+            size="sm"
+            className="shrink-0 rounded-full"
+          >
+            {fetchStatusPending ? "Fetching status..." : "Fetch status"}
+          </IconButton>
+        ) : isLive ? (
           <IconButton
             render={
               <a
@@ -102,7 +120,7 @@ export function EditorTopBar({
           >
             Visit website
           </IconButton>
-        )}
+        ) : null}
         {onToggleSchemaForm && (
           <IconButton
             type="button"

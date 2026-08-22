@@ -4,7 +4,14 @@ import { revalidatePath } from "next/cache"
 import { z } from "zod"
 
 import { createClient } from "@/lib/supabase/server"
-import { getDeploymentState, type DeploymentState } from "@/services/deployment"
+import { getDeploymentStatus } from "@/lib/vercel/deploy"
+import { getUserIntegrationByProvider } from "@/services/user-integration"
+import { getVaultSecret } from "@/services/vault-secret"
+import {
+  getDeploymentState,
+  syncDeploymentStatus,
+  type DeploymentState,
+} from "@/services/deployment"
 import {
   orchestrateProjectDeployment,
   type DeploymentOrchestratorCode,
@@ -12,6 +19,25 @@ import {
 import type { DeploymentStatus } from "@/types/deployment"
 
 const projectIdSchema = z.uuid()
+
+function deploymentStatusFromReadyState(readyState: string): DeploymentStatus {
+  switch (readyState.toUpperCase()) {
+    case "QUEUED":
+      return "queued"
+    case "INITIALIZING":
+      return "initializing"
+    case "BUILDING":
+      return "building"
+    case "READY":
+      return "ready"
+    case "CANCELED":
+      return "canceled"
+    case "ERROR":
+      return "error"
+    default:
+      throw new Error(`Unsupported Vercel deployment state: ${readyState}`)
+  }
+}
 
 export type DeploymentActionSnapshot = {
   status: DeploymentStatus
@@ -91,4 +117,102 @@ export async function getProjectDeploymentAction(
 
   const deployment = await getDeploymentState(parsedProjectId.data, userId)
   return snapshot(deployment)
+}
+
+export type FetchDeploymentStatusActionResult =
+  | {
+      status: "success"
+      response: Awaited<ReturnType<typeof getDeploymentStatus>>
+      deployment: DeploymentActionSnapshot
+    }
+  | { status: "error"; message: string }
+
+export async function fetchDeploymentStatusAction(
+  projectId: string
+): Promise<FetchDeploymentStatusActionResult> {
+  const parsedProjectId = projectIdSchema.safeParse(projectId)
+  if (!parsedProjectId.success) {
+    return { status: "error", message: "Invalid project." }
+  }
+
+  try {
+    const supabase = await createClient()
+    const { data } = await supabase.auth.getClaims()
+    const userId = data?.claims.sub
+    if (!userId) return { status: "error", message: "Sign in to continue." }
+
+    const deployment = await getDeploymentState(parsedProjectId.data, userId)
+    if (!deployment?.vercel_deployment_id) {
+      return { status: "error", message: "No Vercel deployment ID is stored." }
+    }
+
+    const integration = await getUserIntegrationByProvider({
+      validateToken: false,
+    })
+    if (!integration || integration.status !== "CONNECTED") {
+      return {
+        status: "error",
+        message: "Connect Vercel before checking status.",
+      }
+    }
+
+    const token = await getVaultSecret(integration.token)
+    if (!token)
+      return { status: "error", message: "Vercel access token is missing." }
+
+    const response = await getDeploymentStatus(
+      {
+        token,
+        teamId:
+          typeof integration.credentials?.team_id === "string"
+            ? integration.credentials.team_id
+            : undefined,
+      },
+      deployment.vercel_deployment_id
+    )
+
+    const deploymentStatus = deploymentStatusFromReadyState(response.readyState)
+    const error =
+      response.errorCode || response.errorMessage
+        ? [response.errorCode, response.errorMessage].filter(Boolean).join(": ")
+        : null
+    const buildFinishedAt = response.buildContainerFinishedAt
+      ? new Date(response.buildContainerFinishedAt).toISOString()
+      : null
+
+    const syncedDeployment = await syncDeploymentStatus(
+      parsedProjectId.data,
+      userId,
+      {
+        expectedDeploymentId: deployment.vercel_deployment_id,
+        deploymentId: response.id,
+        status: deploymentStatus,
+        deploymentUrl: response.url
+          ? response.url.startsWith("http")
+            ? response.url
+            : `https://${response.url}`
+          : null,
+        error,
+        updatedAt: buildFinishedAt,
+      }
+    )
+    if (!syncedDeployment) {
+      return {
+        status: "error",
+        message: "Deployment status changed before the response was saved.",
+      }
+    }
+
+    return {
+      status: "success",
+      response,
+      deployment: snapshot(syncedDeployment, response.inspectorUrl ?? null)!,
+    }
+  } catch (error) {
+    console.error("Failed to fetch deployment status", error)
+    return {
+      status: "error",
+      message: "Failed to fetch the deployment status.",
+    }
+  }
 }

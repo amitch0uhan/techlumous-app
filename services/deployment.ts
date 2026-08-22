@@ -14,6 +14,7 @@ export type DeploymentState = Pick<
   | "id"
   | "user_id"
   | "vercel_project_id"
+  | "vercel_deployment_id"
   | "deployment_url"
   | "deploy_status"
   | "deploy_error"
@@ -32,18 +33,30 @@ export type StartDeploymentInput = ExpectedDeploymentState & {
 
 export type UpdateDeploymentStateInput = ExpectedDeploymentState & {
   status: ActiveDeploymentStatus
+  deploymentId?: string
 }
 
 export type MarkDeploymentSuccessInput = ExpectedDeploymentState & {
+  deploymentId: string
   productionUrl: string
   contentHash: string
   completedAt?: string
 }
 
 export type MarkDeploymentFailureInput = ExpectedDeploymentState & {
+  deploymentId?: string
   status: Extract<DeploymentStatus, "error" | "canceled" | "timeout">
   errorCode?: string | null
   errorMessage?: string | null
+}
+
+export type SyncDeploymentStatusInput = {
+  expectedDeploymentId: string
+  deploymentId: string
+  status: DeploymentStatus
+  deploymentUrl?: string | null
+  error?: string | null
+  updatedAt?: string | null
 }
 
 function nextTimestamp(
@@ -82,7 +95,7 @@ export async function getDeploymentState(
   const { data, error } = await supabase
     .from(TABLE)
     .select(
-      "id, user_id, vercel_project_id, deployment_url, deploy_status, deploy_error, deployed_content_hash, last_deployed_at, updated_at"
+      "id, user_id, vercel_project_id, vercel_deployment_id, deployment_url, deploy_status, deploy_error, deployed_content_hash, last_deployed_at, updated_at"
     )
     .eq("id", projectId)
     .eq("user_id", userId)
@@ -99,6 +112,36 @@ export function hasActiveDeployment(
   state: Pick<DeploymentState, "deploy_status">
 ): boolean {
   return isActiveDeploymentStatus(state.deploy_status)
+}
+
+export async function syncDeploymentStatus(
+  projectId: string,
+  userId: string,
+  input: SyncDeploymentStatusInput
+): Promise<DeploymentState | null> {
+  const supabase = await createAdminClient()
+  const { data, error } = await supabase
+    .from(TABLE)
+    .update({
+      vercel_deployment_id: input.deploymentId,
+      deploy_status: input.status,
+      deployment_url: input.deploymentUrl ?? undefined,
+      deploy_error: input.error ?? null,
+      ...(input.updatedAt && { last_deployed_at: input.updatedAt }),
+      updated_at: input.updatedAt ?? new Date().toISOString(),
+    })
+    .eq("id", projectId)
+    .eq("user_id", userId)
+    .eq("vercel_deployment_id", input.expectedDeploymentId)
+    .select(
+      "id, user_id, vercel_project_id, vercel_deployment_id, deployment_url, deploy_status, deploy_error, deployed_content_hash, last_deployed_at, updated_at"
+    )
+    .maybeSingle()
+
+  if (error)
+    throw new Error(`Failed to sync deployment status: ${error.message}`)
+
+  return data
 }
 
 async function transitionDeployment(
@@ -137,7 +180,7 @@ async function transitionDeployment(
 
   const { data, error } = await query
     .select(
-      "id, user_id, vercel_project_id, deployment_url, deploy_status, deploy_error, deployed_content_hash, last_deployed_at, updated_at"
+      "id, user_id, vercel_project_id, vercel_deployment_id, deployment_url, deploy_status, deploy_error, deployed_content_hash, last_deployed_at, updated_at"
     )
     .maybeSingle()
 
@@ -174,7 +217,8 @@ export async function updateDeploymentState(
     projectId,
     userId,
     input.expectedUpdatedAt,
-    input.status
+    input.status,
+    input.deploymentId ? { vercel_deployment_id: input.deploymentId } : {}
   )
 }
 
@@ -194,6 +238,7 @@ export async function markDeploymentSuccess(
     input.expectedUpdatedAt,
     "ready",
     {
+      vercel_deployment_id: input.deploymentId,
       deployment_url: input.productionUrl,
       deployed_content_hash: input.contentHash,
       deploy_error: null,
@@ -213,6 +258,9 @@ export async function markDeploymentFailure(
     input.expectedUpdatedAt,
     input.status,
     {
+      ...(input.deploymentId && {
+        vercel_deployment_id: input.deploymentId,
+      }),
       deploy_error: formatDeploymentError(input.errorCode, input.errorMessage),
     }
   )

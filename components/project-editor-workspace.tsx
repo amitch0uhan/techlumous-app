@@ -6,6 +6,7 @@ import { toast } from "sonner"
 
 import {
   deployProjectAction,
+  fetchDeploymentStatusAction,
   getProjectDeploymentAction,
   type DeploymentActionSnapshot,
 } from "@/actions/deploy"
@@ -70,6 +71,8 @@ export function ProjectEditorWorkspace({
   )
   const [isSaving, setIsSaving] = useState(false)
   const [isDeploying, setIsDeploying] = useState(false)
+  const [isFetchingStatus, setIsFetchingStatus] = useState(false)
+  const statusCooldownUntilRef = useRef(0)
   const [deployment, setDeployment] =
     useState<DeploymentActionSnapshot>(initialDeployment)
   const [needsVercelReconnect, setNeedsVercelReconnect] =
@@ -98,6 +101,27 @@ export function ProjectEditorWorkspace({
     [publishedContent, savedContent]
   )
   const hasActiveDeployment = isActiveDeploymentStatus(deployment.status)
+  const handleFetchStatus = useCallback(async () => {
+    if (isFetchingStatus || Date.now() < statusCooldownUntilRef.current) return
+
+    statusCooldownUntilRef.current = Date.now() + 60_000
+    setIsFetchingStatus(true)
+    try {
+      const result = await fetchDeploymentStatusAction(projectId)
+      if (result.status === "error") {
+        toast.error(result.message)
+        return
+      }
+      setDeployment((current) => ({
+        ...result.deployment,
+        inspectorUrl:
+          result.deployment.inspectorUrl ?? current.inspectorUrl ?? null,
+      }))
+      console.log("Vercel deployment status", result.response)
+    } finally {
+      setIsFetchingStatus(false)
+    }
+  }, [isFetchingStatus, projectId])
   const canDeploy =
     !!template &&
     isContentValid &&
@@ -318,6 +342,9 @@ export function ProjectEditorWorkspace({
           title={projectName}
           projectStatus={deployment.status}
           liveUrl={deployment.liveUrl}
+          isDeploymentInProgress={hasActiveDeployment}
+          onFetchStatus={handleFetchStatus}
+          fetchStatusPending={isFetchingStatus}
           viewport={viewport}
           onViewportChange={updateViewport}
           isSchemaFormOpen={isSchemaFormOpen}

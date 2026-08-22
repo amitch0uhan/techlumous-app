@@ -203,6 +203,7 @@ async function recordFailure(
   projectId: string,
   userId: string,
   status: "error" | "canceled" | "timeout",
+  deploymentId: string | undefined,
   code: string,
   error: unknown
 ): Promise<DeploymentState | null> {
@@ -212,6 +213,7 @@ async function recordFailure(
   return (
     (await dependencies.markDeploymentFailure(projectId, userId, {
       expectedUpdatedAt: current.updated_at,
+      ...(deploymentId && { deploymentId }),
       status,
       errorCode: code,
       errorMessage: error instanceof Error ? error.message : String(error),
@@ -239,6 +241,7 @@ async function recordAcceptedDeployment(
     (await dependencies.updateDeploymentState(projectId, userId, {
       expectedUpdatedAt: current.updated_at,
       status,
+      deploymentId: result.deploymentId,
     })) ?? current
   )
 }
@@ -407,6 +410,7 @@ export async function orchestrateProjectDeployment(
       project.id,
       userId,
       "error",
+      undefined,
       "FILE_COLLECTION_FAILED",
       error
     )
@@ -450,6 +454,7 @@ export async function orchestrateProjectDeployment(
       project.id,
       userId,
       "error",
+      undefined,
       "DEPLOYMENT_UPLOAD_FAILED",
       error
     )
@@ -487,6 +492,7 @@ export async function orchestrateProjectDeployment(
       current && hasActiveDeployment(current) && result.url
         ? ((await dependencies.markDeploymentSuccess(project.id, userId, {
             expectedUpdatedAt: current.updated_at,
+            deploymentId: result.deploymentId,
             productionUrl: result.url,
             contentHash: contentHash(parsedContent.data),
           })) ?? current)
@@ -513,6 +519,7 @@ export async function orchestrateProjectDeployment(
     project.id,
     userId,
     failureStatus(result),
+    result.deploymentId,
     result.errorCode ?? "DEPLOYMENT_FAILED",
     result.errorMessage ?? "Vercel reported a deployment failure"
   )

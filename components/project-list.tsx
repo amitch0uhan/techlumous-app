@@ -83,6 +83,7 @@ export async function ProjectList({
               name={project.name}
               url={project.deployment_url ?? "Not deployed"}
               status={cardStatus(project.deploy_status)}
+              deploymentId={project.vercel_deployment_id}
               createdAt={formatCreatedAt(project.created_at)}
               websiteUrl={project.deployment_url}
               lastDeployedAt={project.last_deployed_at}
