@@ -23,7 +23,7 @@ export async function createClient() {
           } catch (error) {
             // Called from a Server Component — safe to ignore since middleware
             // handles session refresh.
-            console.error(error)
+            // console.error(error)
           }
         },
       },

@@ -1,10 +1,8 @@
-import { redirect } from "next/navigation"
 import Link from "next/link"
 
 import { PreviewSkeleton } from "@/components/preview-skeleton"
 import { TemplatePreviewWindow } from "@/components/template-preview-window"
 import { buttonVariants } from "@/components/ui/button"
-import { createClient } from "@/lib/supabase/server"
 import { cn } from "@/lib/utils"
 import { getTemplate } from "@/services/template"
 
@@ -13,10 +11,6 @@ export default async function Page({
 }: {
   searchParams: Promise<{ template?: string }>
 }) {
-  const supabase = await createClient()
-  const { data } = await supabase.auth.getClaims()
-  if (!data?.claims) redirect("/login")
-
   const emptyState = (slug?: string) => (
     <div className="page">
       <div className="mt-8 flex flex-col items-center justify-center gap-10 overflow-x-clip">

@@ -3,16 +3,10 @@ import { Suspense } from "react"
 import { ProjectActions } from "@/components/project-actions"
 import { ProjectList } from "@/components/project-list"
 import { ProjectListSkeleton } from "@/components/project-card-skeleton"
-import { createClient } from "@/lib/supabase/server"
 import { listProjects } from "@/services/project"
 import { listTemplates } from "@/services/template"
-import { redirect } from "next/navigation"
 
-export default async function Page() {
-  const supabase = await createClient()
-  const { data } = await supabase.auth.getClaims()
-  if (!data?.claims) redirect("/login")
-
+export default function Page() {
   const projectsPromise = listProjects()
   const templatesPromise = listTemplates()
 
