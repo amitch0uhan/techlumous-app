@@ -1,5 +1,5 @@
 import { Header } from "@/components/header"
-import { createClient } from "@/lib/supabase/server"
+import { requireAuthenticatedUserId } from "@/lib/supabase/auth"
 import { redirect } from "next/navigation"
 
 export default async function DashboardLayout({
@@ -7,9 +7,8 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode
 }) {
-  const supabase = await createClient()
-  const { data } = await supabase.auth.getClaims()
-  if (!data?.claims) redirect("/login")
+  const userId = await requireAuthenticatedUserId()
+  if (!userId) redirect("/login")
 
   return (
     <div className="min-h-screen">

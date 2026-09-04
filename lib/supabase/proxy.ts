@@ -1,6 +1,8 @@
 import { createServerClient } from "@supabase/ssr"
 import { NextResponse, type NextRequest } from "next/server"
 
+import { requireAuthenticatedUserId } from "@/lib/supabase/auth"
+
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
     request,
@@ -32,13 +34,12 @@ export async function updateSession(request: NextRequest) {
     }
   )
 
-  const { data } = await supabase.auth.getClaims()
-  const user = data?.claims
+  const userId = await requireAuthenticatedUserId(supabase)
   const pathname = request.nextUrl.pathname
   const isVercelWebhook = pathname === "/api/webhooks/vercel"
 
   if (
-    !user &&
+    !userId &&
     !isVercelWebhook &&
     !pathname.startsWith("/login") &&
     !pathname.startsWith("/auth") &&

@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache"
 import { z } from "zod"
 
-import { createClient } from "@/lib/supabase/server"
+import { requireAuthenticatedUserId } from "@/lib/supabase/auth"
 import { VercelApiError } from "@/lib/vercel/api"
 import { deleteProject as deleteVercelProject } from "@/lib/vercel/projects"
 import {
@@ -38,6 +38,14 @@ export async function saveProjectContentAction(
   projectId: string,
   content: unknown
 ): Promise<SaveProjectContentState> {
+  const userId = await requireAuthenticatedUserId()
+  if (!userId) {
+    return {
+      status: "error",
+      message: "You must be authenticated to save project content",
+    }
+  }
+
   const parsed = saveProjectContentSchema.safeParse({
     projectId,
     draftContent: content,
@@ -66,6 +74,14 @@ export async function createProjectAction(
   _prevState: CreateProjectState,
   formData: FormData
 ): Promise<CreateProjectState> {
+  const userId = await requireAuthenticatedUserId()
+  if (!userId) {
+    return {
+      status: "error",
+      message: "You must be authenticated to create a project",
+    }
+  }
+
   const templateId = String(formData.get("template_id") ?? "").trim()
 
   const parsed = insertProjectSchema.safeParse({
@@ -107,6 +123,14 @@ export async function selectTemplateAction(
   projectId: string,
   templateId: string
 ): Promise<SelectTemplateState> {
+  const userId = await requireAuthenticatedUserId()
+  if (!userId) {
+    return {
+      status: "error",
+      message: "You must be authenticated to select a template",
+    }
+  }
+
   const parsed = selectTemplateSchema.safeParse({ projectId, templateId })
   if (!parsed.success) {
     return { status: "error", message: "Invalid project or template" }
@@ -143,13 +167,29 @@ export async function selectTemplateAction(
 export async function deleteProjectAction(
   projectId: string
 ): Promise<DeleteProjectState> {
-  return deleteProjectWithMode(projectId, true)
+  const userId = await requireAuthenticatedUserId()
+  if (!userId) {
+    return {
+      status: "error",
+      message: "You must be authenticated to delete a project",
+    }
+  }
+
+  return deleteProjectWithMode(projectId, true, userId)
 }
 
 export async function deleteProjectFromAppAction(
   projectId: string
 ): Promise<DeleteProjectState> {
-  return deleteProjectWithMode(projectId, false)
+  const userId = await requireAuthenticatedUserId()
+  if (!userId) {
+    return {
+      status: "error",
+      message: "You must be authenticated to delete a project",
+    }
+  }
+
+  return deleteProjectWithMode(projectId, false, userId)
 }
 
 function clientSafeVercelDeleteError(error: VercelApiError): string {
@@ -170,22 +210,12 @@ function clientSafeVercelDeleteError(error: VercelApiError): string {
 
 async function deleteProjectWithMode(
   projectId: string,
-  deleteFromVercel: boolean
+  deleteFromVercel: boolean,
+  userId: string
 ): Promise<DeleteProjectState> {
   const parsed = z.uuid().safeParse(projectId)
   if (!parsed.success) {
     return { status: "error", message: "Invalid project" }
-  }
-
-  const supabase = await createClient()
-  const { data: claims } = await supabase.auth.getClaims()
-  const userId = claims?.claims.sub
-
-  if (!userId) {
-    return {
-      status: "error",
-      message: "You must be authenticated to delete a project",
-    }
   }
 
   try {

@@ -4,7 +4,7 @@ import { randomBytes } from "node:crypto"
 import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
 
-import { createClient } from "@/lib/supabase/server"
+import { requireAuthenticatedUserId } from "@/lib/supabase/auth"
 import { VERCEL_STATE_COOKIE } from "@/lib/vercel/oauth"
 import type { ActionState } from "@/types/integration"
 
@@ -16,9 +16,8 @@ export async function connectVercel(
 ): Promise<ActionState> {
   void prevState
 
-  const supabase = await createClient()
-  const { data } = await supabase.auth.getClaims()
-  if (!data?.claims?.sub) redirect("/login")
+  const userId = await requireAuthenticatedUserId()
+  if (!userId) redirect("/login")
 
   const slug = process.env.VERCEL_INTEGRATION_SLUG
   if (!slug) return { error: "Missing VERCEL_INTEGRATION_SLUG env var" }

@@ -1,8 +1,14 @@
 "use server"
 
+import { requireAuthenticatedUserId } from "@/lib/supabase/auth"
 import { createAdminClient } from "@/lib/supabase/server"
 
 export async function createVaultSecret(secret: string): Promise<string> {
+  const userId = await requireAuthenticatedUserId()
+  if (!userId) {
+    throw new Error("Failed to create vault secret: not authenticated")
+  }
+
   const supabase = await createAdminClient()
 
   const { data, error } = await supabase.rpc("vault_create_secret", { secret })
@@ -28,6 +34,11 @@ export async function updateVaultSecret(
   secretId: string,
   secret: string
 ): Promise<void> {
+  const userId = await requireAuthenticatedUserId()
+  if (!userId) {
+    throw new Error("Failed to update vault secret: not authenticated")
+  }
+
   const supabase = await createAdminClient()
 
   const { error } = await supabase.rpc("vault_update_secret", {
@@ -39,6 +50,11 @@ export async function updateVaultSecret(
 }
 
 export async function deleteVaultSecret(secretId: string): Promise<void> {
+  const userId = await requireAuthenticatedUserId()
+  if (!userId) {
+    throw new Error("Failed to delete vault secret: not authenticated")
+  }
+
   const supabase = await createAdminClient()
 
   const { error } = await supabase.rpc("vault_delete_secret", {

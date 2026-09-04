@@ -39,3 +39,4 @@ next-env.d.ts
 
 .mcp.json
 local-scripts/*
+.omx/*
