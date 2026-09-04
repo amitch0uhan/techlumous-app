@@ -1,5 +1,6 @@
 "use server"
 
+import { requireAuthenticatedUserId } from "@/lib/supabase/auth"
 import { createAdminClient, createClient } from "@/lib/supabase/server"
 import {
   insertProjectSchema,
@@ -16,8 +17,7 @@ export async function createProject(input: InsertProject): Promise<Project> {
   const supabase = await createClient()
 
   // projects.user_id has no DB default, so it must come from the session.
-  const { data: claims } = await supabase.auth.getClaims()
-  const userId = claims?.claims.sub
+  const userId = await requireAuthenticatedUserId(supabase)
   if (!userId) throw new Error("Failed to create project: not authenticated")
 
   const { data, error } = await supabase
@@ -62,6 +62,11 @@ export async function updateProject(
   id: string,
   input: UpdateProject
 ): Promise<Project> {
+  const userId = await requireAuthenticatedUserId()
+  if (!userId) {
+    throw new Error("Failed to update project: not authenticated")
+  }
+
   const payload = updateProjectSchema.parse(input)
   const supabase = await createClient()
 
@@ -79,6 +84,11 @@ export async function updateProject(
 }
 
 export async function deleteProject(id: string, userId: string): Promise<void> {
+  const authenticatedUserId = await requireAuthenticatedUserId()
+  if (!authenticatedUserId || authenticatedUserId !== userId) {
+    throw new Error("Failed to delete project: not authenticated")
+  }
+
   const supabase = await createAdminClient()
 
   const { error } = await supabase

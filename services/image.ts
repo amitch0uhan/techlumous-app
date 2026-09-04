@@ -6,6 +6,7 @@ import type { SupabaseClient } from "@supabase/supabase-js"
 import { normalize } from "@/lib/schema-form/normalize"
 import { resolveWidget } from "@/lib/schema-form/resolver"
 import type { FieldDescriptor } from "@/lib/schema-form/types"
+import { requireAuthenticatedUserId } from "@/lib/supabase/auth"
 import { createAdminClient, createClient } from "@/lib/supabase/server"
 import { getTemplateContentSchema } from "@/templates/schema-registry"
 
@@ -111,8 +112,7 @@ export async function uploadProjectImage(
   }
 
   const supabase = await createClient()
-  const { data } = await supabase.auth.getClaims()
-  const userId = data?.claims.sub
+  const userId = await requireAuthenticatedUserId(supabase)
   if (!userId) throw new Error("You must be authenticated to upload an image")
 
   const project = await getProject(projectId)

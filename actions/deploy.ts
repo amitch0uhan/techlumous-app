@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache"
 import { z } from "zod"
 
-import { createClient } from "@/lib/supabase/server"
+import { requireAuthenticatedUserId } from "@/lib/supabase/auth"
 import { getDeploymentStatus } from "@/lib/vercel/deploy"
 import { getUserIntegrationByProvider } from "@/services/user-integration"
 import { getVaultSecret } from "@/services/vault-secret"
@@ -72,6 +72,16 @@ function snapshot(
 export async function deployProjectAction(
   projectId: string
 ): Promise<DeployProjectActionResult> {
+  const userId = await requireAuthenticatedUserId()
+  if (!userId) {
+    return {
+      status: "error",
+      code: "NOT_AUTHENTICATED",
+      message: "Sign in before deploying this project.",
+      deployment: null,
+    }
+  }
+
   const parsedProjectId = projectIdSchema.safeParse(projectId)
   if (!parsedProjectId.success) {
     return {
@@ -110,9 +120,7 @@ export async function getProjectDeploymentAction(
   const parsedProjectId = projectIdSchema.safeParse(projectId)
   if (!parsedProjectId.success) return null
 
-  const supabase = await createClient()
-  const { data } = await supabase.auth.getClaims()
-  const userId = data?.claims.sub
+  const userId = await requireAuthenticatedUserId()
   if (!userId) return null
 
   const deployment = await getDeploymentState(parsedProjectId.data, userId)
@@ -136,9 +144,7 @@ export async function fetchDeploymentStatusAction(
   }
 
   try {
-    const supabase = await createClient()
-    const { data } = await supabase.auth.getClaims()
-    const userId = data?.claims.sub
+    const userId = await requireAuthenticatedUserId()
     if (!userId) return { status: "error", message: "Sign in to continue." }
 
     const deployment = await getDeploymentState(parsedProjectId.data, userId)

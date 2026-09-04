@@ -1,6 +1,7 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
+import { requireAuthenticatedUserId } from "@/lib/supabase/auth"
 import type { ActionState } from "@/types/integration"
 import { getUserIntegrationByProvider } from "@/services/user-integration"
 import { deleteVaultSecret } from "@/services/vault-secret"
@@ -9,6 +10,11 @@ export async function disconnectIntegration(
   prevState: ActionState
 ): Promise<ActionState> {
   void prevState
+
+  const userId = await requireAuthenticatedUserId()
+  if (!userId) {
+    return { error: "You must be authenticated to disconnect an integration." }
+  }
 
   const integration = await getUserIntegrationByProvider({
     validateToken: false,

@@ -1,6 +1,7 @@
 "use server"
 
 import { z } from "zod"
+import { requireAuthenticatedUserId } from "@/lib/supabase/auth"
 import { uploadProjectImage } from "@/services/image"
 
 const uploadImageSchema = z.object({
@@ -15,6 +16,14 @@ export async function uploadProjectImageAction(
 ): Promise<
   { status: "success"; url: string } | { status: "error"; message: string }
 > {
+  const userId = await requireAuthenticatedUserId()
+  if (!userId) {
+    return {
+      status: "error",
+      message: "You must be authenticated to upload an image",
+    }
+  }
+
   const parsed = uploadImageSchema.safeParse({ projectId, fieldPath })
   if (!parsed.success) {
     return { status: "error", message: "Invalid image upload" }

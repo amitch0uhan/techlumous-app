@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto"
 
-import { createClient } from "@/lib/supabase/server"
+import { requireAuthenticatedUserId } from "@/lib/supabase/auth"
 import { collectEngineFiles } from "@/lib/vercel/collect-files"
 import { deployFiles, type DeployResult } from "@/lib/vercel/deploy"
 import { resolveProject as resolveVercelProject } from "@/lib/vercel/projects"
@@ -71,11 +71,7 @@ export type DeploymentOrchestratorOverrides =
   Partial<DeploymentOrchestratorDependencies>
 
 const defaultDependencies: DeploymentOrchestratorDependencies = {
-  getAuthenticatedUserId: async () => {
-    const supabase = await createClient()
-    const { data } = await supabase.auth.getClaims()
-    return data?.claims.sub ?? null
-  },
+  getAuthenticatedUserId: requireAuthenticatedUserId,
   getProject,
   updateProject,
   getTemplateById,

@@ -1,15 +1,14 @@
 import Image from "next/image"
+import { redirect } from "next/navigation"
 
 import { LoginForm } from "@/components/login-form"
 import { Logo } from "@/components/logo"
-import { createClient } from "@/lib/supabase/server"
-import { redirect } from "next/navigation"
+import { requireAuthenticatedUserId } from "@/lib/supabase/auth"
 
 export default async function LoginPage() {
-  const supabase = await createClient()
-  const { data } = await supabase.auth.getClaims()
+  const userId = await requireAuthenticatedUserId()
 
-  if (data?.claims) redirect("/")
+  if (userId) redirect("/")
 
   return (
     <div className="grid min-h-svh p-2 lg:grid-cols-2">

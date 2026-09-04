@@ -1,5 +1,6 @@
 "use server"
 
+import { requireAuthenticatedUserId } from "@/lib/supabase/auth"
 import { createClient } from "@/lib/supabase/server"
 import { verifyVercelToken } from "@/lib/vercel/oauth"
 import { getVaultSecret } from "@/services/vault-secret"
@@ -74,6 +75,11 @@ async function validateConnectedIntegration(
 export async function createUserIntegration(
   input: InsertUserIntegration
 ): Promise<UserIntegration> {
+  const userId = await requireAuthenticatedUserId()
+  if (!userId) {
+    throw new Error("Failed to create integration: not authenticated")
+  }
+
   const payload = insertUserIntegrationSchema.parse(input)
   const supabase = await createClient()
 
@@ -128,6 +134,11 @@ export async function updateUserIntegration(
   id: string,
   input: UpdateUserIntegration
 ): Promise<UserIntegration> {
+  const userId = await requireAuthenticatedUserId()
+  if (!userId) {
+    throw new Error("Failed to update integration: not authenticated")
+  }
+
   const payload = updateUserIntegrationSchema.parse(input)
   const supabase = await createClient()
 
@@ -145,6 +156,11 @@ export async function updateUserIntegration(
 }
 
 export async function deleteUserIntegration(id: string): Promise<void> {
+  const userId = await requireAuthenticatedUserId()
+  if (!userId) {
+    throw new Error("Failed to delete integration: not authenticated")
+  }
+
   const supabase = await createClient()
 
   const { error } = await supabase

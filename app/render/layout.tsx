@@ -1,16 +1,15 @@
 import { redirect } from "next/navigation"
 import type { ReactNode } from "react"
 
-import { createClient } from "@/lib/supabase/server"
+import { requireAuthenticatedUserId } from "@/lib/supabase/auth"
 
 export default async function RenderLayout({
   children,
 }: {
   children: ReactNode
 }) {
-  const supabase = await createClient()
-  const { data } = await supabase.auth.getClaims()
-  if (!data?.claims) redirect("/login")
+  const userId = await requireAuthenticatedUserId()
+  if (!userId) redirect("/login")
 
   return <>{children}</>
 }

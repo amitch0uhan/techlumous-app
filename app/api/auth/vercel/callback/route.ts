@@ -1,7 +1,7 @@
 import { cookies } from "next/headers"
 import { NextResponse } from "next/server"
 
-import { createClient } from "@/lib/supabase/server"
+import { requireAuthenticatedUserId } from "@/lib/supabase/auth"
 import {
   VERCEL_STATE_COOKIE,
   buildVercelCredentials,
@@ -50,9 +50,8 @@ export async function GET(request: Request) {
   }
 
   // 3. Must be authenticated so auth.uid() populates user_id and scopes the row.
-  const supabase = await createClient()
-  const { data: claims } = await supabase.auth.getClaims()
-  if (!claims?.claims) {
+  const userId = await requireAuthenticatedUserId()
+  if (!userId) {
     return redirectClearing("/login?next=/integration")
   }
 
