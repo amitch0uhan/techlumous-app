@@ -1,100 +1,97 @@
 # Template Engine
 
-A lightweight Next.js app that renders **one** template into a published site.
-It owns the shared `templates/` library and acts as the renderer for published
-sites.
+The template engine is an independent Next.js app that renders one selected
+template as a published site. The same `templates/` source is consumed by the
+studio editor, live preview, and deployed renderer.
 
-The template is chosen at build time by the `TEMPLATE_SLUG` environment
-variable. The site's published content lives in Supabase and is fetched at
-runtime with ISR (`revalidate = 60`). Saving a draft does not affect the live
-site. Publishing the draft makes it visible within approximately one minute
-without a Vercel redeployment.
+## Structure
 
-## Layout
-
-```
+```text
 template-engine/
-  templates/        ← the shared template library (single source of truth)
-    registry.ts     ← slug -> template module
-    types.ts
-    hello-world/    ← meta.ts, schema.ts, Template.tsx, index.ts
-  lib/
-    content.ts      ← fetches the site's published content from Supabase
-  app/
-    page.tsx        ← reads TEMPLATE_SLUG, renders that template with content
-    layout.tsx
-    globals.css
-  next.config.ts    ← pins turbopack.root to this folder
+  app/                         # Published-site shell and entry page
+  lib/content.ts               # Published-content read boundary
+  templates/
+    types.ts                   # TemplateModule and TemplateMeta contracts
+    taxonomy.ts                # Categories and suggested tags
+    registry.ts                # Complete template modules by slug
+    schema-registry.ts         # Zod schemas by slug for studio operations
+    <slug>/                    # Self-contained template implementation
+  package.json                 # Independent engine dependencies
+  next.config.ts               # Engine build and image-host configuration
 ```
 
-## How it works
+## Runtime and integration
 
-- `templates/` lives **inside** this app, so the build compiles it with plain
-  Turbopack — no copy, no webpack, no external-dir workaround.
-- Styling: each template owns its **entire** style inside its own folder — a
-  `styles.css` with `@import "tailwindcss"`, its `@theme` design tokens, and
-  keyframes, imported by the template's `Template.tsx`. The engine's
-  `app/globals.css` is only a tiny reset; **no template-specific style lives in
-  the engine**. Templates also load their own web fonts, so a deployed
-  single-template build is fully self-contained. (Generic build tooling —
-  `postcss.config.mjs` and the Tailwind dependency — stays at the engine root.)
-- `app/page.tsx` reads `TEMPLATE_SLUG`, looks the template up in the registry,
-  fetches the site's content via `lib/content.ts`, and renders the template.
-- Content comes from the `projects.published_content` column in Supabase,
-  addressed by `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and `PROJECT_ID`. The anon
-  key is public by design; RLS lets it read **only published rows**, and column
-  grants allow access to published content but not saved drafts.
-- Failure semantics: if the env pointers are absent (local dev) the template
-  renders its `defaultContent`. If they are present but the fetch fails, the
-  page **throws** — at build time the deploy fails loudly, at runtime a failed
-  ISR regeneration keeps serving the last good page. A live site never
-  silently renders defaults.
-- `next.config.ts` pins `turbopack.root` to this folder, so the surrounding
-  studio app's root files (e.g. `proxy.ts`) are never pulled into the build.
+- `TEMPLATE_SLUG` selects the template. `PROJECT_ID`, `SUPABASE_URL`, and
+  `SUPABASE_ANON_KEY` identify the published content source.
+- The runtime reads only published project content through the public Supabase
+  anon key. RLS and column grants are the security boundary; never add a
+  service-role key, draft read, or database write to the engine.
+- If the content pointers are absent, local rendering uses `defaultContent`.
+  With configured pointers, query failures throw; a missing published payload
+  uses the template default. ISR revalidates published content every 60 seconds.
+- The studio imports the same registry through its `@/templates/*` alias. The
+  live preview sends new content to the renderer; templates only receive a
+  `content` prop and do not know about editor state or the message protocol.
+- Deployment uploads the engine plus only the selected template folder and a
+  generated single-template registry. Do not import another template, the
+  schema registry, taxonomy, or root-app-only code from a template.
+- Template source changes require a new deployment. Publishing content alone
+  updates the existing deployed renderer after ISR revalidation.
 
-## Shared with the studio
+## Template rules
 
-The studio app (repo root) imports the same registry directly — its
-`@/templates/*` alias points at `./template-engine/templates/*`. Because this
-folder sits inside the studio's directory, that import resolves normally. One
-source of truth, no duplication.
+- Every template folder must export `template` from `index.ts` with `meta`,
+  `contentSchema`, `defaultContent`, and `Template`.
+- The folder name, `meta.slug`, both registry keys, catalog slug, and
+  `TEMPLATE_SLUG` must be the same lowercase kebab-case value.
+- `contentSchema` is the source of truth. `defaultContent` must parse against it
+  and the renderer must be typed from `z.infer`.
+- Keep styles, fonts, helpers, and assets inside the template folder. The engine
+  global stylesheet is only a reset.
+- Use only packages already in this folder's current `package.json`. Adding or
+  installing packages is prohibited, including in AI auto-permission mode;
+  only an explicit user request to install a specific package can authorize it.
+- Treat content as partial or older JSON: use optional chaining and safe
+  fallbacks for every nested object and array prop (`content.hero?.title ?? ""`,
+  `(content.links ?? []).map(...)`). Do not directly call `.map`, `.length`,
+  index, destructure, or invoke methods on possibly missing content values.
+- Keep new content props flat where possible: prefer top-level scalar props and
+  primitive arrays. If nested objects or arrays of objects are genuinely needed,
+  flag the proposed shape to the user and get confirmation before coding.
 
-## Deployment
+For the full implementation rules and architecture details, read
+[`skills/template-engine/SKILL.md`](../skills/template-engine/SKILL.md),
+[`skills/template-engine-strict/SKILL.md`](../skills/template-engine-strict/SKILL.md),
+and [`skills/template-engine/references/architecture.md`](../skills/template-engine/references/architecture.md).
 
-The studio deploys this app **as source** to the user's Vercel account via the
-file-upload API (`lib/vercel/collect-files.ts` + `lib/vercel/deploy.ts` in the
-repo root) — no Git connection; Vercel runs the build. Only the selected
-template's folder is uploaded, along with a generated single-template
-`registry.ts`. The env pointers above are passed per deployment.
+## Local usage
 
-The first deployment uploads and builds the template engine. Later content
-changes only require publishing the saved draft in Supabase; the live engine
-will pick up the new `published_content` on revalidation.
-
-## Usage
+Run these commands from `template-engine/`:
 
 ```bash
-# 1. Install this app's own (minimal) dependencies — once
-npm install
-
-# 2. Configure (all Supabase vars optional locally — defaults render instead)
+npm install       # Initial setup only; do not add packages during template work
 cp .env.example .env.local
-
-# 3. Run locally
 npm run dev
-
-# 4. Or build the same way Vercel does
 npm run build
 ```
 
-## Adding templates
+The environment variables are optional for local default rendering. Keep
+`.env.local` private.
 
-Create a folder under `templates/` with `meta.ts`, `schema.ts`, `Template.tsx`,
-and an `index.ts` that exports `template: TemplateModule<...>` (the uniform
-export name is required — the deploy pipeline generates a single-template
-registry from it). If the template uses Tailwind, add a `styles.css`
-(`@import "tailwindcss"` + its own `@theme` tokens and keyframes) and import it
-from `Template.tsx` — keep every style concern in the folder so nothing leaks
-into the engine. Register it in `templates/registry.ts`; the studio picks it up
-automatically. An unknown `TEMPLATE_SLUG` fails the build with a message listing
-the valid slugs.
+## Adding a template — short brief
+
+1. Create `templates/<slug>/` with `meta.ts`, `schema.ts`, `Template.tsx`, and
+   `index.ts`; add `styles.css` when the template has local Tailwind styles.
+2. Define the Zod schema, inferred content type, realistic `defaultContent`, and
+   defensive renderer. Verify `contentSchema.safeParse(defaultContent)`.
+3. Register the module in `templates/registry.ts` and its schema in
+   `templates/schema-registry.ts`.
+4. Keep the database `templates` catalog projection synchronized with metadata
+   and `default_content` using the established database workflow. Code
+   registration alone does not make a catalog row selectable.
+5. Run root lint/typecheck, `npm --prefix template-engine run build`, and test
+   editor fields, live preview, partial content, and responsive layouts.
+
+See [`references/new-template.md`](../skills/template-engine/references/new-template.md)
+for the complete checklist and compatibility guidance.
