@@ -24,6 +24,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
+import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
 import type { WidgetId, WidgetProps } from "./types"
 
@@ -64,6 +65,16 @@ function UrlWidget({ value, onChange, field }: WidgetProps) {
       value={String(value ?? "")}
       placeholder={field.label}
       onChange={(e) => onChange(e.target.value)}
+    />
+  )
+}
+
+function SwitchWidget({ value, onChange, field }: WidgetProps) {
+  return (
+    <Switch
+      checked={Boolean(value)}
+      aria-label={field.label}
+      onCheckedChange={onChange}
     />
   )
 }
@@ -278,4 +289,5 @@ export const widgets: Record<
   url: UrlWidget,
   image: ImageWidget,
   select: SelectWidget,
+  switch: SwitchWidget,
 }

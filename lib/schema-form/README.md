@@ -27,19 +27,21 @@ Widget selection is driven by `.meta()` on the schema, resolved in this order
 
 ```ts
 z.object({
-  title:   z.string().meta({ label: "Title" }),                    // -> text (default)
-  bio:     z.string().meta({ label: "Bio", widget: "textarea" }),  // -> explicit widget
-  site:    z.string().meta({ label: "Site", format: "url" }),      // -> url (semantic)
-  theme:   z.enum(["dark", "light"]),                              // -> select (enum)
-  links:   z.array(z.object({ /* ... */ })),                       // -> repeatable list
+  title: z.string().meta({ label: "Title" }), // -> text (default)
+  bio: z.string().meta({ label: "Bio", widget: "textarea" }), // -> explicit widget
+  site: z.string().meta({ label: "Site", format: "url" }), // -> url (semantic)
+  theme: z.enum(["dark", "light"]), // -> select (enum)
+  visible: z.boolean().meta({ label: "Show section" }), // -> switch
+  links: z.array(z.object({/* ... */})), // -> repeatable list
 })
 ```
 
-- `widget` — force a specific input (`"text" | "textarea" | "url" | "select"`).
+- `widget` — force a specific input (`"text" | "textarea" | "url" | "select" | "switch"`).
 - `format` — semantic hint (`"url"`); the resolver maps it to a widget.
 - `label` — the field label. Omit it and the field renders with no label.
 - Objects become groups, arrays become add/remove lists — automatically, no meta
   needed.
+- Booleans become switches automatically.
 
 ## Adding a new widget
 
@@ -55,4 +57,7 @@ The core (`SchemaForm`, `normalize`) never changes for a new leaf widget.
 - Client-only (`"use client"`) — it renders interactive inputs.
 - Works with any Zod object schema; the type is yours via `z.infer`.
 - Full design rationale: `docs/schema-form.md`.
+
+```
+
 ```

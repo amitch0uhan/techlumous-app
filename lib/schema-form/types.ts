@@ -1,5 +1,12 @@
 export type WidgetId =
-  "text" | "textarea" | "url" | "image" | "select" | "group" | "array"
+  | "text"
+  | "textarea"
+  | "url"
+  | "image"
+  | "select"
+  | "group"
+  | "array"
+  | "switch"
 
 export interface FieldDescriptor {
   key: string
