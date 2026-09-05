@@ -1,6 +1,7 @@
 import { CardSkeleton } from "@/components/card-skeleton"
 import { CreateProjectDrawer } from "@/components/create-project-drawer"
 import { ProjectCard } from "@/components/project-card"
+import { getRequestDeviceCapabilities } from "@/lib/device-capabilities.server"
 import { cn } from "@/lib/utils"
 import type { Project } from "@/services/project.schema"
 import type { Template } from "@/services/template.schema"
@@ -33,9 +34,10 @@ export async function ProjectList({
   projectsPromise,
   templatesPromise,
 }: ProjectListProps) {
-  const [projects, templates] = await Promise.all([
+  const [projects, templates, capabilities] = await Promise.all([
     projectsPromise,
     templatesPromise,
+    getRequestDeviceCapabilities(),
   ])
 
   const selectedTemplateForProject = projects.reduce(
@@ -87,6 +89,7 @@ export async function ProjectList({
               createdAt={formatCreatedAt(project.created_at)}
               websiteUrl={project.deployment_url}
               lastDeployedAt={project.last_deployed_at}
+              canEditTemplate={capabilities.canEditProjects}
             />
           ))}
         </div>

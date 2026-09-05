@@ -7,7 +7,7 @@ import { toast } from "sonner"
 import { fetchDeploymentStatusAction } from "@/actions/deploy"
 import {
   ArrowUpRightIcon,
-  NotePencilIcon,
+  PencilCircleIcon,
   TrashSimpleIcon,
   ArrowClockwiseIcon,
 } from "@phosphor-icons/react/ssr"
@@ -55,6 +55,7 @@ interface ProjectCardProps {
   onDelete?: () => void
   className?: string
   isTemplateSelected?: boolean
+  canEditTemplate?: boolean
 }
 
 function InfoItem({
@@ -233,6 +234,7 @@ export function ProjectCard({
   onDelete,
   className,
   isTemplateSelected,
+  canEditTemplate = true,
 }: ProjectCardProps) {
   const [isFetchingStatus, startFetchingStatus] = React.useTransition()
   const statusCooldownUntilRef = React.useRef(0)
@@ -253,7 +255,7 @@ export function ProjectCard({
     <Card
       variant="default"
       className={cn(
-        "relative flex-col items-stretch gap-4 rounded-3xl p-1.5 ring-0! lg:flex-row lg:items-center lg:gap-6",
+        "start relative flex-col items-stretch gap-4 rounded-3xl p-1.5 ring-0! lg:flex-row lg:gap-6",
         className
       )}
     >
@@ -288,16 +290,9 @@ export function ProjectCard({
         />
       </div>
 
-      <div className="flex flex-1 flex-col gap-6 p-2 lg:p-0">
+      <div className="flex flex-1 flex-col gap-6 p-2 lg:p-2 lg:px-0">
         <div className="grid grid-cols-1 gap-x-10 gap-y-4 sm:grid-cols-3 sm:pr-10">
           <InfoItem label="Project Name">{name}</InfoItem>
-          <InfoItem label="Status">
-            {status ? (
-              <DeploymentStatus status={status} />
-            ) : (
-              <span className="text-muted-foreground">Not deployed</span>
-            )}
-          </InfoItem>
           <InfoItem label="Project URL">
             {normalizedProjectUrl && vercelProjectName ? (
               <a
@@ -314,6 +309,13 @@ export function ProjectCard({
               <span className="text-muted-foreground">{url}</span>
             )}
           </InfoItem>
+          <InfoItem label="Status">
+            {status ? (
+              <DeploymentStatus status={status} />
+            ) : (
+              <span className="text-muted-foreground">Not deployed</span>
+            )}
+          </InfoItem>
           <InfoItem label="Created">{createdAt}</InfoItem>
           <InfoItem label="Last Deployment">
             {lastDeployedAt ? (
@@ -327,22 +329,42 @@ export function ProjectCard({
         </div>
 
         <div className="flex flex-wrap gap-3">
-          <IconButton
-            render={
-              isTemplateSelected ? (
-                <Link href={`/preview/${projectId}/edit`} />
-              ) : (
-                <Link href={`/templates?project=${projectId}`} />
-              )
-            }
-            icon={isTemplateSelected ? NotePencilIcon : undefined}
-            iconPosition="end"
-            variant="default"
-            size="lg"
-            className="rounded-full pl-3"
-          >
-            {isTemplateSelected ? "Edit Template" : "Select Template"}
-          </IconButton>
+          {!canEditTemplate ? null : (
+            <IconButton
+              render={
+                isTemplateSelected ? (
+                  <Link href={`/preview/${projectId}/edit`} />
+                ) : (
+                  <Link href={`/templates?project=${projectId}`} />
+                )
+              }
+              icon={isTemplateSelected ? PencilCircleIcon : undefined}
+              iconPosition="end"
+              variant="default"
+              size="lg"
+              className="rounded-full pl-3"
+            >
+              {isTemplateSelected ? "Edit Template" : "Select Template"}
+            </IconButton>
+          )}
+          {normalizedWebsiteUrl && (
+            <IconButton
+              render={
+                <a
+                  href={normalizedWebsiteUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                />
+              }
+              icon={ArrowUpRightIcon}
+              iconPosition="end"
+              variant="outline"
+              size="lg"
+              className="rounded-full pl-3"
+            >
+              Visit Website
+            </IconButton>
+          )}
           <DeploymentButton
             onRetry={onRetry}
             onReconnect={onReconnect}

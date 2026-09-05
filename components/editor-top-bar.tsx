@@ -46,6 +46,7 @@ interface EditorTopBarProps {
   fetchStatusPending?: boolean
   viewport: PreviewViewport
   onViewportChange: (viewport: PreviewViewportPreset) => void
+  allowViewportResize?: boolean
   isSchemaFormOpen?: boolean
   onToggleSchemaForm?: () => void
 }
@@ -59,6 +60,7 @@ export function EditorTopBar({
   fetchStatusPending = false,
   viewport,
   onViewportChange,
+  allowViewportResize = true,
   isSchemaFormOpen,
   onToggleSchemaForm,
 }: EditorTopBarProps) {
@@ -80,15 +82,17 @@ export function EditorTopBar({
         )}
       </div>
 
-      <Switcher
-        aria-label="Preview viewport"
-        value={viewport}
-        options={viewportOptions}
-        onValueChange={(value) =>
-          onViewportChange(value as PreviewViewportPreset)
-        }
-        className="absolute left-1/2 -translate-x-1/2"
-      />
+      {allowViewportResize && (
+        <Switcher
+          aria-label="Preview viewport"
+          value={viewport}
+          options={viewportOptions}
+          onValueChange={(value) =>
+            onViewportChange(value as PreviewViewportPreset)
+          }
+          className="absolute left-1/2 -translate-x-1/2"
+        />
+      )}
 
       <div className="flex shrink-0 items-center gap-2">
         {isDeploymentInProgress && onFetchStatus ? (
