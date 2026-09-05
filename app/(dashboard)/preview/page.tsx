@@ -1,12 +1,24 @@
 import Link from "next/link"
+import { Suspense } from "react"
 
 import { PreviewSkeleton } from "@/components/preview-skeleton"
 import { TemplatePreviewWindow } from "@/components/template-preview-window"
 import { buttonVariants } from "@/components/ui/button"
+import { getRequestDeviceCapabilities } from "@/lib/device-capabilities.server"
 import { cn } from "@/lib/utils"
 import { getTemplate } from "@/services/template"
 
-export default async function Page({
+function PreviewPageFallback() {
+  return (
+    <div className="page">
+      <div className="flex w-full justify-center pt-28">
+        <PreviewSkeleton />
+      </div>
+    </div>
+  )
+}
+
+async function PreviewContent({
   searchParams,
 }: {
   searchParams: Promise<{ template?: string }>
@@ -31,7 +43,10 @@ export default async function Page({
     </div>
   )
 
-  const { template: requested } = await searchParams
+  const [{ template: requested }, capabilities] = await Promise.all([
+    searchParams,
+    getRequestDeviceCapabilities(),
+  ])
   const slug = requested
 
   if (!slug) return emptyState()
@@ -47,6 +62,19 @@ export default async function Page({
       slug={template.slug}
       name={template.name}
       content={template.default_content}
+      allowViewportResize={capabilities.canResizePreview}
     />
+  )
+}
+
+export default function Page({
+  searchParams,
+}: {
+  searchParams: Promise<{ template?: string }>
+}) {
+  return (
+    <Suspense fallback={<PreviewPageFallback />}>
+      <PreviewContent searchParams={searchParams} />
+    </Suspense>
   )
 }
