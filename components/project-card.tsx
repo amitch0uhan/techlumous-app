@@ -7,7 +7,7 @@ import { toast } from "sonner"
 import { fetchDeploymentStatusAction } from "@/actions/deploy"
 import {
   ArrowUpRightIcon,
-  NotePencilIcon,
+  PencilCircleIcon,
   TrashSimpleIcon,
   ArrowClockwiseIcon,
 } from "@phosphor-icons/react/ssr"
@@ -338,13 +338,31 @@ export function ProjectCard({
                   <Link href={`/templates?project=${projectId}`} />
                 )
               }
-              icon={isTemplateSelected ? NotePencilIcon : undefined}
+              icon={isTemplateSelected ? PencilCircleIcon : undefined}
               iconPosition="end"
               variant="default"
               size="lg"
               className="rounded-full pl-3"
             >
               {isTemplateSelected ? "Edit Template" : "Select Template"}
+            </IconButton>
+          )}
+          {normalizedWebsiteUrl && (
+            <IconButton
+              render={
+                <a
+                  href={normalizedWebsiteUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                />
+              }
+              icon={ArrowUpRightIcon}
+              iconPosition="end"
+              variant="outline"
+              size="lg"
+              className="rounded-full pl-3"
+            >
+              Visit Website
             </IconButton>
           )}
           <DeploymentButton

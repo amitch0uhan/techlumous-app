@@ -3,6 +3,7 @@
 import Image from "next/image"
 import { useActionState, useEffect } from "react"
 import { toast } from "sonner"
+import { LinkBreakIcon } from "@phosphor-icons/react/ssr"
 
 import { Badge } from "@/components/ui/badge"
 import { IconButton } from "@/components/ui/button"
@@ -89,11 +90,14 @@ export function IntegrationCard({
       type={action ? "submit" : undefined}
       variant={cta.variant}
       size="lg"
+      icon={status === "connected" ? LinkBreakIcon : undefined}
       onClick={action ? undefined : handler}
       disabled={action ? isPending : undefined}
       className={cn(
         cta.extra,
-        "rounded-full pl-3 [&>svg]:transition-transform hover:[&>svg]:rotate-45"
+        "rounded-full pl-3",
+        status !== "connected" &&
+          "[&>svg]:transition-transform hover:[&>svg]:rotate-45"
       )}
     >
       {cta.label}
