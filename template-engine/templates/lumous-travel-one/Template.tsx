@@ -213,11 +213,13 @@ function Eyebrow({
   return (
     <div className="font-lt-label text-lt-xs tracking-lt-eyebrow flex flex-col gap-1.5 font-extralight uppercase">
       {index.length > 0 ? (
-        <span className={onPanel ? "text-lt-on-image/55" : "text-lt-subtle"}>
+        <span
+          className={onPanel ? "text-lt-section-text/55" : "text-lt-subtle"}
+        >
           {index}
         </span>
       ) : null}
-      <span className={onPanel ? "text-lt-on-image" : "text-lt-body"}>
+      <span className={onPanel ? "text-lt-section-text" : "text-lt-body"}>
         {trimmed(label)}
       </span>
     </div>
@@ -317,6 +319,8 @@ export function Template({ content }: { content: Content }) {
     "--color-lt-body": hue(colors.textBody, "#E8E6DF"),
     "--color-lt-muted": hue(colors.textMuted, "#B4B1A7"),
     "--color-lt-subtle": hue(colors.textSubtle, "#807D75"),
+
+    "--color-lt-section-text": hue(colors.sectionText, "#FFFFFF"),
 
     "--color-lt-on-image": hue(colors.onImage, "#FFFFFF"),
     "--color-lt-on-light": hue(colors.onLight, "#0A0A0B"),
@@ -621,7 +625,7 @@ export function Template({ content }: { content: Content }) {
                   index={sectionNumber("destinations")}
                   label={c.destinationsEyebrow}
                 />
-                <h2 className="font-lt-display text-lt-display-md tracking-lt-tight text-lt-strong m-0 max-w-[24ch] leading-[1.14] font-extralight text-pretty">
+                <h2 className="font-lt-display text-lt-display-md tracking-lt-tight text-lt-section-text m-0 max-w-[24ch] leading-[1.14] font-extralight text-pretty">
                   {emphasise(c.destinationsHeadline)}
                 </h2>
               </div>
@@ -647,7 +651,7 @@ export function Template({ content }: { content: Content }) {
                         type="button"
                         onClick={() => setDest(index)}
                         aria-current={index === destIndex}
-                        className="font-lt-display tracking-lt-snug text-lt-strong ease-lt-standard flex cursor-pointer items-center border-none bg-transparent p-0 text-right text-[clamp(20px,2vw,28px)] transition-opacity duration-300"
+                        className="font-lt-display tracking-lt-snug text-lt-section-text ease-lt-standard flex cursor-pointer items-center border-none bg-transparent p-0 text-right text-[clamp(20px,2vw,28px)] transition-opacity duration-300"
                         style={{
                           flex: `0 0 ${REGION_ROW}`,
                           height: REGION_ROW,
@@ -671,7 +675,7 @@ export function Template({ content }: { content: Content }) {
             {destinations.length > 0 ? (
               <div className="mt-[clamp(56px,7vw,104px)] flex flex-wrap items-end gap-[clamp(24px,3vw,40px)]">
                 <div className="flex min-w-0 flex-[1_1_260px] flex-col gap-[18px] pb-[clamp(8px,2vw,40px)]">
-                  <p className="font-lt-display text-lt-strong m-0 text-[clamp(18px,1.6vw,22px)] font-medium">
+                  <p className="font-lt-display text-lt-section-text m-0 text-[clamp(18px,1.6vw,22px)] font-medium">
                     {trimmed(activeDestination?.title)}
                   </p>
                   <p className="text-lt-sm text-lt-muted m-0 max-w-[34ch] leading-[1.7]">
@@ -717,7 +721,7 @@ export function Template({ content }: { content: Content }) {
                             destinations.length
                         )
                       }
-                      className="text-lt-strong border-lt-border/20 h-[34px] w-[34px] border bg-transparent"
+                      className="text-lt-section-text border-lt-border/20 h-[34px] w-[34px] border bg-transparent"
                     />
                     <CarouselButton
                       label="Next destination"
@@ -813,7 +817,7 @@ export function Template({ content }: { content: Content }) {
                 label={c.whyEyebrow}
                 onPanel
               />
-              <h2 className="font-lt-display text-lt-display-md tracking-lt-tight text-lt-on-image/60 m-0 max-w-[30ch] leading-[1.14] font-extralight text-pretty">
+              <h2 className="font-lt-display text-lt-display-md tracking-lt-tight text-lt-section-text/60 m-0 max-w-[30ch] leading-[1.14] font-extralight text-pretty">
                 {emphasise(c.whyHeadline)}
               </h2>
             </div>
@@ -835,16 +839,16 @@ export function Template({ content }: { content: Content }) {
                       aria-expanded={isOpen}
                       className="flex w-full cursor-pointer items-center gap-[clamp(16px,3vw,48px)] border-none bg-transparent py-[clamp(18px,2.2vw,28px)] text-left"
                     >
-                      <span className="font-lt-label text-lt-xs tracking-lt-eyebrow text-lt-on-image/60 flex-[0_0_44px] font-extralight">
+                      <span className="font-lt-label text-lt-xs tracking-lt-eyebrow text-lt-section-text/60 flex-[0_0_44px] font-extralight">
                         {pad(index + 1)}
                       </span>
-                      <span className="font-lt-display tracking-lt-snug text-lt-on-image flex-1 text-[clamp(24px,2.8vw,40px)] font-light">
+                      <span className="font-lt-display tracking-lt-snug text-lt-section-text flex-1 text-[clamp(24px,2.8vw,40px)] font-light">
                         {trimmed(item?.title)}
                       </span>
                       <span
                         aria-hidden="true"
                         className={join(
-                          "border-lt-border/35 text-lt-on-image grid h-[34px] w-[34px] flex-[0_0_34px] place-items-center rounded-full border transition-transform duration-300",
+                          "border-lt-border/35 text-lt-section-text grid h-[34px] w-[34px] flex-[0_0_34px] place-items-center rounded-full border transition-transform duration-300",
                           isOpen && "rotate-45"
                         )}
                       >
@@ -860,7 +864,7 @@ export function Template({ content }: { content: Content }) {
                       )}
                     >
                       <div className="min-h-0 overflow-hidden">
-                        <p className="text-lt-sm text-lt-on-image/[0.78] m-0 max-w-[62ch] pb-[clamp(20px,2.4vw,30px)] pl-[clamp(60px,6vw,92px)] leading-[1.75]">
+                        <p className="text-lt-sm text-lt-section-text/[0.78] m-0 max-w-[62ch] pb-[clamp(20px,2.4vw,30px)] pl-[clamp(60px,6vw,92px)] leading-[1.75]">
                           {trimmed(item?.body)}
                         </p>
                       </div>

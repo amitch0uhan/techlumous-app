@@ -30,6 +30,7 @@ const DEFAULT_COLORS = {
   textBody: "#E8E6DF",
   textMuted: "#B4B1A7",
   textSubtle: "#807D75",
+  sectionText: "#FFFFFF",
   onImage: "#FFFFFF",
   onLight: "#0A0A0B",
   border: "#FFFFFF",
@@ -69,6 +70,7 @@ export const contentSchema = z.object({
       textBody: color("Body text", DEFAULT_COLORS.textBody),
       textMuted: color("Muted text", DEFAULT_COLORS.textMuted),
       textSubtle: color("Subtle label text", DEFAULT_COLORS.textSubtle),
+      sectionText: color("Section text", DEFAULT_COLORS.sectionText),
 
       onImage: color("Text & controls over images", DEFAULT_COLORS.onImage),
       onLight: color("Text on light buttons", DEFAULT_COLORS.onLight),

@@ -16,21 +16,22 @@ and footer.
   before a control existed still renders; content saved under the earlier
   `z.enum(["show", "hide"])` still works too, since `Template.tsx` treats the
   string `"hide"` and boolean `false` the same way.
-- **Every colour the template paints is editable.** The `colors` group holds 16
+- **Every colour the template paints is editable.** The `colors` group holds 17
   six-digit hex values, one per design role, and is declared first so it renders
-  at the top of the form. It is the only nested object in the schema — sixteen
+  at the top of the form. It is the only nested object in the schema — seventeen
   sibling `*Color` scalars would swamp the flat top level — and it is marked
   `collapsed` so the swatches do not push the rest of the panel below the fold.
 
-  | Prop                                                     | Paints                                                                             |
-  | -------------------------------------------------------- | ---------------------------------------------------------------------------------- |
-  | `canvas` / `navSurface` / `cardSurface` / `panelSurface` | the four opaque surfaces                                                           |
-  | `accentPrimary` / `accentSecondary` / `accentForeground` | buttons, glow, both tinted section panels, and the label sitting on an accent fill |
-  | `textStrong` / `textBody` / `textMuted` / `textSubtle`   | the warm off-panel text ramp                                                       |
-  | `onImage` / `onLight`                                    | text and controls over photography; the label on a light button                    |
-  | `border` / `scrim` / `shadow`                            | hairlines, the two image overlays, drop shadows                                    |
+  | Prop                                                     | Paints                                                                                                                   |
+  | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+  | `canvas` / `navSurface` / `cardSurface` / `panelSurface` | the four opaque surfaces                                                                                                 |
+  | `accentPrimary` / `accentSecondary` / `accentForeground` | buttons, glow, both tinted section panels, and the label sitting on an accent fill                                       |
+  | `textStrong` / `textBody` / `textMuted` / `textSubtle`   | the warm off-panel text ramp                                                                                             |
+  | `sectionText`                                            | all text inside the two tinted panels (destinations, why-us), isolated from every other role                             |
+  | `onImage` / `onLight`                                    | text and controls over photography (hero, nav lockup, package cards, the white button fill); the label on a light button |
+  | `border` / `scrim` / `shadow`                            | hairlines, the two image overlays, drop shadows                                                                          |
 
-  `Template.tsx` redeclares all 16 as `--color-lt-*` custom properties on the
+  `Template.tsx` redeclares all 17 as `--color-lt-*` custom properties on the
   template root, so every `*-lt-*` utility, every opacity modifier built on one,
   and the scrim/shadow/glow classes resolve to the studio value. The literals in
   the `@theme` block are only reached if that inline layer is absent.

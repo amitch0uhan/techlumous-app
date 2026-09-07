@@ -22,6 +22,9 @@
   --color-lt-muted: #b4b1a7;
   --color-lt-subtle: #807d75;
 
+  /* --- Text inside a tinted section panel ------------------------------- */
+  --color-lt-section-text: #ffffff;
+
   /* over imagery / on a light fill */
   --color-lt-on-image: #ffffff;
   --color-lt-on-light: #0a0a0b;
