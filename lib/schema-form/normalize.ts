@@ -7,6 +7,7 @@ interface FieldMeta {
   widget?: WidgetId
   format?: string
   labelLayout?: "above" | "beside"
+  collapsed?: boolean
 }
 
 export function normalize(schema: ZodType, key = ""): FieldDescriptor {
@@ -19,6 +20,7 @@ export function normalize(schema: ZodType, key = ""): FieldDescriptor {
     widget: meta.widget,
     format: meta.format,
     labelLayout: meta.labelLayout,
+    collapsed: meta.collapsed,
   }
 
   switch (def.type as string) {
@@ -44,6 +46,10 @@ export function normalize(schema: ZodType, key = ""): FieldDescriptor {
     case "default":
     case "prefault":
     case "readonly": {
+      // A wrapper carries its own `.meta()` only when the author put it there;
+      // otherwise every editor hint falls through to the schema it wraps. All of
+      // them must be forwarded — `z.object({...}).meta({...}).prefault({})` is a
+      // normal shape, and dropping one here silently loses that hint.
       const inner = normalize(def.innerType, key)
       return {
         ...inner,
@@ -51,6 +57,8 @@ export function normalize(schema: ZodType, key = ""): FieldDescriptor {
         label: base.label ?? inner.label,
         widget: base.widget ?? inner.widget,
         format: base.format ?? inner.format,
+        labelLayout: base.labelLayout ?? inner.labelLayout,
+        collapsed: base.collapsed ?? inner.collapsed,
       }
     }
     default:

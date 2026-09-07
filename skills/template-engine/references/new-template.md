@@ -114,6 +114,18 @@ Schema design checklist:
 - Every editable field has a useful label.
 - Long text uses `widget: "textarea"`.
 - Links use `format: "url"`.
+- On/off state uses `z.boolean()` (renders as a switch). Place a `show*` section
+  toggle immediately before that section's own fields so the form shows the
+  switch above the content it controls.
+- Colours use `widget: "color"` (swatch + hex). Expose the palette as one
+  `colors` group of semantic roles declared first in the schema and marked
+  `collapsed`, rather than as scattered top-level `*Color` scalars. Always
+  include the readable "on" colour placed over an accent (button text / icons)
+  so a light accent does not leave an unreadable label.
+- Any new field needs a `.default()`, and any new object group needs
+  `.default()` on every leaf plus `.prefault({})` on the group — nothing
+  backfills a new key, so without this every existing project fails publish
+  validation. See the compatibility rules in the parent skill.
 - Uploaded images use `widget: "image"` and have alt text.
 - Groups and arrays have labels that make sense in the editor.
 - Default arrays include enough realistic data to test repetition and wrapping.
@@ -144,6 +156,13 @@ Render all user-visible values from `content`; do not hard-code editable copy in
 the component. Use stable semantic keys instead of array indexes when the
 content model provides an identifier.
 
+Box a user-supplied logo so any orientation fits. Fix one dimension, cap the
+other, and use `object-contain` so a wide wordmark, a portrait mark, and a
+square icon all render uncropped. Do not impose a shape, fill or border — no
+circular clip that cuts the corners off a non-round logo. Keep the generated
+placeholder mark on a separate branch so its look never changes. See `brandMark`
+in `lumous-travel-one`.
+
 If using Tailwind, the local `styles.css` starts with:
 
 ```css
@@ -156,6 +175,24 @@ If using Tailwind, the local `styles.css` starts with:
 
 Keep custom token and keyframe names template-specific. Load template fonts in
 the component and attach their variable classes at the template root.
+
+### Scroll-triggered reveals must survive a non-scrolling viewport
+
+Known issue in `lumous-travel-one`: sections near the end of the page (the
+contact block at ~90% height) stayed invisible in the studio preview — the
+content simply never appeared.
+
+Cause: the preview renders the template in an iframe sized to the full document
+height with `overflow: hidden`, so it cannot scroll. A GSAP ScrollTrigger with a
+viewport-relative `start` (e.g. `"top 88%"`) never reaches its trigger point for
+anything past that line, so the element is left in its hidden `from` state
+(`opacity: 0`) permanently.
+
+When a reveal effect hides content with JS, guarantee it becomes visible even
+when scroll distance is zero: settle any trigger whose `start` exceeds
+`ScrollTrigger.maxScroll(window)` on each refresh, or drive the reveal from an
+`IntersectionObserver` instead. Never let final visibility depend on a scroll
+event that a non-scrolling preview can't produce.
 
 ## 4. Export the Uniform Module
 

@@ -52,6 +52,13 @@ template-engine/
 - Use only packages already in this folder's current `package.json`. Adding or
   installing packages is prohibited, including in AI auto-permission mode;
   only an explicit user request to install a specific package can authorize it.
+- Icons come from `@phosphor-icons/react` (already a dependency). Do not
+  hand-write inline `<svg>`, paste path data out of a design file, or use a text
+  glyph (`+`, `→`, `★`) as an icon. Import each icon by name so the bundle stays
+  tree-shaken, size it with `size`, let it inherit `currentColor`, and pick one
+  `weight` for the whole template:
+  `<ArrowUpRight size={18} weight="light" aria-hidden="true" />`. Phosphor
+  components are client components, so the template needs `"use client"`.
 - Treat content as partial or older JSON: use optional chaining and safe
   fallbacks for every nested object and array prop (`content.hero?.title ?? ""`,
   `(content.links ?? []).map(...)`). Do not directly call `.map`, `.length`,

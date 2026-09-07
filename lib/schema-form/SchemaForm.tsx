@@ -117,7 +117,13 @@ export function Field({
     }
 
     return (
-      <Accordion variant="schema" defaultValue={[field.key]}>
+      // A group opens on first paint unless it asks not to. A large group — a
+      // colour palette, say — would otherwise push every other field in the
+      // panel below the fold.
+      <Accordion
+        variant="schema"
+        defaultValue={field.collapsed ? [] : [field.key]}
+      >
         <AccordionItem
           variant="schema"
           value={field.key}

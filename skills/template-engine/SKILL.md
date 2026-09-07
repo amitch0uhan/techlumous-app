@@ -116,8 +116,57 @@ or database writes to its runtime.
 - Use `next/image` for optimized images. If content can reference a new remote
   host, update `template-engine/next.config.ts` deliberately and verify that the
   host restriction is no broader than required.
+- Take icons from `@phosphor-icons/react`, which is already a declared engine
+  dependency. Do not hand-write inline `<svg>` markup, copy path data out of a
+  design file, or render a text glyph (`+`, `→`, `★`) as an icon. Phosphor is
+  the same icon set the root app uses, so a template stays visually consistent
+  with the studio, and its icons are tree-shaken, sized by a `size` prop, and
+  inherit `currentColor` — which a pasted SVG usually does not.
+  Import each icon by name so only what is used is bundled, and pick one
+  `weight` (`thin` | `light` | `regular` | `bold` | `fill` | `duotone`) for the
+  whole template rather than mixing weights per icon:
+
+  ```tsx
+  import { ArrowUpRight } from "@phosphor-icons/react"
+  ;<ArrowUpRight size={18} weight="light" aria-hidden="true" />
+  ```
+
+  Mark a decorative icon `aria-hidden="true"` and put the label on its
+  interactive parent. Phosphor components are client components, so a template
+  using them needs `"use client"`.
+
 - Make the template responsive and usable at the studio preview widths as well
   as on the standalone published page.
+- Give a user-supplied brand asset (logo) a generous bounded box rather than a
+  tight square. Fix one dimension, let the other grow with the artwork up to a
+  cap, and use `object-contain` so a wide wordmark, a portrait mark, and a
+  square icon all fit without being cropped or distorted. Do not impose a shape,
+  fill or border — no `rounded-full`/`overflow-hidden` clip that would cut the
+  corners off a non-round logo. Keep any generated placeholder mark on its own
+  separate path so this box never changes the default look. Reference:
+  `brandMark` in `lumous-travel-one`.
+- When an accent or brand colour is editable, also expose the readable colour
+  laid over it (the "on" colour — button text, icons on a filled control) as its
+  own field, defaulted to the design value. A light accent paired with the fixed
+  dark-on-accent text otherwise renders an unreadable label. Reference:
+  `colors.accentForeground` / `--color-lt-on-primary` in `lumous-travel-one`.
+- Make a template's palette editable as **one `colors` group of semantic roles**,
+  declared first in the schema so it renders at the top of the form, marked
+  `collapsed`, with `widget: "color"` on each leaf. Name roles for the job
+  (`panelSurface`, `onImage`, `scrim`) rather than the shade, and keep the set
+  curated — collapse near-identical one-offs onto the nearest role instead of
+  exposing every literal. Redeclare the whole set as custom properties on the
+  template root so one inline layer drives every utility. Two mechanics make
+  this cheap, both proven in `lumous-travel-one`:
+  - An **opacity modifier works on any `@theme` colour token**, so the many
+    alpha steps stay at their call sites and still follow the token:
+    `border-white/20` becomes `border-lt-border/20`, unchanged visually.
+  - A **Tailwind arbitrary value cannot contain a `color-mix()`**, because it
+    has spaces. Any gradient or box-shadow whose colour must track a token has
+    to become a real class in the template's `styles.css`
+    (`.lt-scrim-hero`, `.lt-shadow-card`). Keep the alpha ladder fixed in that
+    rule — it is what holds text legible over an arbitrary photograph — and let
+    only the hue be editable.
 
 ## Content Schema Rules
 
@@ -127,9 +176,10 @@ metadata is:
 ```ts
 .meta({
   label: "Field label",
-  widget: "text" | "textarea" | "url" | "image" | "select",
+  widget: "text" | "textarea" | "url" | "image" | "select" | "switch" | "color",
   format: "url",
   labelLayout: "above" | "beside",
+  collapsed: true, // labelled object only: render its group closed
 })
 ```
 
@@ -137,7 +187,13 @@ Use these editor-safe shapes:
 
 - `z.string()` for text; select `textarea`, `url`, or `image` with metadata.
 - `z.enum([...])` for a select.
-- `z.object({...})` for a group.
+- `z.boolean()` for an on/off switch; the resolver maps it to the `switch`
+  widget, and the stored value is a real boolean. Declare a `show*` toggle
+  immediately before the fields of the section it controls so the generated form
+  places the switch directly above that section's content.
+- `z.string()` with `widget: "color"` for a swatch picker beside the hex text.
+- `z.object({...})` for a group; label it to get a collapsible accordion, and add
+  `collapsed: true` when it is large enough to bury the rest of the form.
 - `z.array(...)` for an add/remove list.
 - Optional, nullable, default, prefault, and readonly wrappers only after
   checking how an empty value should be created by the form.
@@ -149,11 +205,11 @@ flag the proposed schema to the user and get confirmation before implementing
 it. Existing nested schemas are legacy contracts and must not be flattened
 silently because that would break stored content.
 
-Do not assume arbitrary Zod constructs have a matching editor. Numbers and
-booleans are recognized structurally but currently fall back to a text input,
-which can produce strings. Unions, tuples, records, dates, transforms, and
-custom effects are not normalized as dedicated controls. Extend and test the
-schema-form system first if one is required.
+Do not assume arbitrary Zod constructs have a matching editor. Booleans resolve
+to a `switch`; numbers are recognized structurally but currently fall back to a
+text input, which can produce strings. Unions, tuples, records, dates,
+transforms, and custom effects are not normalized as dedicated controls. Extend
+and test the schema-form system first if one is required.
 
 For an image field, set `widget: "image"`. The studio upload path validates
 that metadata and requires a project id. Current accepted upload formats are
@@ -167,6 +223,19 @@ content contract when the image is rendered.
   shape.
 - Prefer additive fields with a deliberate fallback when compatibility is
   required. Otherwise plan an explicit content migration and version change.
+- **Nothing in the pipeline backfills a newly added key.** The editor loads
+  `draft_content` verbatim (a whole-document fallback, never a per-key merge),
+  saving does not apply the template schema at all, and publishing `safeParse`s
+  and refuses on failure. A new _required_ field therefore locks every existing
+  project out of publishing until someone fills it in by hand. Give a new field
+  a `.default()` so `safeParse` fills it and publish writes it back; for a new
+  object group, put a `.default()` on every leaf **and** `.prefault({})` on the
+  group — a plain `.default({})` short-circuits and hands back an empty object
+  instead of re-parsing through the leaf defaults.
+- The deployed renderer runs `<Template content={publishedContent}>` with no
+  schema parse and no error boundary above it, so a template must also read a
+  new nested value defensively (`content.group ?? {}`) or an already-published
+  site throws on the next deployment.
 - Do not rely on the published renderer to repair invalid content. Publication
   validates against the schema, while the deployed page renders the stored
   published payload directly.
