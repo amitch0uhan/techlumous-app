@@ -117,7 +117,10 @@ export function Field({
     }
 
     return (
-      <Accordion variant="schema" defaultValue={[field.key]}>
+      <Accordion
+        variant="schema"
+        defaultValue={field.collapsed ? [] : [field.key]}
+      >
         <AccordionItem
           variant="schema"
           value={field.key}

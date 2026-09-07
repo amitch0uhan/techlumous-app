@@ -1,0 +1,116 @@
+@import "tailwindcss";
+
+/* Ported Lumous design system. Every token is `lt-` prefixed. Colour and font
+   literals are fallbacks only: Template.tsx re-declares them on the template
+   root from the editable `colors` group. White/black colour roles are only ever
+   painted through an opacity modifier or a color-mix. */
+@theme {
+  /* surfaces */
+  --color-lt-canvas: #07080a;
+  --color-lt-nav-surface: #0f0f12;
+  --color-lt-card-surface: #131317;
+  --color-lt-panel-surface: #1c1c22;
+
+  /* brand accent */
+  --color-lt-primary: #3aae7e;
+  --color-lt-secondary: #1f6b4e;
+  --color-lt-on-primary: #06120d;
+
+  /* text ramp */
+  --color-lt-strong: #ffffff;
+  --color-lt-body: #e8e6df;
+  --color-lt-muted: #b4b1a7;
+  --color-lt-subtle: #807d75;
+
+  /* --- Text inside a tinted section panel ------------------------------- */
+  --color-lt-section-text: #ffffff;
+
+  /* over imagery / on a light fill */
+  --color-lt-on-image: #ffffff;
+  --color-lt-on-light: #0a0a0b;
+
+  /* lines and depth */
+  --color-lt-border: #ffffff;
+  --color-lt-scrim: #07080a;
+  --color-lt-shadow: #000000;
+
+  /* Must stay literal: a var() to a next/font variable resolves to nothing on :root. */
+  --font-lt-display: "Manrope", system-ui, sans-serif;
+  --font-lt-body: "Manrope", system-ui, sans-serif;
+  --font-lt-label: "Manrope", system-ui, sans-serif;
+
+  /* fluid display scale */
+  --text-lt-display-lg: clamp(2.5rem, 1.4rem + 5vw, 4.5rem);
+  --text-lt-display-md: clamp(2rem, 1.4rem + 3vw, 3.25rem);
+  --text-lt-sm: 0.875rem;
+  --text-lt-xs: 0.78rem;
+
+  /* tracking */
+  --tracking-lt-tight: -0.03em;
+  --tracking-lt-snug: -0.01em;
+  --tracking-lt-eyebrow: 0.18em;
+
+  /* radii */
+  --radius-lt-lg: 16px;
+
+  /* motion */
+  --ease-lt-standard: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --ease-lt-emphasis: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* The template's one breakpoint; 700px is where the section header grids stop
+   fitting two columns. Keep it in step with the `lt-mobile:` alignment rules. */
+@custom-variant lt-mobile (@media (width < 700px));
+
+/* One destination slide width. Percentage-free: it also feeds a translateX(),
+   which would resolve a `%` against the track rather than the viewport. */
+.lt-destination-carousel {
+  --lt-slide: calc((min(68vw, 940px) - clamp(12px, 1.5vw, 20px)) / 1.5);
+}
+
+@media (width < 700px) {
+  .lt-destination-carousel {
+    --lt-slide: calc(100vw - 16px - 2 * clamp(20px, 4vw, 64px));
+  }
+}
+
+/* Classes rather than Tailwind arbitrary values so the color-mix() stops track
+   the editable tokens; the alpha ladders themselves are fixed by the design. */
+.lt-glow-sm {
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--color-lt-primary) 25%, transparent),
+    0 6px 24px color-mix(in srgb, var(--color-lt-primary) 22%, transparent);
+}
+
+.lt-scrim-hero {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--color-lt-scrim) 66%, transparent) 0%,
+    color-mix(in srgb, var(--color-lt-scrim) 16%, transparent) 38%,
+    color-mix(in srgb, var(--color-lt-scrim) 16%, transparent) 100%
+  );
+}
+
+.lt-scrim-card {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--color-lt-scrim) 35%, transparent) 0%,
+    color-mix(in srgb, var(--color-lt-scrim) 25%, transparent) 40%,
+    color-mix(in srgb, var(--color-lt-scrim) 92%, transparent) 100%
+  );
+}
+
+.lt-shadow-button {
+  box-shadow: 0 6px 24px
+    color-mix(in srgb, var(--color-lt-shadow) 28%, transparent);
+}
+
+.lt-shadow-float {
+  box-shadow: 0 8px 32px
+    color-mix(in srgb, var(--color-lt-shadow) 22%, transparent);
+}
+
+.lt-shadow-card {
+  box-shadow: 0 4px 16px
+    color-mix(in srgb, var(--color-lt-shadow) 35%, transparent);
+}

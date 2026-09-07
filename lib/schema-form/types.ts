@@ -7,6 +7,7 @@ export type WidgetId =
   | "group"
   | "array"
   | "switch"
+  | "color"
 
 export interface FieldDescriptor {
   key: string
@@ -18,6 +19,7 @@ export interface FieldDescriptor {
   options?: string[]
   fields?: FieldDescriptor[]
   item?: FieldDescriptor
+  collapsed?: boolean
 }
 
 export interface WidgetProps {

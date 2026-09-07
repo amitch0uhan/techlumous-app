@@ -3,7 +3,7 @@ import type { TemplateMeta } from "@/templates/types"
 export const meta: TemplateMeta = {
   slug: "lumous-travel-one",
   name: "Lumous Travel One",
-  version: "2.0.0",
+  version: "1.0.0",
   category: "landing",
   tags: ["dark", "one-page", "travel", "animated", "cta"],
   description:

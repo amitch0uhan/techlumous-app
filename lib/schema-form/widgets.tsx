@@ -79,6 +79,33 @@ function SwitchWidget({ value, onChange, field }: WidgetProps) {
   )
 }
 
+const HEX_PATTERN = /^#[0-9a-fA-F]{6}$/
+
+function ColorWidget({ value, onChange, field }: WidgetProps) {
+  const raw = typeof value === "string" ? value : ""
+  // The picker only accepts `#rrggbb`; the text input stays authoritative for partial edits.
+  const swatch = HEX_PATTERN.test(raw) ? raw : "#000000"
+
+  return (
+    <div className="flex items-center gap-2">
+      <input
+        type="color"
+        value={swatch}
+        aria-label={field.label ? `${field.label} picker` : "Colour picker"}
+        onChange={(event) => onChange(event.target.value.toUpperCase())}
+        className="size-7 shrink-0 cursor-pointer appearance-none rounded-md border border-border bg-transparent p-0 [&::-webkit-color-swatch]:rounded-sm [&::-webkit-color-swatch]:border-0 [&::-webkit-color-swatch-wrapper]:p-0.5"
+      />
+      <Input
+        variant="schema"
+        value={raw}
+        placeholder={field.label}
+        spellCheck={false}
+        onChange={(event) => onChange(event.target.value)}
+      />
+    </div>
+  )
+}
+
 function formatFileSize(bytes: number) {
   if (bytes < 1024) return `${bytes} B`
   if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`
@@ -290,4 +317,5 @@ export const widgets: Record<
   image: ImageWidget,
   select: SelectWidget,
   switch: SwitchWidget,
+  color: ColorWidget,
 }

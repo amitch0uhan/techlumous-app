@@ -32,16 +32,23 @@ z.object({
   site: z.string().meta({ label: "Site", format: "url" }), // -> url (semantic)
   theme: z.enum(["dark", "light"]), // -> select (enum)
   visible: z.boolean().meta({ label: "Show section" }), // -> switch
+  accent: z.string().meta({ label: "Accent", widget: "color" }), // -> swatch + hex
   links: z.array(z.object({/* ... */})), // -> repeatable list
 })
 ```
 
-- `widget` — force a specific input (`"text" | "textarea" | "url" | "select" | "switch"`).
+- `widget` — force a specific input
+  (`"text" | "textarea" | "url" | "image" | "select" | "switch" | "color"`).
 - `format` — semantic hint (`"url"`); the resolver maps it to a widget.
 - `label` — the field label. Omit it and the field renders with no label.
+- `collapsed` — on a labelled object, render its group closed on first paint.
+  Use it for a large group that would otherwise push the rest of the form below
+  the fold.
 - Objects become groups, arrays become add/remove lists — automatically, no meta
   needed.
 - Booleans become switches automatically.
+- Every hint above survives a wrapper, so
+  `z.object({ ... }).meta({ label: "Colours" }).prefault({})` keeps its label.
 
 ## Adding a new widget
 

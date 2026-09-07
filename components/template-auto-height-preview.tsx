@@ -32,6 +32,8 @@ export function TemplateAutoHeightPreview({
   const cleanupRef = useRef<(() => void) | null>(null)
   const frameLoadedRef = useRef(false)
   const rendererReadyRef = useRef(false)
+  const measureStyleRef = useRef<HTMLStyleElement | null>(null)
+  const appliedHeightRef = useRef(-1)
 
   const postToRenderer = useCallback((message: TemplateLiveMessage) => {
     const frame = iframeRef.current
@@ -81,6 +83,9 @@ export function TemplateAutoHeightPreview({
         return
       }
 
+      // Handshake once per renderer document, else form-ready/renderer-ready loop forever.
+      if (rendererReadyRef.current) return
+
       rendererReadyRef.current = true
       sendFormReady()
       sendContentUpdate()
@@ -105,17 +110,13 @@ export function TemplateAutoHeightPreview({
     const doc = frame?.contentDocument
     if (!frame || !doc?.body) return
 
-    // Temporarily shrinking the iframe changes the outer document's scroll
-    // height. If the editor is currently scrolled below that temporary
-    // height, the browser clamps the page to the top before the iframe is
-    // restored. Keep the user's outer-page position across the measurement.
-    const scrollX = window.scrollX
-    const scrollY = window.scrollY
-
-    // Measure from the editor's available viewport height so template styles
-    // such as min-height: 100vh do not create a height feedback loop.
     const minimumHeight = Math.max(window.innerHeight - 96, 320)
-    frame.style.height = `${minimumHeight}px`
+
+    // Suppress the templates' `min-height: 100vh` for the measurement so the frame
+    // can shrink. A <head> stylesheet does this without touching the renderer
+    // viewport, which would trip the body MutationObserver and feed a resize loop.
+    const measureStyle = measureStyleRef.current
+    if (measureStyle) measureStyle.disabled = false
 
     const contentHeight = Math.max(
       doc.documentElement.scrollHeight,
@@ -125,6 +126,15 @@ export function TemplateAutoHeightPreview({
       minimumHeight
     )
 
+    if (measureStyle) measureStyle.disabled = true
+
+    // Only touch the frame when the value moved; an unchanged write still risks a loop.
+    if (contentHeight === appliedHeightRef.current) return
+    appliedHeightRef.current = contentHeight
+
+    // A shorter frame can clamp the outer scroll position; restore it.
+    const scrollX = window.scrollX
+    const scrollY = window.scrollY
     frame.style.height = `${contentHeight}px`
     window.scrollTo(scrollX, scrollY)
   }, [])
@@ -135,6 +145,8 @@ export function TemplateAutoHeightPreview({
 
       const frame = event.currentTarget
       frameLoadedRef.current = true
+      // Fresh renderer document: let its `renderer-ready` back through the guard.
+      rendererReadyRef.current = false
       const doc = frame.contentDocument
 
       sendFormReady()
@@ -144,6 +156,15 @@ export function TemplateAutoHeightPreview({
 
       doc.documentElement.style.overflow = "hidden"
       doc.body.style.overflow = "hidden"
+
+      // Lives in <head> (unwatched by the observer); enabled only during a measurement.
+      const measureStyle = doc.createElement("style")
+      measureStyle.textContent =
+        "html,body{min-height:0!important}body>*{min-height:0!important}"
+      doc.head.appendChild(measureStyle)
+      measureStyle.disabled = true
+      measureStyleRef.current = measureStyle
+      appliedHeightRef.current = -1
 
       let disposed = false
       let animationFrame: number | null = null
@@ -164,8 +185,7 @@ export function TemplateAutoHeightPreview({
         subtree: true,
       })
 
-      // Resizing an editor panel changes the iframe viewport without changing
-      // the outer window. Re-measure after width-driven template reflow.
+      // Re-measure after a width-driven template reflow (editor panel resize).
       const resizeObserver = new ResizeObserver(([entry]) => {
         if (!entry || entry.contentRect.width === previousFrameWidth) return
         previousFrameWidth = entry.contentRect.width
@@ -187,6 +207,10 @@ export function TemplateAutoHeightPreview({
         doc.removeEventListener("load", scheduleResize, true)
         doc.removeEventListener("transitionend", scheduleResize, true)
         window.removeEventListener("resize", scheduleResize)
+        measureStyle.remove()
+        if (measureStyleRef.current === measureStyle) {
+          measureStyleRef.current = null
+        }
         if (animationFrame !== null) {
           window.cancelAnimationFrame(animationFrame)
         }

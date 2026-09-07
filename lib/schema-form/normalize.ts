@@ -7,6 +7,7 @@ interface FieldMeta {
   widget?: WidgetId
   format?: string
   labelLayout?: "above" | "beside"
+  collapsed?: boolean
 }
 
 export function normalize(schema: ZodType, key = ""): FieldDescriptor {
@@ -19,6 +20,7 @@ export function normalize(schema: ZodType, key = ""): FieldDescriptor {
     widget: meta.widget,
     format: meta.format,
     labelLayout: meta.labelLayout,
+    collapsed: meta.collapsed,
   }
 
   switch (def.type as string) {
@@ -44,6 +46,7 @@ export function normalize(schema: ZodType, key = ""): FieldDescriptor {
     case "default":
     case "prefault":
     case "readonly": {
+      // Forward every hint the wrapper does not itself set through to its inner schema.
       const inner = normalize(def.innerType, key)
       return {
         ...inner,
@@ -51,6 +54,8 @@ export function normalize(schema: ZodType, key = ""): FieldDescriptor {
         label: base.label ?? inner.label,
         widget: base.widget ?? inner.widget,
         format: base.format ?? inner.format,
+        labelLayout: base.labelLayout ?? inner.labelLayout,
+        collapsed: base.collapsed ?? inner.collapsed,
       }
     }
     default:
