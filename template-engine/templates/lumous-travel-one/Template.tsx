@@ -24,57 +24,36 @@ import type { LumousTravelOneContent } from "./schema"
 
 import "./styles.css"
 
-// Self-hosted through next/font so the template never depends on the engine
-// layout for its typefaces. Manrope is the single family: the source design
-// already remapped the design system's mono slot to it, and the body slot now
-// uses it too, so display, body and label all resolve to one variable font.
 const manrope = Manrope({
   subsets: ["latin"],
   display: "swap",
 })
 
-// The font tokens are re-declared on the template root rather than pointed at a
-// next/font `variable` class. A var() inside a custom property is substituted
-// where that property is *declared*, so a `@theme` token on :root can never see
-// a next/font variable that only exists further down the tree — it would
-// resolve to nothing and silently drop the whole font-family. Assigning the
-// generated family here means the substitution happens on an element that
-// actually has it, and every `font-lt-*` utility below inherits it.
+// Assign the generated family on the template root: a var() in a :root @theme
+// token cannot see a next/font variable declared further down the tree.
 const fontTokens = {
   "--font-lt-display": manrope.style.fontFamily,
   "--font-lt-body": manrope.style.fontFamily,
   "--font-lt-label": manrope.style.fontFamily,
 } as CSSProperties
 
-// Every section element spans the full viewport so its background bleeds edge
-// to edge. This wrapper puts the content back onto the shared column with the
-// template's horizontal layout padding, so copy stays aligned across sections
-// whether or not the section behind it is painted.
+// Lays content back onto the shared column inside a full-bleed section.
 const CONTENT = "mx-auto w-full max-w-[1440px] px-[clamp(20px,4vw,64px)]"
 
-// A painted section stretches to the full width the page gutter allows, so its
-// background is what spans; each direct child is then laid back onto the
-// content column above. Applied as a child selector so the section keeps
-// carrying its own background rather than delegating it to an overlay.
+// Same, applied to each direct child so the section keeps its own background.
 const CONTENT_CHILDREN =
   "[&>*]:mx-auto [&>*]:w-full [&>*]:max-w-[1440px] [&>*]:px-[clamp(20px,4vw,64px)]"
 
-// The page gutter. Sections stop short of the viewport edge by this much on
-// each side, which is the inset the source layout has always had — the panels
-// are meant to read as inset cards, not as full-bleed bands.
 const SECTION_RADIUS = "rounded-[clamp(18px,2vw,28px)]"
 
 const PACKAGE_WIDTH_ACTIVE = "clamp(280px, 46vw, 640px)"
 const PACKAGE_WIDTH_IDLE = "clamp(170px, 22vw, 300px)"
 const PACKAGE_GAP = "clamp(12px, 1.5vw, 20px)"
 const REGION_ROW = "clamp(34px, 3.4vw, 46px)"
-// Declared by `.lt-destination-carousel` in styles.css, which also holds the
-// mobile override. Kept as a var so one slide width drives both the flex basis
-// and the track's translateX.
+// Defined by `.lt-destination-carousel` in styles.css, incl. its mobile override.
 const DESTINATION_SLIDE = "var(--lt-slide)"
 
-// Content arrives as editable, potentially older JSON. Every collection and
-// nested object is read through these loosened shapes plus optional chaining.
+// Content is editable, possibly older JSON: read through loose shapes + optional chaining.
 type Content = LumousTravelOneContent
 type HeroCard = Partial<Content["heroCards"][number]>
 type Destination = Partial<Content["destinations"][number]>
@@ -84,10 +63,7 @@ type PackageItem = Partial<Content["packages"][number]>
 type FooterLink = Partial<Content["footerLinks"][number]>
 type Colors = Partial<Content["colors"]>
 
-/* Content saved before the `colors` group existed carries three flat colour
-   keys instead. They are gone from the schema but still honoured here, so an
-   existing project keeps the accent it chose rather than snapping back to the
-   design green. Nothing else reads this shape. */
+// Pre-`colors`-group content carried three flat accent keys; still honoured below.
 type LegacyColors = {
   primaryColor?: unknown
   secondaryColor?: unknown
@@ -104,13 +80,7 @@ const list = <T,>(value: unknown): T[] => (Array.isArray(value) ? value : [])
 const trimmed = (value: unknown) =>
   typeof value === "string" ? value.trim() : ""
 
-/* Every photograph now comes from content, whose defaults point at the shared
-   `techlumous` Storage bucket — the template no longer bundles any imagery.
-
-   A cleared image field therefore renders nothing at all: `next/image` rejects
-   an empty `src`, and with no bundled artwork left there is nothing to fall
-   back to. Each surrounding layout keeps its own size and background, so a
-   missing photograph leaves a gap rather than collapsing the section. */
+// A cleared image field renders nothing; `next/image` rejects an empty `src`.
 function ContentImage({
   src,
   alt,
@@ -118,14 +88,10 @@ function ContentImage({
 }: Omit<ComponentProps<typeof Image>, "src"> & { src: unknown }) {
   const url = trimmed(src)
   if (url.length === 0) return null
-  // `alt` is pulled out and passed explicitly rather than left in the spread so
-  // the jsx-a11y/alt-text rule can see it; the prop type already requires it.
   return <Image src={url} alt={alt} {...rest} />
 }
 
-// Headlines mark emphasised runs with *asterisk pairs*. The surrounding line is
-// dimmed and the marked words come forward, reproducing the design's two-tone
-// headline without needing a nested content shape.
+// Renders *asterisk pairs* as bright inline runs against the dimmed line.
 function emphasise(value: unknown): ReactNode {
   const source = typeof value === "string" ? value : ""
   if (!source.includes("*")) return source
@@ -140,10 +106,6 @@ function emphasise(value: unknown): ReactNode {
   )
 }
 
-/* Every icon in this template comes from `@phosphor-icons/react`; nothing is
-   hand-drawn as inline SVG. `light` is the weight that matches the source
-   canvas's hairline strokes, and `currentColor` is Phosphor's default so each
-   icon inherits the surrounding text colour. */
 const ICON_WEIGHT = "light" as const
 
 const BUTTON_SIZE = {
@@ -165,7 +127,6 @@ const ICON_SIZE = {
   lg: "h-[54px] w-[54px]",
 } as const
 
-/** Button plus trailing icon button, the pairing the design uses for every CTA. */
 function CtaPair({
   label,
   href,
@@ -281,8 +242,7 @@ export function Template({ content }: { content: Content }) {
   const [openRow, setOpenRow] = useState(0)
   const [pkgRaw, setPkg] = useState(0)
 
-  // Collections shrink when the studio removes an entry, so every index is
-  // clamped at read time rather than trusted from state.
+  // Clamp every carousel index at read time: collections shrink when entries are removed.
   const heroIndex =
     heroCards.length > 0 ? Math.min(heroRaw, heroCards.length - 1) : 0
   const destIndex =
@@ -291,10 +251,7 @@ export function Template({ content }: { content: Content }) {
     packages.length > 0 ? Math.min(pkgRaw, packages.length - 1) : 0
   const activeDestination = destinations[destIndex]
 
-  // Visibility is a boolean switch now. A missing value means the section
-  // predates the control, so it stays visible; only `false` removes it. Content
-  // saved under the older enum still carries the string "hide", so that is
-  // honoured too.
+  // Missing = visible; only `false` (or the legacy string "hide") removes a section.
   const hidden = (value: unknown) => value === false || value === "hide"
   const show = {
     nav: !hidden(c.showNav),
@@ -308,8 +265,7 @@ export function Template({ content }: { content: Content }) {
     footer: !hidden(c.showFooter),
   }
 
-  // Section numbers are derived from what is actually rendered, so hiding a
-  // section renumbers the rest instead of leaving a gap in the sequence.
+  // Numbered from what actually renders, so hiding a section renumbers the rest.
   const numbered = (
     [
       show.about && "about",
@@ -326,14 +282,8 @@ export function Template({ content }: { content: Content }) {
     return index < 0 ? "" : `(${pad(index + 1)})`
   }
 
-  /* The whole palette is redeclared on the template root, so every `*-lt-*`
-     utility, every opacity modifier built on one, and the scrim/shadow/glow
-     classes in styles.css resolve to the studio value for this subtree. The
-     literals in the `@theme` block are only reached when this layer is absent.
-
-     Each role is read through `hue()` rather than directly: published content
-     may predate the `colors` group entirely, and this component renders on the
-     deployed site with no schema parse and no error boundary above it. */
+  // Redeclare the palette on the root so every `*-lt-*` utility and styles.css
+  // class resolves to the studio value. `hue()` guards content predating `colors`.
   const colors = (c.colors ?? {}) as Colors
   const legacy = c as LegacyColors
   const hue = (value: unknown, fallback: string, older?: unknown) =>
@@ -378,9 +328,8 @@ export function Template({ content }: { content: Content }) {
 
   const rootRef = useRef<HTMLDivElement | null>(null)
 
-  // GSAP owns the scroll-reveal layer only. It sets the hidden start state from
-  // inside this effect, so with JavaScript unavailable — or when the visitor
-  // asks for reduced motion — every section renders in its resting state.
+  // Scroll-reveal only. The hidden start state is set here, so without JS or
+  // with reduced-motion every section renders in its resting state.
   useEffect(() => {
     const root = rootRef.current
     if (!root) return
@@ -390,17 +339,8 @@ export function Template({ content }: { content: Content }) {
 
     let triggers: ScrollTrigger[] = []
 
-    /* A reveal that can never be scrolled to would stay hidden forever.
-       The studio preview is exactly that case: it sizes its iframe to the whole
-       document and disables scrolling, so the viewport *is* the page and
-       `top 88%` sits past the end for anything in the last 12% — the contact
-       section is at ~90%, and it held `opacity: 0` for the life of the preview.
-
-       So after every refresh — ScrollTrigger runs one whenever the viewport
-       resizes, which is what the preview's measuring does — settle any trigger
-       whose start lies beyond the furthest reachable scroll position. Only
-       genuinely unreachable sections are touched, so a normally scrolling page
-       still animates every section the usual way. */
+    // Reveal targets whose start is past the furthest reachable scroll can never
+    // fire (the non-scrolling studio preview), so settle them visible on refresh.
     const settleUnreachable = () => {
       const furthest = ScrollTrigger.maxScroll(window)
       const stranded = triggers.filter((trigger) => trigger.start > furthest)
@@ -444,18 +384,8 @@ export function Template({ content }: { content: Content }) {
   const brandName = trimmed(c.brandName)
   const logo = trimmed(c.logoUrl)
 
-  /* An uploaded logo wins; otherwise the engine's shared placeholder mark
-     stands in. That mark paints its own fixed `#F3F3F3` as an SVG presentation
-     attribute, so it does not follow the colour settings and no class here can
-     make it — changing that means changing a component every template shares.
-
-     The uploaded logo sits inside a bounded box rather than being forced into a
-     small square: the box's height is fixed and its width grows with the artwork
-     up to `maxWidth`, so a square mark and a wide wordmark are both shown whole,
-     since `object-contain` never crops. No shape, fill or border is imposed — a
-     round logo stays round, a wordmark stays rectangular, and the artwork sits
-     directly on the canvas. The generated placeholder keeps its own look
-     untouched. */
+  // Uploaded logo in a fixed-height box that grows to `maxWidth` (object-contain,
+  // never cropped); otherwise the engine's shared placeholder mark.
   const brandMark = (size: number, maxWidth: number) =>
     logo.length > 0 ? (
       <span
@@ -482,9 +412,7 @@ export function Template({ content }: { content: Content }) {
           {brandName}
         </span>
       </a>
-      {/* Dropped on mobile: the button pair plus its arrow cannot sit beside
-          the brand lockup without wrapping to a second row, and the contact
-          section already carries the same action. */}
+      {/* Dropped on mobile; the contact section carries the same action. */}
       <CtaPair
         label={c.navCtaLabel}
         href={c.navCtaHref}
@@ -502,7 +430,6 @@ export function Template({ content }: { content: Content }) {
       className="bg-lt-canvas text-lt-body font-lt-body min-h-screen overflow-x-hidden"
     >
       <div className="flex flex-col gap-[clamp(24px,3vw,56px)] p-[clamp(8px,1vw,16px)]">
-        {/* ------------------------------------------------------ hero --- */}
         {show.hero ? (
           <section
             id="top"
@@ -533,7 +460,7 @@ export function Template({ content }: { content: Content }) {
               )}
             >
               <h1 className="font-lt-display text-lt-display-lg tracking-lt-tight text-lt-on-image m-0 max-w-[20ch] leading-[1.06] font-extralight text-balance">
-                {trimmed(c.heroHeadline)}
+                {emphasise(c.heroHeadline)}
               </h1>
 
               <div className="grid [grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))] items-end gap-[clamp(20px,3vw,40px)]">
@@ -590,7 +517,7 @@ export function Template({ content }: { content: Content }) {
                       <div
                         className="ease-lt-emphasis flex gap-3 transition-transform duration-[360ms]"
                         style={{
-                          transform: `translateX(calc(${-heroIndex} * (min(78%, 320px) + 12px)))`,
+                          transform: `translateX(calc(${-heroIndex} * (clamp(240px, 78%, 320px) + 12px)))`,
                         }}
                       >
                         {heroCards.map((card, index) => (
@@ -636,7 +563,6 @@ export function Template({ content }: { content: Content }) {
           )
         )}
 
-        {/* ----------------------------------------------------- about --- */}
         {show.about ? (
           <section
             id="about"
@@ -675,7 +601,6 @@ export function Template({ content }: { content: Content }) {
           </section>
         ) : null}
 
-        {/* ---------------------------------------------- destinations --- */}
         {show.destinations ? (
           <section
             id="destinations"
@@ -702,10 +627,7 @@ export function Template({ content }: { content: Content }) {
               </div>
 
               {destinations.length > 0 ? (
-                /* The vertical region picker is hidden on mobile. It relies on
-                   a tall masked column beside the headline, which the stacked
-                   layout has no room for; the carousel's arrows remain the way
-                   to move between regions. */
+                // Vertical region picker; hidden on mobile, arrows replace it.
                 <div
                   className="lt-mobile:hidden w-full justify-self-end overflow-hidden [mask-image:linear-gradient(to_bottom,transparent_0%,#000_16%,#000_68%,transparent_100%)]"
                   style={{
@@ -757,10 +679,7 @@ export function Template({ content }: { content: Content }) {
                   </p>
                 </div>
 
-                {/* On mobile this fills the section's content width instead of
-                    sitting in a right-hand column, so one slide shows whole
-                    rather than the desktop 1.5-slide peek. Both widths come
-                    from `--lt-slide` in styles.css. */}
+                {/* Full width on mobile (one whole slide) vs. the 1.5-slide desktop peek. */}
                 <div className="lt-destination-carousel lt-mobile:ml-0 lt-mobile:flex-[0_0_100%] ml-auto flex-[0_0_min(68vw,940px,100%)] overflow-hidden">
                   <div
                     className="ease-lt-emphasis flex items-start gap-[clamp(12px,1.5vw,20px)] transition-transform duration-[420ms]"
@@ -815,7 +734,6 @@ export function Template({ content }: { content: Content }) {
           </section>
         ) : null}
 
-        {/* ---------------------------------------------- testimonials --- */}
         {show.testimonials ? (
           <section
             data-lt-reveal
@@ -834,9 +752,7 @@ export function Template({ content }: { content: Content }) {
                   {emphasise(c.testimonialsHeadline)}
                 </h2>
               </div>
-              {/* Right-aligned against the headline on desktop; once the grid
-                  is a single column that reads as a stray ragged block, so it
-                  returns to the left edge with a little breathing room. */}
+              {/* Right-aligned by the headline on desktop, left edge once stacked. */}
               <p className="text-lt-sm text-lt-muted lt-mobile:justify-self-start lt-mobile:my-[clamp(10px,3vw,20px)] lt-mobile:text-left m-0 max-w-[40ch] justify-self-end text-right leading-[1.75]">
                 {trimmed(c.testimonialsNote)}
               </p>
@@ -878,7 +794,6 @@ export function Template({ content }: { content: Content }) {
           </section>
         ) : null}
 
-        {/* --------------------------------------------------- why us --- */}
         {show.why ? (
           <section
             data-lt-reveal
@@ -957,7 +872,6 @@ export function Template({ content }: { content: Content }) {
           </section>
         ) : null}
 
-        {/* ------------------------------------------------- packages --- */}
         {show.packages ? (
           <section
             id="packages"
@@ -974,8 +888,6 @@ export function Template({ content }: { content: Content }) {
                   {emphasise(c.packagesHeadline)}
                 </h2>
               </div>
-              {/* Matches the testimonials note: left-aligned with extra
-                  vertical room once the header grid collapses to one column. */}
               <div className="lt-mobile:items-start lt-mobile:justify-self-start lt-mobile:my-[clamp(10px,3vw,20px)] lt-mobile:text-left flex flex-col items-end gap-6 justify-self-end text-right">
                 <p className="text-lt-sm text-lt-muted m-0 max-w-[42ch] leading-[1.75]">
                   {trimmed(c.packagesNote)}
@@ -1045,15 +957,12 @@ export function Template({ content }: { content: Content }) {
                             className="lt-scrim-card absolute inset-0"
                           />
 
-                          {/* An inactive panel is one big target that only
-                              selects; the real CTA appears once it is open, so
-                              no interactive element is ever nested inside
-                              another. */}
+                          {/* Whole inactive panel selects; the CTA only exists once open. */}
                           {!isActive ? (
                             <button
                               type="button"
                               onClick={() => setPkg(index)}
-                              aria-label={title}
+                              aria-label={title || `Package ${index + 1}`}
                               className="absolute inset-0 z-20 cursor-pointer bg-transparent"
                             />
                           ) : null}
@@ -1110,7 +1019,6 @@ export function Template({ content }: { content: Content }) {
           </section>
         ) : null}
 
-        {/* --------------------------------------------------- contact --- */}
         {show.contact ? (
           <section
             id="contact"
@@ -1126,11 +1034,8 @@ export function Template({ content }: { content: Content }) {
             />
             <div className="grid [grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr))] items-end gap-[clamp(32px,5vw,72px)]">
               <h2 className="font-lt-display text-lt-display-lg tracking-lt-tight text-lt-strong m-0 leading-[1.1] font-extralight text-pretty">
-                {trimmed(c.contactHeadline)}{" "}
-                {/* The button sits inline at the end of the headline on
-                    desktop. On mobile `flex` makes this span block-level so it
-                    drops onto its own line, clear of the last word instead of
-                    crowding it. */}
+                {emphasise(c.contactHeadline)}{" "}
+                {/* Inline after the headline on desktop, its own line on mobile. */}
                 <span className="lt-mobile:mt-[clamp(24px,6vw,40px)] lt-mobile:ml-0 lt-mobile:flex ml-3.5 inline-flex items-center align-middle">
                   <CtaPair
                     label={c.contactCtaLabel}
@@ -1171,15 +1076,11 @@ export function Template({ content }: { content: Content }) {
           </section>
         ) : null}
 
-        {/* ---------------------------------------------------- footer --- */}
         {show.footer ? (
           <footer
             className={join(
               CONTENT,
-              // On mobile the row becomes a column. `items-stretch` is what
-              // keeps the brand lockup left-aligned: each child spans the full
-              // width and centres its own contents, so the links and copyright
-              // can centre while the logo and name stay put.
+              // `items-stretch` keeps the brand lockup left-aligned once stacked.
               "lt-mobile:flex-col lt-mobile:items-stretch border-lt-border/10 flex flex-wrap items-center justify-between gap-[clamp(20px,3vw,40px)] border-t pt-[clamp(24px,2.5vw,32px)] pb-[clamp(8px,0.8vw,12px)]"
             )}
           >

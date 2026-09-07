@@ -1,112 +1,66 @@
 @import "tailwindcss";
 
-/* This template's entire design system, ported from the Lumous design system
-   used by the source canvas. Everything is kept in-folder so nothing leaks into
-   the engine, and every token is `lt-` prefixed so it cannot clobber Tailwind's
-   default scales or another template's tokens.
-
-   Note on the accent: the source artboard overrides the Lumous DS "signal"
-   ramp from its default blue to this green. The green is the real design, so
-   the green values are what is reproduced here.
-
-   Every colour token below is a fallback only. Template.tsx re-declares all
-   sixteen inline on the template root from the editable `colors` content group,
-   so each `*-lt-*` utility, both panel `color-mix`es, the scrim gradients and
-   the shadow/glow classes follow the studio value.
-
-   The alpha steps that used to be written as `white/20`, `rgba(7,8,10,0.66)`
-   and so on are now opacity modifiers on these tokens (`border-lt-border/20`)
-   or `color-mix()` against them. That is why a role like `border` defaults to
-   solid white even though it is only ever painted at a low alpha: the token
-   carries the hue, the call site carries the strength. */
+/* Ported Lumous design system. Every token is `lt-` prefixed. Colour and font
+   literals are fallbacks only: Template.tsx re-declares them on the template
+   root from the editable `colors` group. White/black colour roles are only ever
+   painted through an opacity modifier or a color-mix. */
 @theme {
-  /* --- Surfaces ---------------------------------------------------------- */
+  /* surfaces */
   --color-lt-canvas: #07080a;
   --color-lt-nav-surface: #0f0f12;
   --color-lt-card-surface: #131317;
   --color-lt-panel-surface: #1c1c22;
 
-  /* --- Brand accent ------------------------------------------------------ */
+  /* brand accent */
   --color-lt-primary: #3aae7e;
   --color-lt-secondary: #1f6b4e;
   --color-lt-on-primary: #06120d;
 
-  /* --- Text ramp --------------------------------------------------------- */
+  /* text ramp */
   --color-lt-strong: #ffffff;
   --color-lt-body: #e8e6df;
   --color-lt-muted: #b4b1a7;
   --color-lt-subtle: #807d75;
 
-  /* --- Over imagery / on a light fill ------------------------------------ */
+  /* over imagery / on a light fill */
   --color-lt-on-image: #ffffff;
   --color-lt-on-light: #0a0a0b;
 
-  /* --- Lines and depth --------------------------------------------------- */
+  /* lines and depth */
   --color-lt-border: #ffffff;
   --color-lt-scrim: #07080a;
   --color-lt-shadow: #000000;
 
-  /* --- Fonts --------------------------------------------------------------
-     Manrope is the single family for the whole template: the source design
-     already remapped the DS mono slot to it, so the eyebrow labels are Manrope
-     rather than a monospace, and the body slot uses it as well. The three names
-     are kept as distinct tokens so a future variant can split them again
-     without touching every utility.
-
-     These literals are only the fallback. Template.tsx re-declares all three on
-     the template root with the family next/font actually generated, and that is
-     what renders. They must stay literal here: a var() pointing at a next/font
-     variable would be substituted on :root, where that variable does not
-     exist, which invalidates the declaration and drops the font entirely. */
+  /* Must stay literal: a var() to a next/font variable resolves to nothing on :root. */
   --font-lt-display: "Manrope", system-ui, sans-serif;
   --font-lt-body: "Manrope", system-ui, sans-serif;
   --font-lt-label: "Manrope", system-ui, sans-serif;
 
-  /* --- Fluid display scale ----------------------------------------------- */
+  /* fluid display scale */
   --text-lt-display-lg: clamp(2.5rem, 1.4rem + 5vw, 4.5rem);
   --text-lt-display-md: clamp(2rem, 1.4rem + 3vw, 3.25rem);
   --text-lt-sm: 0.875rem;
-  --text-lt-xs: 0.875rem;
+  --text-lt-xs: 0.78rem;
 
-  /* --- Tracking ---------------------------------------------------------- */
+  /* tracking */
   --tracking-lt-tight: -0.03em;
   --tracking-lt-snug: -0.01em;
   --tracking-lt-eyebrow: 0.18em;
 
-  /* --- Radii ------------------------------------------------------------- */
+  /* radii */
   --radius-lt-lg: 16px;
 
-  /* --- Motion ------------------------------------------------------------ */
+  /* motion */
   --ease-lt-standard: cubic-bezier(0.22, 0.61, 0.36, 1);
   --ease-lt-emphasis: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* The template's one breakpoint. Everything else here is fluid — `clamp()` for
-   type and spacing, `auto-fit minmax()` for the section grids — so there is no
-   Tailwind `sm:`/`md:` scale in play and a mobile-only rule needs its own
-   variant.
-
-   700px is not arbitrary: it is the width at which the section header grids
-   (`minmax(min(100%, 300px), 1fr)` with a 4vw gap, inside the CONTENT column's
-   4vw padding and the page's 1vw gutter) stop fitting two columns and collapse
-   to one. Pinning the variant there keeps every `lt-mobile:` rule switching in
-   the same frame as the stacked layout it is meant to correct, rather than
-   leaving a band where the layout has stacked but the alignment has not
-   followed. Change one and the other must be rechecked. */
+/* The template's one breakpoint; 700px is where the section header grids stop
+   fitting two columns. Keep it in step with the `lt-mobile:` alignment rules. */
 @custom-variant lt-mobile (@media (width < 700px));
 
-/* Width of one destination slide, as a custom property so the mobile override
-   lives beside the breakpoint that drives it.
-
-   Both values are deliberately free of percentages. The width feeds a
-   `translateX()` as well as a flex basis, and a percentage in a transform
-   resolves against the transformed element's own width — here the full slide
-   track, not the viewport — so a `%` term would move the carousel by the wrong
-   distance.
-
-   Desktop keeps the design's 1.5-slide peek. Mobile is one whole slide spanning
-   the section's content box: the viewport less the page gutter (8px a side at
-   these widths) and the CONTENT column's own padding. */
+/* One destination slide width. Percentage-free: it also feeds a translateX(),
+   which would resolve a `%` against the track rather than the viewport. */
 .lt-destination-carousel {
   --lt-slide: calc((min(68vw, 940px) - clamp(12px, 1.5vw, 20px)) / 1.5);
 }
@@ -117,24 +71,14 @@
   }
 }
 
-/* The brand's luminous halo. Declared as a class rather than a Tailwind
-   arbitrary value so the alpha stops track `--color-lt-primary` when the
-   studio changes it. */
+/* Classes rather than Tailwind arbitrary values so the color-mix() stops track
+   the editable tokens; the alpha ladders themselves are fixed by the design. */
 .lt-glow-sm {
   box-shadow:
     0 0 0 1px color-mix(in srgb, var(--color-lt-primary) 25%, transparent),
     0 6px 24px color-mix(in srgb, var(--color-lt-primary) 22%, transparent);
 }
 
-/* Scrims and shadows.
-
-   These are real rules rather than Tailwind arbitrary values for a hard reason:
-   a `color-mix()` contains spaces and an arbitrary value cannot, so a gradient
-   or box-shadow whose colour must track a token has nowhere else to live.
-
-   The alpha ladder inside each one *is* the design — it is what keeps text
-   legible over an arbitrary photograph — so the stops stay fixed here and only
-   the hue is editable. */
 .lt-scrim-hero {
   background: linear-gradient(
     180deg,
@@ -167,7 +111,3 @@
   box-shadow: 0 4px 16px
     color-mix(in srgb, var(--color-lt-shadow) 35%, transparent);
 }
-
-/* The scroll-reveal layer is applied by GSAP from inside an effect, which sets
-   the hidden start state inline at runtime. Nothing is hidden by this
-   stylesheet, so with JavaScript unavailable every section renders visible. */

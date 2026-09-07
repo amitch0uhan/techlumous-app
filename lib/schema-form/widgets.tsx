@@ -81,13 +81,9 @@ function SwitchWidget({ value, onChange, field }: WidgetProps) {
 
 const HEX_PATTERN = /^#[0-9a-fA-F]{6}$/
 
-/* A native swatch picker paired with the hex text, both writing the same
-   `#RRGGBB` string. The text input stays authoritative: it shows whatever is
-   stored, including a half-typed or invalid value, so nothing is silently
-   rewritten while the user edits. The picker only accepts `#rrggbb`, so it falls
-   back to black rather than throwing when the stored value is not yet valid. */
 function ColorWidget({ value, onChange, field }: WidgetProps) {
   const raw = typeof value === "string" ? value : ""
+  // The picker only accepts `#rrggbb`; the text input stays authoritative for partial edits.
   const swatch = HEX_PATTERN.test(raw) ? raw : "#000000"
 
   return (

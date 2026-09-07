@@ -46,10 +46,7 @@ export function normalize(schema: ZodType, key = ""): FieldDescriptor {
     case "default":
     case "prefault":
     case "readonly": {
-      // A wrapper carries its own `.meta()` only when the author put it there;
-      // otherwise every editor hint falls through to the schema it wraps. All of
-      // them must be forwarded — `z.object({...}).meta({...}).prefault({})` is a
-      // normal shape, and dropping one here silently loses that hint.
+      // Forward every hint the wrapper does not itself set through to its inner schema.
       const inner = normalize(def.innerType, key)
       return {
         ...inner,

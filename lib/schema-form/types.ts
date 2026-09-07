@@ -19,7 +19,6 @@ export interface FieldDescriptor {
   options?: string[]
   fields?: FieldDescriptor[]
   item?: FieldDescriptor
-  /** A labelled group renders its accordion closed on first paint. */
   collapsed?: boolean
 }
 

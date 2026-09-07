@@ -1,25 +1,7 @@
 import { z } from "zod"
 
-// The Zod schema is the single source of truth: it drives the content type
-// (via z.infer) and the generated studio edit form. `.meta()` carries UI intent
-// so the schema-form engine can pick a widget.
-//
-// Three conventions used throughout:
-//
-// 0. Every colour the template paints lives in the `colors` group, declared
-//    first so it renders at the top of the form. It is the one nested object in
-//    this schema, and it earns that shape: sixteen sibling `*Color` scalars
-//    would swamp the flat top level. See DEFAULT_COLORS below for why every
-//    leaf carries its own default.
-// 1. Section visibility is a `z.boolean()`, which the schema-form engine renders
-//    as a real switch. Each toggle is declared immediately before the fields of
-//    the section it controls, so in the studio form the switch sits directly
-//    above that section's content rather than in a separate block. Older content
-//    saved the value as the string "show" / "hide"; Template.tsx still honours
-//    those (see `hidden()` there).
-// 2. Headlines accept *asterisk* pairs to mark emphasised words. They render as
-//    the design's bright inline runs against the dimmed rest of the line. A
-//    plain string with no asterisks renders normally.
+// Source of truth for the content type (z.infer) and the studio edit form.
+// `.meta()` picks the widget. Headlines take *asterisk* pairs for emphasis.
 
 const text = (label: string) => z.string().meta({ label })
 
@@ -34,16 +16,8 @@ const image = (label: string) =>
 const visibility = (label: string) =>
   z.boolean().meta({ label, widget: "switch" })
 
-/* The design's own palette, and the single source of truth for it: these values
-   are both the schema's per-field defaults and the `defaultContent.colors`
-   below, so the two can never drift apart.
-
-   Names describe the role, not the shade, so that re-theming stays sensible —
-   `panelSurface` still means something after someone makes it beige.
-
-   Several roles default to plain white or black because they are only ever
-   painted through an opacity modifier (`border-lt-border/20`) or a `color-mix()`
-   in styles.css. The token carries the hue; the call site carries the strength. */
+// Role-named palette, shared by the per-field defaults and defaultContent.colors.
+// White/black roles are only ever painted through an opacity modifier or color-mix.
 const DEFAULT_COLORS = {
   canvas: "#07080A",
   navSurface: "#0F0F12",
@@ -63,15 +37,8 @@ const DEFAULT_COLORS = {
   shadow: "#000000",
 } as const
 
-/* Six-digit hex, rendered by the schema-form engine as a swatch picker beside
-   the hex text.
-
-   The `.default()` is what keeps this group non-breaking. Content saved before
-   the group existed has no `colors` key at all, and nothing in the pipeline
-   backfills one: the editor loads a draft verbatim and publishing validates
-   against this schema. Without a default on every leaf — and `.prefault({})` on
-   the group itself — every existing project would fail validation and be locked
-   out of publishing until someone typed sixteen hex values by hand. */
+// Six-digit hex, shown as a swatch picker. Every leaf carries a default so
+// content saved before the `colors` group still validates on publish.
 const color = (label: string, fallback: string) =>
   z
     .string()
@@ -80,7 +47,7 @@ const color = (label: string, fallback: string) =>
     .default(fallback)
 
 export const contentSchema = z.object({
-  // --------------------------------------------------------------- colours ---
+  // colours
   colors: z
     .object({
       canvas: color("Page background", DEFAULT_COLORS.canvas),
@@ -110,23 +77,19 @@ export const contentSchema = z.object({
       scrim: color("Image overlay", DEFAULT_COLORS.scrim),
       shadow: color("Shadow", DEFAULT_COLORS.shadow),
     })
-    // Collapsed so sixteen swatches do not push every other field in the panel
-    // below the fold. `.prefault({})` re-parses through the object, letting the
-    // leaf defaults above fill a missing group in; a plain `.default({})` would
-    // short-circuit and hand back an empty object.
+    // `.prefault({})` re-parses so the leaf defaults fill a missing group.
     .meta({ label: "Colours", collapsed: true })
     .prefault({}),
 
-  // ---------------------------------------------------------------- brand ---
   brandName: text("Brand name"),
   logoUrl: image("Logo"),
 
-  // ------------------------------------------------------------------ nav ---
+  // nav
   showNav: visibility("Show navigation"),
   navCtaLabel: text("Nav CTA label"),
   navCtaHref: link("Nav CTA destination"),
 
-  // ----------------------------------------------------------------- hero ---
+  // hero
   showHero: visibility("Show hero"),
   heroHeadline: area("Hero headline"),
   heroImageUrl: image("Hero background"),
@@ -143,7 +106,7 @@ export const contentSchema = z.object({
     )
     .meta({ label: "Hero trip cards" }),
 
-  // ---------------------------------------------------------------- about ---
+  // about
   showAbout: visibility("Show about"),
   aboutEyebrow: text("About eyebrow"),
   aboutIntro: area("About intro"),
@@ -151,7 +114,7 @@ export const contentSchema = z.object({
   aboutCtaLabel: text("About CTA label"),
   aboutCtaHref: link("About CTA destination"),
 
-  // --------------------------------------------------------- destinations ---
+  // destinations
   showDestinations: visibility("Show popular destinations"),
   destinationsEyebrow: text("Destinations eyebrow"),
   destinationsHeadline: area("Destinations headline"),
@@ -167,7 +130,7 @@ export const contentSchema = z.object({
     )
     .meta({ label: "Destinations" }),
 
-  // --------------------------------------------------------- testimonials ---
+  // testimonials
   showTestimonials: visibility("Show testimonials"),
   testimonialsEyebrow: text("Testimonials eyebrow"),
   testimonialsHeadline: area("Testimonials headline"),
@@ -183,7 +146,7 @@ export const contentSchema = z.object({
     )
     .meta({ label: "Testimonials" }),
 
-  // --------------------------------------------------------------- why us ---
+  // why us
   showWhyUs: visibility("Show why choose us"),
   whyEyebrow: text("Why-us eyebrow"),
   whyHeadline: area("Why-us headline"),
@@ -196,7 +159,7 @@ export const contentSchema = z.object({
     )
     .meta({ label: "Why-us points" }),
 
-  // ------------------------------------------------------------- packages ---
+  // packages
   showPackages: visibility("Show packages we offer"),
   packagesEyebrow: text("Packages eyebrow"),
   packagesHeadline: area("Packages headline"),
@@ -217,7 +180,7 @@ export const contentSchema = z.object({
     )
     .meta({ label: "Packages" }),
 
-  // -------------------------------------------------------------- contact ---
+  // contact
   showContact: visibility("Show contact"),
   contactEyebrow: text("Contact eyebrow"),
   contactHeadline: area("Contact headline"),
@@ -228,7 +191,7 @@ export const contentSchema = z.object({
   contactReachLabel: text("Reach-us label"),
   contactReachLines: z.array(z.string()).meta({ label: "Reach-us details" }),
 
-  // --------------------------------------------------------------- footer ---
+  // footer
   showFooter: visibility("Show footer"),
   footerLinks: z
     .array(
