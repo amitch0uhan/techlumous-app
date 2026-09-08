@@ -59,8 +59,12 @@ Preserve these invariants:
 - `index.ts` must export a value named exactly `template`. The file-upload
   deployment generates a single-template registry that depends on this name.
 - A template may import files inside its own folder and engine-owned shared
-  runtime files. It must not import another template or unrelated root-app code;
-  those files are absent from a single-template deployment.
+  runtime files (`template-engine/component/`, `template-engine/hooks/`). It
+  must not import another template or unrelated root-app code; those files are
+  absent from a single-template deployment.
+- Import engine-owned shared files by relative path (`../../hooks/use-carousel`).
+  The engine aliases only `@/templates/*`, and the root app maps `@/` to the
+  repository root, so an `@/hooks/...` specifier breaks one of the two builds.
 - Any runtime package imported by a template must be declared in
   `template-engine/package.json` and locked by
   `template-engine/package-lock.json`.
@@ -87,9 +91,28 @@ safety depends on RLS plus column grants allowing access only to published
 content. Never place a service-role/secret key in the engine or add draft reads
 or database writes to its runtime.
 
+## Shared Runtime Hooks
+
+`template-engine/hooks/` holds behaviour that is genuinely template-agnostic.
+Reuse these before writing a local equivalent:
+
+- `useCarousel(length)` — clamped index state for a carousel, slider, or any
+  "one of N is active" control. Returns `{ index, next, prev, select }`. The
+  index is clamped on every render, which is required: editable collections
+  shrink when an entry is removed in the studio.
+- `useScrollReveal(rootRef, options?)` — fades and lifts `[data-reveal]`
+  elements into view. Mark elements with `data-reveal` and call it once on the
+  template root. Pass `options.selector` to use a different marker.
+
+Both are shipped to every deployed site, so anything added here must depend
+only on its arguments — no template-specific selectors, class names, tokens, or
+content shapes. A helper that needs a `lt-`-style prefix belongs in the template
+folder instead.
+
 ## Choose the Smallest Change
 
-- Visual-only change: edit `Template.tsx` and template-local styles/assets.
+- Visual-only change: edit `Template.tsx`, its `components/`, and
+  template-local styles/assets.
 - Editable-content change: update `schema.ts`, its inferred type and defaults,
   then render the new field and assess compatibility with saved/published
   content.
@@ -170,8 +193,33 @@ or database writes to its runtime.
 
 ## Content Schema Rules
 
-The studio generates its edit form from Zod `.meta()` values. Supported editor
-metadata is:
+Build fields with the shared builders in `template-engine/templates/fields.ts`
+rather than hand-writing `.meta()`:
+
+```ts
+import { area, color, image, link, text, visibility } from "@/templates/fields"
+
+export const contentSchema = z.object({
+  brandName: text("Brand name"),
+  heroHeadline: area("Hero headline"),
+  ctaHref: link("CTA destination"),
+  logoUrl: image("Logo"),
+  showHero: visibility("Show hero"),
+  accent: color("Accent", "#3AAE7E"),
+})
+```
+
+That file ships with every deployment and is safe for a template to import —
+unlike `schema-registry.ts` and `taxonomy.ts`, which are excluded from
+single-template packaging and must never be imported by a template.
+
+`color(label, fallback)` deliberately takes a second argument: a colour leaf
+carries its own `.default()`, which is what lets a colour group be added to an
+existing schema without invalidating already-saved content.
+
+Reach for raw `.meta()` only for a shape the builders do not cover. The
+authoritative widget list is the `WidgetId` union in
+`lib/schema-form/types.ts`:
 
 ```ts
 .meta({
@@ -182,6 +230,11 @@ metadata is:
   collapsed: true, // labelled object only: render its group closed
 })
 ```
+
+`labelLayout` is a real layout switch, not decoration: `"above"` renders the
+label above the control instead of beside it. Two fields sharing a `widget` but
+differing in `labelLayout` are not interchangeable — which is why `area()`
+cannot be dropped into a schema whose textareas were declared without it.
 
 Use these editor-safe shapes:
 

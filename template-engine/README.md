@@ -9,9 +9,12 @@ studio editor, live preview, and deployed renderer.
 ```text
 template-engine/
   app/                         # Published-site shell and entry page
+  component/                   # Engine-owned shared runtime components
+  hooks/                       # Engine-owned shared runtime hooks
   lib/content.ts               # Published-content read boundary
   templates/
     types.ts                   # TemplateModule and TemplateMeta contracts
+    fields.ts                  # Shared Zod field builders for content schemas
     taxonomy.ts                # Categories and suggested tags
     registry.ts                # Complete template modules by slug
     schema-registry.ts         # Zod schemas by slug for studio operations
@@ -19,6 +22,11 @@ template-engine/
   package.json                 # Independent engine dependencies
   next.config.ts               # Engine build and image-host configuration
 ```
+
+`hooks/` currently provides `useCarousel(length)` for clamped "one of N is
+active" index state and `useScrollReveal(rootRef)` for revealing `[data-reveal]`
+elements on scroll. Both are shipped with every deployment, so only genuinely
+template-agnostic behaviour belongs there.
 
 ## Runtime and integration
 
@@ -46,9 +54,15 @@ template-engine/
 - The folder name, `meta.slug`, both registry keys, catalog slug, and
   `TEMPLATE_SLUG` must be the same lowercase kebab-case value.
 - `contentSchema` is the source of truth. `defaultContent` must parse against it
-  and the renderer must be typed from `z.infer`.
+  and the renderer must be typed from `z.infer`. Build fields with the shared
+  builders in `templates/fields.ts` (`text`, `area`, `link`, `image`,
+  `visibility`, `color`) instead of hand-writing `.meta()`.
 - Keep styles, fonts, helpers, and assets inside the template folder. The engine
-  global stylesheet is only a reset.
+  global stylesheet is only a reset. Split a renderer that grows past roughly
+  400 lines into `<slug>/components/`, leaving orchestration in `Template.tsx`.
+- Import engine-owned shared files (`component/`, `hooks/`) by relative path.
+  Only `@/templates/*` is aliased in the engine, and the root app maps `@/` to
+  the repository root.
 - Use only packages already in this folder's current `package.json`. Adding or
   installing packages is prohibited, including in AI auto-permission mode;
   only an explicit user request to install a specific package can authorize it.
