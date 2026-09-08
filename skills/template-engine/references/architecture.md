@@ -12,10 +12,14 @@ template-engine/
     layout.tsx           # Minimal published-site shell
     page.tsx             # Selects and renders one template
   component/             # Engine-owned shared runtime components
+  hooks/                 # Engine-owned shared runtime hooks
+    use-carousel.ts      # Clamped index state for "one of N is active"
+    use-scroll-reveal.ts # GSAP scroll reveal for [data-reveal] elements
   lib/
     content.ts           # Reads published project content
   templates/
     types.ts             # TemplateModule and TemplateMeta contracts
+    fields.ts            # Shared Zod field builders for content schemas
     taxonomy.ts          # Allowed categories and suggested tags
     registry.ts          # Slug -> complete template module
     schema-registry.ts   # Slug -> Zod schema for studio operations
@@ -116,6 +120,8 @@ rules:
 - It omits the shared `templates/registry.ts` and generates a registry importing
   the selected template's exact `template` export.
 - It excludes `templates/schema-registry.ts` and `templates/taxonomy.ts`.
+- Other files directly under `templates/` — `types.ts` and `fields.ts` — are
+  included, so a template may import them.
 - It includes engine-owned shared runtime files, subject to
   `template-engine/.gitignore`.
 - It validates slugs against lowercase letters, digits, and hyphens.
@@ -125,8 +131,16 @@ Consequences:
 - Never import another template from a template implementation.
 - Do not make runtime rendering depend on the schema registry or taxonomy.
 - Prefer template-local helpers and assets. A helper in
-  `template-engine/component/` is shipped to every site and should be truly
-  generic.
+  `template-engine/component/` or `template-engine/hooks/` is shipped to every
+  site and should be truly generic.
+- Packaging walks the whole engine directory and prunes only unselected
+  `templates/<slug>/` folders, so any new engine-owned top-level folder ships
+  automatically without editing `collect-files.ts`. It is still subject to
+  `template-engine/.gitignore`.
+- Shared engine files must be imported by relative path
+  (`../../hooks/use-carousel`), not through `@/`. The engine only aliases
+  `@/templates/*`, while the root app maps `@/` to the repository root, so an
+  `@/hooks/...` specifier resolves to two different places in the two builds.
 - Test the isolated engine build because the root build alone cannot prove that
   single-template packaging is self-contained.
 
@@ -141,7 +155,7 @@ Consequences:
 | Engine dependency | Update engine package and lockfile; isolated build |
 | Remote `next/image` host | Narrowly update engine `next.config.ts`; isolated runtime test |
 | Published-content query | Separate Supabase/RLS security review; never expand to drafts or writes implicitly |
-| Shared engine component | Confirm it is generic and safe to ship with every selected template |
+| Shared engine component or hook | Confirm it is generic and safe to ship with every selected template; check every template that imports it |
 
 ## Failure Guide
 

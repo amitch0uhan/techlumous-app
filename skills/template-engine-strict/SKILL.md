@@ -140,6 +140,16 @@ published JSON.
   folder.
 - Do not import another template or root-app-only package. Deployment includes
   one selected template and the engine's existing files.
+- `@/templates/fields` (the shared Zod field builders) and `@/templates/types`
+  ship with every deployment and may be imported. `@/templates/schema-registry`
+  and `@/templates/taxonomy` are excluded from packaging and must never be
+  imported by a template.
+- Shared code in `template-engine/component/` and `template-engine/hooks/` is
+  shipped to every deployed site. Add to it only what depends purely on its own
+  arguments; anything referencing a template's selectors, class prefixes,
+  tokens, or content shape stays in that template's folder.
+- Import shared engine files relatively (`../../hooks/use-carousel`). `@/`
+  resolves differently in the engine build and the root app build.
 - Do not alter auth, RLS, publishing, or unrelated studio behavior to make a
   template compile.
 

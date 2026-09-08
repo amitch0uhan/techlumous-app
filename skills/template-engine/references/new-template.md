@@ -31,13 +31,30 @@ template-engine/templates/<slug>/
   meta.ts            # Required TemplateMeta
   index.ts           # Required uniform module export
   styles.css         # Optional template-local design system
-  icon.tsx           # Optional template-local component
-  ...                # Optional local helpers/assets
+  components/        # Optional split sections and local UI pieces
+  lib.ts             # Optional local helpers, constants, loose content types
+  ...                # Optional local assets
+```
+
+Engine-owned shared code a template may import:
+
+```text
+template-engine/templates/fields.ts   # Zod field builders (@/templates/fields)
+template-engine/templates/types.ts    # Module contracts (@/templates/types)
+template-engine/component/            # Shared runtime components (relative import)
+template-engine/hooks/                # Shared runtime hooks (relative import)
 ```
 
 Keep all template-specific code in this folder. Use
-`template-engine/component/` only for genuinely reusable, engine-wide runtime
-components.
+`template-engine/component/` and `template-engine/hooks/` only for genuinely
+reusable, engine-wide runtime code.
+
+Once a renderer grows past roughly 400 lines, split it: `Template.tsx` keeps
+orchestration (reading content, visibility flags, palette, hook calls) and each
+section moves to `components/<section>.tsx` receiving already-computed props.
+See `lumous-travel-one` for a worked example. Name files in kebab-case and
+export PascalCase components; `Template.tsx` keeps its exact capitalised name
+because the module contract depends on it.
 
 ## 1. Define Metadata
 
@@ -69,39 +86,26 @@ Create `schema.ts` with schema, inferred type, and defaults together:
 ```ts
 import { z } from "zod"
 
+import { area, image, link, text } from "@/templates/fields"
+
 export const contentSchema = z.object({
-  hero: z
-    .object({
-      heading: z.string().meta({ label: "Heading" }),
-      body: z
-        .string()
-        .meta({ label: "Body", widget: "textarea", labelLayout: "above" }),
-      imageUrl: z
-        .string()
-        .meta({ label: "Image", widget: "image", labelLayout: "above" }),
-      imageAlt: z.string().meta({ label: "Image alt text" }),
-    })
-    .meta({ label: "Hero" }),
+  heading: text("Heading"),
+  body: area("Body"),
+  imageUrl: image("Image"),
+  imageAlt: text("Image alt text"),
   theme: z.enum(["light", "dark"]).meta({ label: "Theme" }),
   links: z
-    .array(
-      z.object({
-        label: z.string().meta({ label: "Label" }),
-        href: z.string().meta({ label: "URL", format: "url" }),
-      })
-    )
+    .array(z.object({ label: text("Label"), href: link("URL") }))
     .meta({ label: "Links" }),
 })
 
 export type MyTemplateContent = z.infer<typeof contentSchema>
 
 export const defaultContent: MyTemplateContent = {
-  hero: {
-    heading: "A useful default heading",
-    body: "Realistic copy that exercises the intended layout.",
-    imageUrl: "",
-    imageAlt: "",
-  },
+  heading: "A useful default heading",
+  body: "Realistic copy that exercises the intended layout.",
+  imageUrl: "",
+  imageAlt: "",
   theme: "light",
   links: [{ label: "Learn more", href: "https://example.com" }],
 }
@@ -112,12 +116,22 @@ Schema design checklist:
 - Keep props flat and easy to edit. Do not create nested object props or arrays
   of objects for convenience; obtain explicit user approval for an exception.
 - Every editable field has a useful label.
-- Long text uses `widget: "textarea"`.
-- Links use `format: "url"`.
-- On/off state uses `z.boolean()` (renders as a switch). Place a `show*` section
+- Prefer the shared builders in `@/templates/fields` over raw `.meta()` — they
+  are the executable record of the combinations that actually work:
+  `text`, `area` (long text), `link` (URL), `image`, `visibility` (section
+  toggle), `color(label, fallback)`. Hand-write `.meta()` only for a shape they
+  do not cover, such as `z.enum` selects and labelled groups/arrays.
+- Long text uses `widget: "textarea"` — via `area()`, which also sets
+  `labelLayout: "above"`. That is a real layout change, so `area()` is not a
+  drop-in replacement for a textarea declared without it.
+- Links use `format: "url"` (via `link()`).
+- On/off state uses `z.boolean()` (renders as a switch, via `visibility()`).
+  Place a `show*` section
   toggle immediately before that section's own fields so the form shows the
   switch above the content it controls.
-- Colours use `widget: "color"` (swatch + hex). Expose the palette as one
+- Colours use `widget: "color"` (swatch + hex, via `color(label, fallback)` —
+  the second argument supplies the required per-leaf `.default()`). Expose the
+  palette as one
   `colors` group of semantic roles declared first in the schema and marked
   `collapsed`, rather than as scattered top-level `*Color` scalars. Always
   include the readable "on" colour placed over an accent (button text / icons)
@@ -126,7 +140,7 @@ Schema design checklist:
   `.default()` on every leaf plus `.prefault({})` on the group — nothing
   backfills a new key, so without this every existing project fails publish
   validation. See the compatibility rules in the parent skill.
-- Uploaded images use `widget: "image"` and have alt text.
+- Uploaded images use `widget: "image"` (via `image()`) and have alt text.
 - Groups and arrays have labels that make sense in the editor.
 - Default arrays include enough realistic data to test repetition and wrapping.
 - Defaults satisfy min/max and all other validations.

@@ -5,6 +5,33 @@ A draft, single-page travel-agency template built from the Claude Design canvas
 navigation, hero, about, destinations, testimonials, why-us, packages, contact
 and footer.
 
+## File layout
+
+```text
+lumous-travel-one/
+  Template.tsx        # Orchestration: content, visibility, numbering, palette
+  lib.ts              # Local helpers, layout constants, loose content types
+  schema.ts           # Zod contract, inferred type, defaultContent
+                      # (fields built with the shared @/templates/fields)
+  meta.ts             # TemplateMeta
+  index.ts            # Uniform module export
+  styles.css          # Local design system (@theme tokens, lt-mobile variant)
+  components/
+    hero.tsx  about.tsx  destinations.tsx  testimonials.tsx
+    why-us.tsx  packages.tsx  contact.tsx  footer.tsx   # One per section
+    nav-bar.tsx         # NavBar plus the nav-only NavSection band
+    cta-pair.tsx  carousel-button.tsx  eyebrow.tsx      # Shared UI atoms
+    brand-mark.tsx  content-image.tsx  emphasise.tsx
+```
+
+`Template.tsx` holds no section markup. It reads the content, derives the
+visibility flags and eyebrow numbers, builds the palette, calls the shared
+hooks, and passes already-computed props down. Each section component is
+presentational and receives what it needs rather than reaching for state.
+
+Carousel index state and scroll reveal come from the engine-wide hooks in
+`template-engine/hooks/`, not from this folder.
+
 ## Content contract
 
 - The schema is flat at the top level: 51 fields, all scalars except the
@@ -134,14 +161,16 @@ enclosing button or link.
 
 ## Interaction and motion
 
-- GSAP with ScrollTrigger drives a scroll-reveal layer only. It sets the hidden
-  start state from inside an effect, so with JavaScript unavailable every
-  section renders in its resting state, and the effect returns early when the
-  visitor prefers reduced motion.
+- Scroll reveal comes from the shared `useScrollReveal(rootRef)` hook in
+  `template-engine/hooks/`, called once on the template root. Sections opt in
+  with a `data-reveal` attribute. The hook sets the hidden start state from
+  inside an effect, so with JavaScript unavailable every section renders in its
+  resting state, and it returns early when the visitor prefers reduced motion.
 - The hero trip cards, the destinations region list and image strip, and the
-  packages panel carousel are React state plus CSS transitions, matching the
-  canvas logic. Every index is clamped at read time so removing an entry in the
-  studio cannot leave the carousel pointing past the end.
+  packages panel carousel each use the shared `useCarousel(length)` hook plus
+  CSS transitions, matching the canvas logic. The hook clamps its index on every
+  render, so removing an entry in the studio cannot leave a carousel pointing
+  past the end.
 - Why-us is an accordion that eases open with a `0fr` to `1fr` grid row.
 - An inactive package panel is one large select button and the "More details"
   call to action only appears once the panel is open, so no interactive element

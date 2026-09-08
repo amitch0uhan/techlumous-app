@@ -1,20 +1,10 @@
 import { z } from "zod"
 
+import { area, color, image, link, text, visibility } from "@/templates/fields"
+
 // Source of truth for the content type (z.infer) and the studio edit form.
-// `.meta()` picks the widget. Headlines take *asterisk* pairs for emphasis.
-
-const text = (label: string) => z.string().meta({ label })
-
-const area = (label: string) =>
-  z.string().meta({ label, widget: "textarea", labelLayout: "above" })
-
-const link = (label: string) => z.string().meta({ label, format: "url" })
-
-const image = (label: string) =>
-  z.string().meta({ label, widget: "image", labelLayout: "above" })
-
-const visibility = (label: string) =>
-  z.boolean().meta({ label, widget: "switch" })
+// Field builders come from the shared `templates/fields.ts`; `.meta()` picks the
+// widget. Headlines take *asterisk* pairs for emphasis.
 
 // Role-named palette, shared by the per-field defaults and defaultContent.colors.
 // White/black roles are only ever painted through an opacity modifier or color-mix.
@@ -37,15 +27,6 @@ const DEFAULT_COLORS = {
   scrim: "#07080A",
   shadow: "#000000",
 } as const
-
-// Six-digit hex, shown as a swatch picker. Every leaf carries a default so
-// content saved before the `colors` group still validates on publish.
-const color = (label: string, fallback: string) =>
-  z
-    .string()
-    .regex(/^#[0-9a-fA-F]{6}$/, "Use a six-digit hex colour, e.g. #3AAE7E")
-    .meta({ label, widget: "color" })
-    .default(fallback)
 
 export const contentSchema = z.object({
   // colours
