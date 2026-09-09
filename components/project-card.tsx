@@ -338,6 +338,7 @@ export function ProjectCard({
                   <Link href={`/templates?project=${projectId}`} />
                 )
               }
+              nativeButton={false}
               icon={isTemplateSelected ? PencilCircleIcon : undefined}
               iconPosition="end"
               variant="default"
@@ -356,6 +357,7 @@ export function ProjectCard({
                   rel="noopener noreferrer"
                 />
               }
+              nativeButton={false}
               icon={ArrowUpRightIcon}
               iconPosition="end"
               variant="outline"
