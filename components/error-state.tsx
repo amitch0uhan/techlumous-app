@@ -32,6 +32,7 @@ export function ErrorState({
           <p className="text-muted-foreground/60">{message}</p>
           <IconButton
             render={<Link href={actionHref} />}
+            nativeButton={false}
             icon={HouseIcon}
             iconPosition="start"
             size="lg"

@@ -116,6 +116,7 @@ export function EditorTopBar({
                 rel="noopener noreferrer"
               />
             }
+            nativeButton={false}
             // icon={ArrowSquareOutIcon}
             iconPosition="end"
             variant="outline"

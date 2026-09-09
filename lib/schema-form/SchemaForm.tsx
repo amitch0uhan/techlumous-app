@@ -158,10 +158,11 @@ export function Field({
             className="px-3"
             action={
               item || trailingAction ? (
-                <div className="flex items-center">
+                <span className="flex items-center">
                   {item && (
                     <Button
-                      type="button"
+                      render={<span />}
+                      nativeButton={false}
                       variant="ghost"
                       size="icon-sm"
                       aria-label={`Add ${label} item`}
@@ -175,7 +176,7 @@ export function Field({
                     </Button>
                   )}
                   {trailingAction}
-                </div>
+                </span>
               ) : null
             }
           >
@@ -204,13 +205,15 @@ export function Field({
                         groupLevel={groupLevel + 1}
                         trailingAction={
                           <Button
-                            type="button"
+                            render={<span />}
+                            nativeButton={false}
                             variant="ghost"
                             size="icon-xs"
                             aria-label="Remove item"
-                            onClick={() =>
+                            onClick={(event) => {
+                              event.stopPropagation()
                               onChange(arr.filter((_, i) => i !== index))
-                            }
+                            }}
                             className="rounded-none text-foreground/40! hover:bg-destructive/5! hover:text-destructive!"
                           >
                             <TrashIcon />
