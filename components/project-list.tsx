@@ -16,13 +16,19 @@ function cardStatus(deployStatus: Project["deploy_status"]) {
   return deployStatus?.trim().toLowerCase() || null
 }
 
+const createdAtFormat = new Intl.DateTimeFormat("en-GB", {
+  day: "2-digit",
+  month: "short",
+  year: "numeric",
+})
+
+// "09 Sep, 2026" — DD MMM, YYYY
 function formatCreatedAt(createdAt: Project["created_at"]) {
   if (!createdAt) return "—"
-  return new Date(createdAt).toLocaleDateString("en-GB", {
-    day: "2-digit",
-    month: "long",
-    year: "numeric",
-  })
+  const parts = createdAtFormat.formatToParts(new Date(createdAt))
+  const get = (type: Intl.DateTimeFormatPartTypes) =>
+    parts.find((part) => part.type === type)?.value ?? ""
+  return `${get("day")} ${get("month")}, ${get("year")}`
 }
 
 interface ProjectListProps {

@@ -66,17 +66,28 @@ function InfoItem({
   children: React.ReactNode
 }) {
   return (
-    <div className="flex flex-col gap-0">
+    <div className="flex min-w-0 flex-col gap-0">
       <span className="font-mono text-sm text-muted-foreground">{label}</span>
-      <div className="font-heading text-2xl text-foreground">{children}</div>
+      <div className="truncate font-heading text-2xl text-foreground">
+        {children}
+      </div>
     </div>
   )
 }
 
-const deployedAtFormatter = new Intl.DateTimeFormat("en-GB", {
-  day: "numeric",
+const deployedAtParts = new Intl.DateTimeFormat("en-GB", {
+  day: "2-digit",
   month: "short",
+  year: "numeric",
 })
+
+// "09 Sep, 2026" — DD MMM, YYYY
+function formatDateDMY(date: Date) {
+  const parts = deployedAtParts.formatToParts(date)
+  const get = (type: Intl.DateTimeFormatPartTypes) =>
+    parts.find((part) => part.type === type)?.value ?? ""
+  return `${get("day")} ${get("month")}, ${get("year")}`
+}
 
 function formatDeployedAt(value: string) {
   const date = new Date(value)
@@ -93,7 +104,7 @@ function formatDeployedAt(value: string) {
     return `${elapsedHours} ${elapsedHours === 1 ? "hour" : "hours"} ago`
   }
 
-  return deployedAtFormatter.format(date)
+  return formatDateDMY(date)
 }
 
 function DeleteProjectDialog({
