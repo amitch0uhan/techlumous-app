@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
+import { flushSync } from "react-dom"
 
 import {
   isTemplateLiveMessage,
@@ -58,7 +59,18 @@ export function LiveTemplateRenderer({
         rendererReadyRef.current &&
         formReadyRef.current
       ) {
-        setContent(event.data.content)
+        const nextContent = event.data.content
+        // Commit before acknowledging, so the parent only reveals the preview
+        // once the template DOM holds the user's content.
+        flushSync(() => setContent(nextContent))
+        parent.postMessage(
+          {
+            channel: TEMPLATE_LIVE_CHANNEL,
+            type: "content-applied",
+            slug,
+          },
+          window.location.origin
+        )
       }
     }
 

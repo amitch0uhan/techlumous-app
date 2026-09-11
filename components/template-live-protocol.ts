@@ -17,6 +17,11 @@ export type TemplateLiveMessage =
       slug: string
       content: unknown
     }
+  | {
+      channel: typeof TEMPLATE_LIVE_CHANNEL
+      type: "content-applied"
+      slug: string
+    }
 
 export function isTemplateLiveMessage(
   value: unknown
@@ -34,6 +39,7 @@ export function isTemplateLiveMessage(
     typeof message.slug === "string" &&
     (message.type === "form-ready" ||
       message.type === "renderer-ready" ||
-      message.type === "content-update")
+      message.type === "content-update" ||
+      message.type === "content-applied")
   )
 }
