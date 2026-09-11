@@ -1,6 +1,13 @@
 "use client"
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 
@@ -66,6 +73,8 @@ export function ProjectEditorWorkspace({
   const [savedContent, setSavedContent] = useState<unknown>(
     () => template?.initialContent
   )
+  // Read by the hide cleanup below, which only runs once.
+  const savedContentRef = useRef<unknown>(template?.initialContent)
   const [publishedContent, setPublishedContent] = useState<unknown>(
     () => initialPublishedContent
   )
@@ -165,6 +174,7 @@ export function ProjectEditorWorkspace({
     setIsSaving(false)
 
     if (result.status === "success") {
+      savedContentRef.current = content
       setSavedContent(content)
       toast.success(result.message)
     } else {
@@ -316,6 +326,16 @@ export function ProjectEditorWorkspace({
     setPendingHref(null)
     setShowLeaveDialog(false)
   }
+
+  // Cache Components keeps this route mounted but hidden (<Activity>) after
+  // navigating away; drop unsaved edits so the next visit starts from the
+  // last saved content.
+  useLayoutEffect(() => {
+    return () => {
+      setContent(savedContentRef.current)
+      setFormReady(false)
+    }
+  }, [])
 
   const handleFormReady = useCallback(() => {
     setFormReady(true)

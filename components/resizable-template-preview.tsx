@@ -59,7 +59,7 @@ export function ResizableTemplatePreview({
           ? "preserve-relative-size"
           : "preserve-pixel-size"
       }
-      className="min-w-0 overflow-hidden bg-white"
+      className="min-w-0 overflow-hidden bg-transparent"
     >
       <TemplateAutoHeightPreview
         slug={slug}

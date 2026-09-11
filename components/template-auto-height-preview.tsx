@@ -1,7 +1,8 @@
 "use client"
 
-import { useCallback, useEffect, useRef } from "react"
+import { useCallback, useEffect, useEffectEvent, useRef, useState } from "react"
 
+import { PreviewTemplateSkeleton } from "@/components/preview-skeleton"
 import { TemplateRenderer } from "@/components/template-preview"
 import {
   isTemplateLiveMessage,
@@ -18,9 +19,6 @@ interface TemplateAutoHeightPreviewProps {
   className?: string
 }
 
-/**
- * Editor-oriented template preview that grows to fit its rendered document.
- */
 export function TemplateAutoHeightPreview({
   slug,
   name,
@@ -34,6 +32,9 @@ export function TemplateAutoHeightPreview({
   const rendererReadyRef = useRef(false)
   const measureStyleRef = useRef<HTMLStyleElement | null>(null)
   const appliedHeightRef = useRef(-1)
+  const hasMountedRef = useRef(false)
+  // Until the renderer confirms the user's content, it still shows defaults.
+  const [isContentApplied, setIsContentApplied] = useState(false)
 
   const postToRenderer = useCallback((message: TemplateLiveMessage) => {
     const frame = iframeRef.current
@@ -77,11 +78,17 @@ export function TemplateAutoHeightPreview({
         event.origin !== window.location.origin ||
         event.source !== frame?.contentWindow ||
         !isTemplateLiveMessage(event.data) ||
-        event.data.slug !== slug ||
-        event.data.type !== "renderer-ready"
+        event.data.slug !== slug
       ) {
         return
       }
+
+      if (event.data.type === "content-applied") {
+        setIsContentApplied(true)
+        return
+      }
+
+      if (event.data.type !== "renderer-ready") return
 
       // Handshake once per renderer document, else form-ready/renderer-ready loop forever.
       if (rendererReadyRef.current) return
@@ -140,10 +147,9 @@ export function TemplateAutoHeightPreview({
   }, [])
 
   const wireFrameHeight = useCallback(
-    (event: React.SyntheticEvent<HTMLIFrameElement>) => {
+    (frame: HTMLIFrameElement) => {
       cleanupRef.current?.()
 
-      const frame = event.currentTarget
       frameLoadedRef.current = true
       // Fresh renderer document: let its `renderer-ready` back through the guard.
       rendererReadyRef.current = false
@@ -219,22 +225,53 @@ export function TemplateAutoHeightPreview({
     [resizeFrame, sendContentUpdate, sendFormReady]
   )
 
+  const rewireOnReshow = useEffectEvent(() => {
+    if (iframeRef.current) wireFrameHeight(iframeRef.current)
+  })
+
+  // On a hard reload the server-rendered iframe can finish loading before
+  // hydration attaches `onLoad`, and React doesn't replay that missed event.
+  const wireIfAlreadyLoaded = useEffectEvent(() => {
+    const frame = iframeRef.current
+    const doc = frame?.contentDocument
+    if (!frame || doc?.readyState !== "complete" || doc.URL === "about:blank") {
+      return
+    }
+    wireFrameHeight(frame)
+  })
+
+  // Cache Components hides this route with <Activity> instead of unmounting
   useEffect(() => {
+    if (!hasMountedRef.current) {
+      hasMountedRef.current = true
+      wireIfAlreadyLoaded()
+    } else {
+      rewireOnReshow()
+    }
     return () => cleanupRef.current?.()
   }, [])
 
   return (
-    <TemplateRenderer
-      ref={iframeRef}
-      slug={slug}
-      name={name}
-      title={`${name} live preview`}
-      scrolling="no"
-      onLoad={wireFrameHeight}
-      className={cn(
-        "block min-h-[calc(100dvh-6rem)] w-full border-0 bg-white",
-        className
+    <div className="relative">
+      <TemplateRenderer
+        ref={iframeRef}
+        slug={slug}
+        name={name}
+        title={`${name} live preview`}
+        scrolling="no"
+        onLoad={(event) => wireFrameHeight(event.currentTarget)}
+        className={cn(
+          "block min-h-[calc(100dvh-6rem)] w-full border-0 bg-transparent",
+          // Hidden, not removed: the frame must keep loading and measuring.
+          !isContentApplied && "invisible",
+          className
+        )}
+      />
+      {!isContentApplied && (
+        <div className="absolute inset-0">
+          <PreviewTemplateSkeleton />
+        </div>
       )}
-    />
+    </div>
   )
 }
