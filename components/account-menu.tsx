@@ -1,39 +1,16 @@
-"use client"
+import { CaretDownIcon } from "@phosphor-icons/react/ssr"
 
-import { useTheme } from "next-themes"
-import { toast } from "sonner"
-import {
-  CaretDownIcon,
-  MonitorIcon,
-  MoonIcon,
-  SignOutIcon,
-  SunIcon,
-} from "@phosphor-icons/react"
-
-import { signOut } from "@/actions/auth"
-import { cn } from "@/lib/utils"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
   DropdownMenuSeparator,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-
-interface AccountMenuProps {
-  name?: string
-  email?: string
-  avatarUrl?: string
-  className?: string
-}
+import { cn } from "@/lib/utils"
+import { AccountMenuActions } from "./account-menu-actions"
+import { createClient } from "@/lib/supabase/server"
 
 function getInitials(name: string) {
   return name
@@ -45,20 +22,17 @@ function getInitials(name: string) {
     .toUpperCase()
 }
 
-export function AccountMenu({
-  name = "Amit Chauhan",
-  email = "amitchauhan5154@gmail.com",
-  avatarUrl,
-  className,
-}: AccountMenuProps) {
-  const { theme, setTheme } = useTheme()
+export async function AccountMenu({ className }: { className?: string }) {
+  const supabase = await createClient()
 
-  async function handleSignOut() {
-    const result = await signOut()
-    if (result?.error) {
-      toast.error(result.error)
-    }
-  }
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser()
+
+  const name = user?.user_metadata?.name || user?.email || ""
+  const email = user?.email || ""
+  const avatarUrl = user?.user_metadata?.avatar_url || ""
 
   return (
     <DropdownMenu>
@@ -87,38 +61,7 @@ export function AccountMenu({
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuGroup>
-          <DropdownMenuSub>
-            <DropdownMenuSubTrigger>
-              <SunIcon className="dark:hidden" />
-              <MoonIcon className="hidden dark:block" />
-              Theme
-            </DropdownMenuSubTrigger>
-            <DropdownMenuSubContent>
-              <DropdownMenuRadioGroup value={theme} onValueChange={setTheme}>
-                <DropdownMenuRadioItem value="light">
-                  <SunIcon />
-                  Light
-                </DropdownMenuRadioItem>
-                <DropdownMenuRadioItem value="dark">
-                  <MoonIcon />
-                  Dark
-                </DropdownMenuRadioItem>
-                <DropdownMenuRadioItem value="system">
-                  <MonitorIcon />
-                  System
-                </DropdownMenuRadioItem>
-              </DropdownMenuRadioGroup>
-            </DropdownMenuSubContent>
-          </DropdownMenuSub>
-        </DropdownMenuGroup>
-        <DropdownMenuSeparator />
-        <DropdownMenuGroup>
-          <DropdownMenuItem variant="destructive" onClick={handleSignOut}>
-            <SignOutIcon />
-            Log out
-          </DropdownMenuItem>
-        </DropdownMenuGroup>
+        <AccountMenuActions />
       </DropdownMenuContent>
     </DropdownMenu>
   )
