@@ -7,9 +7,6 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode
 }) {
-  const userId = await requireAuthenticatedUserId()
-  if (!userId) redirect("/login")
-
   return (
     <div className="min-h-screen">
       <Header />

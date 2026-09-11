@@ -1,6 +1,8 @@
 import { Logo } from "@/components/logo"
 import { MainNav } from "@/components/main-nav"
 import { AccountMenu } from "@/components/account-menu"
+import { Suspense } from "react"
+import { AccountMenuSkeleton } from "./account-menu-skeleton"
 
 export function Header() {
   return (
@@ -11,7 +13,9 @@ export function Header() {
           <MainNav />
         </div>
         <div className="ml-auto">
-          <AccountMenu />
+          <Suspense fallback={<AccountMenuSkeleton />}>
+            <AccountMenu />
+          </Suspense>
         </div>
       </div>
     </header>

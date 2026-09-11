@@ -8,13 +8,11 @@ export default async function Page({
 }: {
   searchParams: Promise<{ project?: string }>
 }) {
-  const { project: projectId } = await searchParams
-
   return (
     <div className="page">
       <h1>Templates</h1>
       <Suspense fallback={<TemplateListSkeleton />}>
-        <TemplatesList projectId={projectId} />
+        <TemplatesList searchParams={searchParams} />
       </Suspense>
     </div>
   )

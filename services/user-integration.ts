@@ -11,6 +11,8 @@ import {
   type UpdateUserIntegration,
   type UserIntegration,
 } from "./user-integration.schema"
+import { cacheLife, cacheTag, updateTag } from "next/cache"
+import { redirect } from "next/navigation"
 
 const TABLE = "user_integration"
 const PROVIDER = "vercel"
@@ -80,6 +82,8 @@ export async function createUserIntegration(
     throw new Error("Failed to create integration: not authenticated")
   }
 
+  updateTag(`intergration-${userId}`)
+
   const payload = insertUserIntegrationSchema.parse(input)
   const supabase = await createClient()
 
@@ -94,17 +98,31 @@ export async function createUserIntegration(
   return data
 }
 
-export async function listUserIntegrations(): Promise<UserIntegration[]> {
+export async function listUserIntegrations(): Promise<
+  Omit<UserIntegration, "credentials" | "token">[]
+> {
+  "use cache: private"
+  cacheLife({
+    stale: 300,
+    revalidate: 300,
+    expire: 1750,
+  })
+
+  const userId = await requireAuthenticatedUserId()
+  if (!userId) redirect("/login")
+
+  cacheTag(`intergration-${userId}`)
+
   const supabase = await createClient()
 
   const { data, error } = await supabase
     .from(TABLE)
-    .select()
+    .select("id,user_id,provider,status,created_at,update_at")
     .eq("provider", PROVIDER)
 
   if (error) throw new Error(`Failed to list integrations: ${error.message}`)
 
-  return data
+  return data || []
 }
 
 export async function getUserIntegration(): Promise<UserIntegration | null> {
@@ -139,6 +157,8 @@ export async function updateUserIntegration(
     throw new Error("Failed to update integration: not authenticated")
   }
 
+  updateTag(`intergration-${userId}`)
+
   const payload = updateUserIntegrationSchema.parse(input)
   const supabase = await createClient()
 
@@ -160,6 +180,7 @@ export async function deleteUserIntegration(id: string): Promise<void> {
   if (!userId) {
     throw new Error("Failed to delete integration: not authenticated")
   }
+  updateTag(`intergration-${userId}`)
 
   const supabase = await createClient()
 

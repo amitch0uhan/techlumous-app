@@ -13,15 +13,13 @@ const TABLE = "templates"
 export async function listTemplates(): Promise<Template[]> {
   "use cache"
   cacheLife({
-    stale: 6 * 60 * 60,
-    revalidate: 6 * 60 * 60,
-    expire: 24 * 60 * 60,
+    stale: 600, // 10 min until considered stale
+    revalidate: 3600, // 1 hours until revalidated
+    expire: 21600, // 6 hours until expired
   })
 
   // This shared list must not read request cookies inside the cached scope.
   const supabase = await createAdminClient()
-
-  console.log("Fetching templates from Supabase")
 
   const { data, error } = await supabase
     .from(TABLE)
