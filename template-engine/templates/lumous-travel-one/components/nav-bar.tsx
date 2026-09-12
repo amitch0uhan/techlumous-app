@@ -21,13 +21,13 @@ export function NavBar({
           {brandName}
         </span>
       </a>
-      {/* Dropped on mobile; the contact section carries the same action. */}
+      {/* Collapses to the icon button on mobile to keep the hero bar compact. */}
       <CtaPair
         label={ctaLabel}
         href={ctaHref}
         variant="white"
         size="md"
-        className="lt-mobile:hidden"
+        mobile="icon"
       />
     </nav>
   )
