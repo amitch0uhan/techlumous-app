@@ -1,4 +1,4 @@
-"use server"
+import "server-only"
 
 import { requireAuthenticatedUserId } from "@/lib/supabase/auth"
 import { createAdminClient, createClient } from "@/lib/supabase/server"
@@ -9,6 +9,7 @@ import {
   type Project,
   type UpdateProject,
 } from "./project.schema"
+import { getUserAccess } from "@/lib/access/server"
 
 const TABLE = "projects"
 
@@ -17,8 +18,32 @@ export async function createProject(input: InsertProject): Promise<Project> {
   const supabase = await createClient()
 
   // projects.user_id has no DB default, so it must come from the session.
-  const userId = await requireAuthenticatedUserId(supabase)
-  if (!userId) throw new Error("Failed to create project: not authenticated")
+  const [userId, userAccess] = await Promise.all([
+    requireAuthenticatedUserId(supabase),
+    getUserAccess(supabase),
+  ])
+  if (!userId || !userAccess) {
+    throw new Error("Failed to create project: not authenticated")
+  }
+
+  const { maxProjects } = userAccess.limits
+
+  if (Number.isFinite(maxProjects)) {
+    const { count, error: countError } = await supabase
+      .from(TABLE)
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", userId)
+
+    if (countError) {
+      throw new Error(`Failed to create project: ${countError.message}`)
+    }
+
+    if ((count ?? 0) >= maxProjects) {
+      throw new Error(
+        `Your plan allows ${maxProjects} project${maxProjects === 1 ? "" : "s"}. Upgrade to create more.`
+      )
+    }
+  }
 
   const { data, error } = await supabase
     .from(TABLE)
