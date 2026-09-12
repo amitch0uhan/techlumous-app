@@ -124,9 +124,10 @@ changes, recheck that 700px is still the collapse point.
 
 On mobile, and only there:
 
-- The nav's call to action is hidden. The contact section carries the same
-  action, and the button pair cannot sit beside the brand lockup without
-  wrapping.
+- The nav's call to action collapses to its round icon button (the link keeps
+  the label as its accessible name), since the full button pair cannot sit
+  beside the brand lockup without wrapping. Every other call to action keeps
+  only its rounded label button on mobile.
 - The destinations region picker is hidden — it needs a tall masked column that
   the stacked layout has no room for — and the image carousel spans the section's
   content width, showing one whole slide instead of the desktop 1.5-slide peek.
