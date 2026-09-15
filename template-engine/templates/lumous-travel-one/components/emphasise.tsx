@@ -6,7 +6,7 @@ export function emphasise(value: unknown): ReactNode {
   if (!source.includes("*")) return source
   return source.split(/\*([^*]+)\*/g).map((part, index) =>
     index % 2 === 1 ? (
-      <strong key={index} className="text-lt-strong font-medium">
+      <strong key={index} className="text-lt-heading font-medium">
         {part}
       </strong>
     ) : (

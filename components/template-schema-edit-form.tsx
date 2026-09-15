@@ -106,7 +106,7 @@ export function TemplateSchemaEditForm({
         aria-label="Schema fields"
         className="min-h-0 flex-1 pt-2"
       >
-        <div className="pt-3">
+        <div className="pt-1">
           {activeTab === "seo" ? (
             <p className="px-4 text-sm text-muted-foreground">
               SEO settings are coming soon.

@@ -36,17 +36,13 @@ export function Destinations({
       className={join(
         SECTION_RADIUS,
         CONTENT_CHILDREN,
-        "py-[clamp(64px,8vw,140px)]"
+        "lt-surface-section bg-lt-background py-[clamp(64px,8vw,140px)]"
       )}
-      style={{
-        background:
-          "color-mix(in oklab, var(--color-lt-panel-surface) 82%, var(--color-lt-primary) 18%)",
-      }}
     >
       <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,300px),1fr))] items-start gap-[clamp(28px,4vw,64px)]">
         <div className="flex flex-col gap-[clamp(20px,3vw,36px)]">
           <Eyebrow index={number} label={content.destinationsEyebrow} />
-          <h2 className="font-lt-display text-lt-display-md tracking-lt-tight text-lt-section-text m-0 max-w-[24ch] leading-[1.14] font-extralight text-pretty">
+          <h2 className="font-lt-display text-lt-display-md tracking-lt-tight text-lt-heading m-0 max-w-[24ch] leading-[1.14] font-extralight text-pretty">
             {emphasise(content.destinationsHeadline)}
           </h2>
         </div>
@@ -74,7 +70,12 @@ export function Destinations({
                   type="button"
                   onClick={() => carousel.select(index)}
                   aria-current={index === carousel.index}
-                  className="font-lt-display tracking-lt-snug text-lt-section-text ease-lt-standard flex cursor-pointer items-center border-none bg-transparent p-0 text-right text-[clamp(20px,2vw,28px)] transition-opacity duration-300"
+                  className={join(
+                    "font-lt-display tracking-lt-snug ease-lt-standard flex cursor-pointer items-center border-none bg-transparent p-0 text-right text-[clamp(20px,2vw,28px)] transition-opacity duration-300",
+                    index === carousel.index
+                      ? "text-lt-region-picker-active-foreground"
+                      : "text-lt-region-picker-inactive-foreground"
+                  )}
                   style={{
                     flex: `0 0 ${REGION_ROW}`,
                     height: REGION_ROW,
@@ -98,10 +99,10 @@ export function Destinations({
       {items.length > 0 ? (
         <div className="mt-[clamp(56px,7vw,104px)] flex flex-wrap items-end gap-[clamp(24px,3vw,40px)]">
           <div className="flex min-w-0 flex-[1_1_260px] flex-col gap-4.5 pb-[clamp(8px,2vw,40px)]">
-            <p className="font-lt-display text-lt-section-text m-0 text-[clamp(18px,1.6vw,22px)] font-medium">
+            <p className="font-lt-display text-lt-heading m-0 text-[clamp(18px,1.6vw,22px)] font-medium">
               {trimmed(active?.title)}
             </p>
-            <p className="text-lt-sm text-lt-muted m-0 max-w-[34ch] leading-[1.7]">
+            <p className="text-lt-sm text-lt-muted-foreground m-0 max-w-[34ch] leading-[1.7]">
               {trimmed(active?.body)}
             </p>
           </div>
@@ -136,13 +137,14 @@ export function Destinations({
                 label="Previous destination"
                 direction="prev"
                 onClick={carousel.prev}
-                className="text-lt-section-text border-lt-border/20 h-8.5 w-8.5 border bg-transparent"
+                className="h-8.5 w-8.5"
               />
               <CarouselButton
                 label="Next destination"
                 direction="next"
                 onClick={carousel.next}
-                className="bg-lt-primary text-lt-on-primary border-lt-border/20 h-8.5 w-8.5 border"
+                variant="active"
+                className="h-8.5 w-8.5"
               />
             </div>
           </div>

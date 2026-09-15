@@ -1,38 +1,92 @@
 @import "tailwindcss";
 
-/* Ported Lumous design system. Every token is `lt-` prefixed. Colour and font
-   literals are fallbacks only: Template.tsx re-declares them on the template
-   root from the editable `colors` group. White/black colour roles are only ever
-   painted through an opacity modifier or a color-mix. */
+/* Lumous design system. Every token is `lt-` prefixed.
+
+   Colour works in three layers (see README "Colour system"):
+   1. Palette: `paletteStyle()` in lib.ts writes every `design.colors` value
+      onto the template root. Surface roles land as raw `--lt-<surface>-<role>`
+      vars, which have no utilities, so components cannot reach them directly.
+   2. Surface tokens: the contextual `--color-lt-background / heading /
+      foreground / muted-foreground / subtle-foreground / border` utilities for
+      free text. Each `.lt-surface-*` class remaps them from its own palette
+      group, so text always follows the surface it sits on.
+   3. Component tokens: `--color-lt-<component>-<role>`, one per component
+      role, also written by `paletteStyle()`. A component paints only from its
+      own group.
+
+   The `transparent` values below only register the utilities; real values
+   always come from the root (a `:root` token cannot see a var declared further
+   down the tree, so nothing here may `var()` a palette var). */
 @theme {
-  /* surfaces */
-  --color-lt-canvas: #07080a;
-  --color-lt-nav-surface: #0f0f12;
-  --color-lt-card-surface: #131317;
-  --color-lt-panel-surface: #1c1c22;
+  /* surface tokens (remapped by .lt-surface-*) */
+  --color-lt-background: transparent;
+  --color-lt-heading: transparent;
+  --color-lt-foreground: transparent;
+  --color-lt-muted-foreground: transparent;
+  --color-lt-subtle-foreground: transparent;
+  --color-lt-border: transparent;
 
-  /* brand accent */
-  --color-lt-primary: #3aae7e;
-  --color-lt-secondary: #1f6b4e;
-  --color-lt-on-primary: #06120d;
+  /* component tokens */
+  --color-lt-button-primary-background: transparent;
+  --color-lt-button-primary-foreground: transparent;
+  --color-lt-button-primary-hover-background: transparent;
+  --color-lt-button-primary-glow: transparent;
 
-  /* text ramp */
-  --color-lt-strong: #ffffff;
-  --color-lt-body: #e8e6df;
-  --color-lt-muted: #b4b1a7;
-  --color-lt-subtle: #807d75;
+  --color-lt-button-secondary-foreground: transparent;
+  --color-lt-button-secondary-border: transparent;
+  --color-lt-button-secondary-hover-foreground: transparent;
+  --color-lt-button-secondary-hover-border: transparent;
 
-  /* --- Text inside a tinted section panel ------------------------------- */
-  --color-lt-section-text: #ffffff;
+  --color-lt-button-header-background: transparent;
+  --color-lt-button-header-foreground: transparent;
+  --color-lt-button-header-hover-background: transparent;
 
-  /* over imagery / on a light fill */
-  --color-lt-on-image: #ffffff;
-  --color-lt-on-light: #0a0a0b;
+  --color-lt-arrow-button-foreground: transparent;
+  --color-lt-arrow-button-border: transparent;
+  --color-lt-arrow-button-active-background: transparent;
+  --color-lt-arrow-button-active-foreground: transparent;
 
-  /* lines and depth */
-  --color-lt-border: #ffffff;
-  --color-lt-scrim: #07080a;
-  --color-lt-shadow: #000000;
+  --color-lt-hero-arrow-background: transparent;
+  --color-lt-hero-arrow-foreground: transparent;
+  --color-lt-hero-arrow-border: transparent;
+
+  --color-lt-hero-progress-track: transparent;
+  --color-lt-hero-progress-fill: transparent;
+  --color-lt-hero-progress-label: transparent;
+
+  --color-lt-tag-background: transparent;
+  --color-lt-tag-foreground: transparent;
+  --color-lt-tag-border: transparent;
+
+  --color-lt-trip-card-foreground: transparent;
+  --color-lt-trip-card-muted-foreground: transparent;
+  --color-lt-trip-card-border: transparent;
+
+  --color-lt-testimonial-card-background: transparent;
+  --color-lt-testimonial-card-heading: transparent;
+  --color-lt-testimonial-card-foreground: transparent;
+  --color-lt-testimonial-card-muted-foreground: transparent;
+  --color-lt-testimonial-card-border: transparent;
+
+  --color-lt-package-card-overlay: transparent;
+  --color-lt-package-card-foreground: transparent;
+  --color-lt-package-card-muted-foreground: transparent;
+
+  --color-lt-accordion-number: transparent;
+  --color-lt-accordion-title: transparent;
+  --color-lt-accordion-body: transparent;
+  --color-lt-accordion-divider: transparent;
+  --color-lt-accordion-icon: transparent;
+  --color-lt-accordion-icon-border: transparent;
+
+  --color-lt-region-picker-active-foreground: transparent;
+  --color-lt-region-picker-inactive-foreground: transparent;
+
+  --color-lt-link-foreground: transparent;
+  --color-lt-link-hover-foreground: transparent;
+
+  --color-lt-ring: transparent;
+  --color-lt-shadow: transparent;
 
   /* Must stay literal: a var() to a next/font variable resolves to nothing on :root. */
   --font-lt-display: "Manrope", system-ui, sans-serif;
@@ -58,6 +112,68 @@
   --ease-lt-emphasis: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+/* --- Surfaces ---------------------------------------------------------------
+   Every class sets all six surface tokens so nothing leaks in from a parent
+   surface. `subtle` is derived (a quieter muted tone), not a user control. */
+.lt-surface-page {
+  --color-lt-background: var(--lt-page-background);
+  --color-lt-heading: var(--lt-page-heading);
+  --color-lt-foreground: var(--lt-page-foreground);
+  --color-lt-muted-foreground: var(--lt-page-muted-foreground);
+  --color-lt-subtle-foreground: color-mix(
+    in srgb,
+    var(--lt-page-muted-foreground) 70%,
+    var(--lt-page-background)
+  );
+  --color-lt-border: var(--lt-page-border);
+}
+
+.lt-surface-section {
+  --color-lt-background: var(--lt-section-background);
+  --color-lt-heading: var(--lt-section-heading);
+  --color-lt-foreground: var(--lt-section-foreground);
+  --color-lt-muted-foreground: var(--lt-section-muted-foreground);
+  --color-lt-subtle-foreground: color-mix(
+    in srgb,
+    var(--lt-section-muted-foreground) 70%,
+    var(--lt-section-background)
+  );
+  --color-lt-border: var(--lt-section-border);
+}
+
+.lt-surface-header {
+  --color-lt-background: var(--lt-header-background);
+  --color-lt-heading: var(--lt-header-foreground);
+  --color-lt-foreground: var(--lt-header-foreground);
+  --color-lt-muted-foreground: var(--lt-header-foreground);
+  --color-lt-subtle-foreground: var(--lt-header-foreground);
+  --color-lt-border: var(--lt-header-foreground);
+}
+
+.lt-surface-photo {
+  --color-lt-background: var(--lt-photo-overlay);
+  --color-lt-heading: var(--lt-photo-foreground);
+  --color-lt-foreground: var(--lt-photo-foreground);
+  --color-lt-muted-foreground: var(--lt-photo-foreground);
+  --color-lt-subtle-foreground: var(--lt-photo-foreground);
+  --color-lt-border: var(--lt-photo-foreground);
+}
+
+.lt-surface-footer {
+  --color-lt-background: var(--lt-footer-background);
+  --color-lt-heading: var(--lt-footer-foreground);
+  --color-lt-foreground: var(--lt-footer-foreground);
+  --color-lt-muted-foreground: var(--lt-footer-foreground);
+  --color-lt-subtle-foreground: var(--lt-footer-foreground);
+  --color-lt-border: var(--lt-footer-border);
+}
+
+/* One visible keyboard focus ring for every link and button. */
+.lt-root :where(a, button):focus-visible {
+  outline: 2px solid var(--color-lt-ring);
+  outline-offset: 3px;
+}
+
 /* The template's one breakpoint; 700px is where the section header grids stop
    fitting two columns. Keep it in step with the `lt-mobile:` alignment rules. */
 @custom-variant lt-mobile (@media (width < 700px));
@@ -78,25 +194,29 @@
    the editable tokens; the alpha ladders themselves are fixed by the design. */
 .lt-glow-sm {
   box-shadow:
-    0 0 0 1px color-mix(in srgb, var(--color-lt-primary) 25%, transparent),
-    0 6px 24px color-mix(in srgb, var(--color-lt-primary) 22%, transparent);
+    0 0 0 1px
+      color-mix(in srgb, var(--color-lt-button-primary-glow) 25%, transparent),
+    0 6px 24px
+      color-mix(in srgb, var(--color-lt-button-primary-glow) 22%, transparent);
 }
 
 .lt-scrim-hero {
   background: linear-gradient(
     180deg,
-    color-mix(in srgb, var(--color-lt-scrim) 66%, transparent) 0%,
-    color-mix(in srgb, var(--color-lt-scrim) 16%, transparent) 38%,
-    color-mix(in srgb, var(--color-lt-scrim) 16%, transparent) 100%
+    color-mix(in srgb, var(--lt-photo-overlay) 66%, transparent) 0%,
+    color-mix(in srgb, var(--lt-photo-overlay) 16%, transparent) 38%,
+    color-mix(in srgb, var(--lt-photo-overlay) 16%, transparent) 100%
   );
 }
 
 .lt-scrim-card {
   background: linear-gradient(
     180deg,
-    color-mix(in srgb, var(--color-lt-scrim) 35%, transparent) 0%,
-    color-mix(in srgb, var(--color-lt-scrim) 25%, transparent) 40%,
-    color-mix(in srgb, var(--color-lt-scrim) 92%, transparent) 100%
+    color-mix(in srgb, var(--color-lt-package-card-overlay) 35%, transparent) 0%,
+    color-mix(in srgb, var(--color-lt-package-card-overlay) 25%, transparent)
+      40%,
+    color-mix(in srgb, var(--color-lt-package-card-overlay) 92%, transparent)
+      100%
   );
 }
 

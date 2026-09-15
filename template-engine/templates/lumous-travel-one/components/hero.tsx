@@ -32,7 +32,7 @@ export function Hero({
       id="top"
       className={join(
         SECTION_RADIUS,
-        "relative flex min-h-[clamp(600px,92vh,900px)] flex-col justify-between overflow-hidden py-[clamp(16px,2.2vw,28px)]"
+        "lt-surface-photo relative flex min-h-[clamp(600px,92vh,900px)] flex-col justify-between overflow-hidden py-[clamp(16px,2.2vw,28px)]"
       )}
     >
       <ContentImage
@@ -53,7 +53,7 @@ export function Hero({
           "relative z-10 mt-[clamp(48px,8vw,120px)] flex flex-col gap-[clamp(28px,4vw,56px)]"
         )}
       >
-        <h1 className="font-lt-display text-lt-display-lg tracking-lt-tight text-lt-on-image m-0 max-w-[20ch] leading-[1.06] font-extralight text-balance">
+        <h1 className="font-lt-display text-lt-display-lg tracking-lt-tight text-lt-heading m-0 max-w-[20ch] leading-[1.06] font-extralight text-balance">
           {emphasise(content.heroHeadline)}
         </h1>
 
@@ -63,7 +63,7 @@ export function Hero({
               {tags.map((tag, index) => (
                 <span
                   key={`${String(tag)}-${index}`}
-                  className="text-lt-sm border-lt-border/[0.14] bg-lt-on-image/[0.03] text-lt-on-image rounded-full border px-[18px] py-[9px] backdrop-blur-[16px] backdrop-saturate-[1.2]"
+                  className="text-lt-sm border-lt-tag-border/[0.14] bg-lt-tag-background/[0.03] text-lt-tag-foreground rounded-full border px-[18px] py-[9px] backdrop-blur-[16px] backdrop-saturate-[1.2]"
                 >
                   {typeof tag === "string" ? tag : ""}
                 </span>
@@ -75,11 +75,11 @@ export function Hero({
 
           {cards.length > 0 ? (
             <div className="flex min-w-0 flex-col gap-4">
-              <div className="font-lt-label text-lt-xs tracking-lt-eyebrow text-lt-on-image/70 flex items-center gap-3.5 font-extralight">
+              <div className="font-lt-label text-lt-xs tracking-lt-eyebrow text-lt-hero-progress-label/70 flex items-center gap-3.5 font-extralight">
                 <span>{pad(carousel.index + 1)}</span>
-                <span className="bg-lt-on-image/[0.28] relative h-px flex-1 overflow-hidden">
+                <span className="bg-lt-hero-progress-track/[0.28] relative h-px flex-1 overflow-hidden">
                   <span
-                    className="ease-lt-standard bg-lt-on-image absolute inset-y-0 left-0 transition-[width] duration-200"
+                    className="ease-lt-standard bg-lt-hero-progress-fill absolute inset-y-0 left-0 transition-[width] duration-200"
                     style={{
                       width: `${((carousel.index + 1) / cards.length) * 100}%`,
                     }}
@@ -90,13 +90,15 @@ export function Hero({
                   label="Previous trip"
                   direction="prev"
                   onClick={carousel.prev}
-                  className="border-lt-border/30 bg-lt-on-image/10 text-lt-on-image h-[30px] w-[30px] border"
+                  variant="photo"
+                  className="h-[30px] w-[30px]"
                 />
                 <CarouselButton
                   label="Next trip"
                   direction="next"
                   onClick={carousel.next}
-                  className="border-lt-border/30 bg-lt-on-image/10 text-lt-on-image h-[30px] w-[30px] border"
+                  variant="photo"
+                  className="h-[30px] w-[30px]"
                 />
               </div>
 
@@ -110,7 +112,7 @@ export function Hero({
                   {cards.map((card, index) => (
                     <article
                       key={index}
-                      className="lt-shadow-float border-lt-border/[0.18] flex flex-[0_0_clamp(240px,78%,320px)] gap-3 rounded-[14px] border p-3 backdrop-blur-[4px] backdrop-saturate-[1.15]"
+                      className="lt-shadow-float border-lt-trip-card-border/[0.18] flex flex-[0_0_clamp(240px,78%,320px)] gap-3 rounded-[14px] border p-3 backdrop-blur-[4px] backdrop-saturate-[1.15]"
                     >
                       <ContentImage
                         src={card?.imageUrl}
@@ -120,10 +122,10 @@ export function Hero({
                         className="h-[78px] w-[84px] flex-none rounded-[9px] object-cover"
                       />
                       <div className="flex min-w-0 flex-col justify-between gap-2.5">
-                        <p className="font-lt-display text-lt-on-image m-0 text-base font-light">
+                        <p className="font-lt-display text-lt-trip-card-foreground m-0 text-base font-light">
                           {trimmed(card?.title)}
                         </p>
-                        <p className="font-lt-label text-lt-on-image/70 m-0 text-[10.5px] font-extralight tracking-[0.12em] uppercase">
+                        <p className="font-lt-label text-lt-trip-card-muted-foreground/70 m-0 text-[10.5px] font-extralight tracking-[0.12em] uppercase">
                           {trimmed(card?.meta)}
                         </p>
                       </div>

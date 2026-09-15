@@ -2,59 +2,358 @@ import { z } from "zod"
 
 import { area, color, image, link, text, visibility } from "@/templates/fields"
 
-const DEFAULT_COLORS = {
-  canvas: "#07080A",
-  navSurface: "#0F0F12",
-  cardSurface: "#131317",
-  panelSurface: "#1C1C22",
-  accentPrimary: "#3AAE7E",
-  accentSecondary: "#1F6B4E",
-  accentForeground: "#06120D",
-  textStrong: "#FFFFFF",
-  textBody: "#E8E6DF",
-  textMuted: "#B4B1A7",
-  textSubtle: "#807D75",
-  sectionText: "#FFFFFF",
-  onImage: "#FFFFFF",
-  onLight: "#0A0A0B",
-  border: "#FFFFFF",
-  scrim: "#07080A",
-  shadow: "#000000",
+/**
+ * The single source of every default colour. Surface groups (page, header,
+ * section, photo, footer) colour free text by where it sits; every other group
+ * belongs to one component category and paints only that component. Key names
+ * follow web conventions (background / foreground / mutedForeground / border,
+ * hover* / active* for states); the editor labels below say where each shows.
+ * Borders, dividers, tracks and glass fills are painted through a fixed
+ * opacity at the call site, so their defaults are plain white.
+ */
+export const DEFAULT_COLORS = {
+  buttonPrimary: {
+    background: "#3AAE7E",
+    foreground: "#06120D",
+    hoverBackground: "#40BF8B",
+    glow: "#3AAE7E",
+  },
+  buttonSecondary: {
+    foreground: "#FFFFFF",
+    border: "#FFFFFF",
+    hoverForeground: "#3AAE7E",
+    hoverBorder: "#3AAE7E",
+  },
+  page: {
+    background: "#07080A",
+    heading: "#FFFFFF",
+    foreground: "#E8E6DF",
+    mutedForeground: "#B4B1A7",
+    border: "#FFFFFF",
+  },
+  header: {
+    background: "#0F0F12",
+    foreground: "#FFFFFF",
+  },
+  section: {
+    background: "#213633",
+    heading: "#FFFFFF",
+    foreground: "#FFFFFF",
+    mutedForeground: "#B4B1A7",
+    border: "#FFFFFF",
+  },
+  photo: {
+    overlay: "#07080A",
+    foreground: "#FFFFFF",
+  },
+  footer: {
+    background: "#07080A",
+    foreground: "#807D75",
+    border: "#FFFFFF",
+  },
+  buttonHeader: {
+    background: "#FFFFFF",
+    foreground: "#0A0A0B",
+    hoverBackground: "#F2F2F2",
+  },
+  arrowButton: {
+    foreground: "#FFFFFF",
+    border: "#FFFFFF",
+    activeBackground: "#3AAE7E",
+    activeForeground: "#06120D",
+  },
+  heroArrow: {
+    background: "#FFFFFF",
+    foreground: "#FFFFFF",
+    border: "#FFFFFF",
+  },
+  heroProgress: {
+    track: "#FFFFFF",
+    fill: "#FFFFFF",
+    label: "#FFFFFF",
+  },
+  tag: {
+    background: "#FFFFFF",
+    foreground: "#FFFFFF",
+    border: "#FFFFFF",
+  },
+  tripCard: {
+    foreground: "#FFFFFF",
+    mutedForeground: "#FFFFFF",
+    border: "#FFFFFF",
+  },
+  testimonialCard: {
+    background: "#131317",
+    heading: "#FFFFFF",
+    foreground: "#E8E6DF",
+    mutedForeground: "#807D75",
+    border: "#FFFFFF",
+  },
+  packageCard: {
+    overlay: "#07080A",
+    foreground: "#FFFFFF",
+    mutedForeground: "#FFFFFF",
+  },
+  accordion: {
+    number: "#FFFFFF",
+    title: "#FFFFFF",
+    body: "#FFFFFF",
+    divider: "#FFFFFF",
+    icon: "#FFFFFF",
+    iconBorder: "#FFFFFF",
+  },
+  regionPicker: {
+    activeForeground: "#FFFFFF",
+    inactiveForeground: "#FFFFFF",
+  },
+  link: {
+    foreground: "#807D75",
+    hoverForeground: "#3AAE7E",
+  },
+  effects: {
+    ring: "#3AAE7E",
+    shadow: "#000000",
+  },
 } as const
 
+const C = DEFAULT_COLORS
+
+// `.prefault({})` re-parses so the leaf defaults fill a missing group.
 export const designSchema = z.object({
-  // colours
   colors: z
     .object({
-      canvas: color("Page background", DEFAULT_COLORS.canvas),
-      navSurface: color("Nav bar background", DEFAULT_COLORS.navSurface),
-      cardSurface: color("Card background", DEFAULT_COLORS.cardSurface),
-      panelSurface: color("Section panel base", DEFAULT_COLORS.panelSurface),
+      buttonPrimary: z
+        .object({
+          background: color(
+            "Primary colour (main buttons)",
+            C.buttonPrimary.background
+          ),
+          foreground: color("Button text", C.buttonPrimary.foreground),
+          hoverBackground: color(
+            "Button on hover",
+            C.buttonPrimary.hoverBackground
+          ),
+          glow: color("Glow around the button", C.buttonPrimary.glow),
+        })
+        .meta({
+          label: "Primary button (Contact, package details)",
+          collapsed: true,
+        })
+        .prefault({}),
 
-      accentPrimary: color("Primary accent", DEFAULT_COLORS.accentPrimary),
-      accentSecondary: color(
-        "Secondary accent",
-        DEFAULT_COLORS.accentSecondary
-      ),
-      accentForeground: color(
-        "Text on accent",
-        DEFAULT_COLORS.accentForeground
-      ),
+      buttonSecondary: z
+        .object({
+          foreground: color("Text & arrow", C.buttonSecondary.foreground),
+          border: color("Secondary colour (outline)", C.buttonSecondary.border),
+          hoverForeground: color(
+            "Text on hover",
+            C.buttonSecondary.hoverForeground
+          ),
+          hoverBorder: color("Outline on hover", C.buttonSecondary.hoverBorder),
+        })
+        .meta({
+          label: "Outline button (About, Packages, arrow circles)",
+          collapsed: true,
+        })
+        .prefault({}),
 
-      textStrong: color("Heading text", DEFAULT_COLORS.textStrong),
-      textBody: color("Body text", DEFAULT_COLORS.textBody),
-      textMuted: color("Muted text", DEFAULT_COLORS.textMuted),
-      textSubtle: color("Subtle label text", DEFAULT_COLORS.textSubtle),
-      sectionText: color("Section text", DEFAULT_COLORS.sectionText),
+      page: z
+        .object({
+          background: color("Page background", C.page.background),
+          heading: color("Headings & highlighted words", C.page.heading),
+          foreground: color("Body text & dimmed headlines", C.page.foreground),
+          mutedForeground: color(
+            "Supporting text & small labels",
+            C.page.mutedForeground
+          ),
+          border: color("Dividers & outlines", C.page.border),
+        })
+        .meta({
+          label: "Page (About, Testimonials, Packages, Contact)",
+          collapsed: true,
+        })
+        .prefault({}),
 
-      onImage: color("Text & controls over images", DEFAULT_COLORS.onImage),
-      onLight: color("Text on light buttons", DEFAULT_COLORS.onLight),
+      header: z
+        .object({
+          background: color(
+            "Bar background (shown when the hero is hidden)",
+            C.header.background
+          ),
+          foreground: color("Brand name", C.header.foreground),
+        })
+        .meta({ label: "Header / navigation", collapsed: true })
+        .prefault({}),
 
-      border: color("Borders & dividers", DEFAULT_COLORS.border),
-      scrim: color("Image overlay", DEFAULT_COLORS.scrim),
-      shadow: color("Shadow", DEFAULT_COLORS.shadow),
+      section: z
+        .object({
+          background: color("Section background", C.section.background),
+          heading: color("Headings & highlighted words", C.section.heading),
+          foreground: color(
+            "Body text & dimmed headlines",
+            C.section.foreground
+          ),
+          mutedForeground: color(
+            "Supporting text & small labels",
+            C.section.mutedForeground
+          ),
+          border: color("Dividers & outlines", C.section.border),
+        })
+        .meta({
+          label: "Highlighted sections (Destinations, Why choose us)",
+          collapsed: true,
+        })
+        .prefault({}),
+
+      photo: z
+        .object({
+          overlay: color("Photo darkening overlay", C.photo.overlay),
+          foreground: color("Headline & text on the photo", C.photo.foreground),
+        })
+        .meta({ label: "Hero photo", collapsed: true })
+        .prefault({}),
+
+      footer: z
+        .object({
+          background: color("Footer background", C.footer.background),
+          foreground: color("Brand name & copyright", C.footer.foreground),
+          border: color("Top divider", C.footer.border),
+        })
+        .meta({ label: "Footer", collapsed: true })
+        .prefault({}),
+
+      buttonHeader: z
+        .object({
+          background: color("Button background", C.buttonHeader.background),
+          foreground: color("Button text", C.buttonHeader.foreground),
+          hoverBackground: color(
+            "Button on hover",
+            C.buttonHeader.hoverBackground
+          ),
+        })
+        .meta({ label: "Header button", collapsed: true })
+        .prefault({}),
+
+      arrowButton: z
+        .object({
+          foreground: color("'Previous' arrow", C.arrowButton.foreground),
+          border: color("Arrow outline", C.arrowButton.border),
+          activeBackground: color(
+            "'Next' arrow background",
+            C.arrowButton.activeBackground
+          ),
+          activeForeground: color(
+            "'Next' arrow icon",
+            C.arrowButton.activeForeground
+          ),
+        })
+        .meta({
+          label: "Carousel arrows (Destinations, Packages)",
+          collapsed: true,
+        })
+        .prefault({}),
+
+      heroArrow: z
+        .object({
+          background: color("Glass fill", C.heroArrow.background),
+          foreground: color("Arrow icon", C.heroArrow.foreground),
+          border: color("Outline", C.heroArrow.border),
+        })
+        .meta({ label: "Hero trip arrows", collapsed: true })
+        .prefault({}),
+
+      heroProgress: z
+        .object({
+          track: color("Track", C.heroProgress.track),
+          fill: color("Filled part", C.heroProgress.fill),
+          label: color("Counter numbers", C.heroProgress.label),
+        })
+        .meta({ label: "Hero trip progress bar", collapsed: true })
+        .prefault({}),
+
+      tag: z
+        .object({
+          background: color("Glass fill", C.tag.background),
+          foreground: color("Tag text", C.tag.foreground),
+          border: color("Outline", C.tag.border),
+        })
+        .meta({ label: "Tags (Hero, Package cards)", collapsed: true })
+        .prefault({}),
+
+      tripCard: z
+        .object({
+          foreground: color("Trip title", C.tripCard.foreground),
+          mutedForeground: color("Nights & price", C.tripCard.mutedForeground),
+          border: color("Outline", C.tripCard.border),
+        })
+        .meta({ label: "Hero trip cards", collapsed: true })
+        .prefault({}),
+
+      testimonialCard: z
+        .object({
+          background: color("Card background", C.testimonialCard.background),
+          heading: color("Quote", C.testimonialCard.heading),
+          foreground: color("Traveller name", C.testimonialCard.foreground),
+          mutedForeground: color(
+            "Trip label",
+            C.testimonialCard.mutedForeground
+          ),
+          border: color("Outline", C.testimonialCard.border),
+        })
+        .meta({ label: "Testimonial cards", collapsed: true })
+        .prefault({}),
+
+      packageCard: z
+        .object({
+          overlay: color("Photo darkening overlay", C.packageCard.overlay),
+          foreground: color("Title & price", C.packageCard.foreground),
+          mutedForeground: color("Description", C.packageCard.mutedForeground),
+        })
+        .meta({ label: "Package cards", collapsed: true })
+        .prefault({}),
+
+      accordion: z
+        .object({
+          number: color("Row number", C.accordion.number),
+          title: color("Row title", C.accordion.title),
+          body: color("Opened text", C.accordion.body),
+          divider: color("Row dividers", C.accordion.divider),
+          icon: color("Plus icon", C.accordion.icon),
+          iconBorder: color("Plus icon outline", C.accordion.iconBorder),
+        })
+        .meta({ label: "Why choose us list", collapsed: true })
+        .prefault({}),
+
+      regionPicker: z
+        .object({
+          activeForeground: color(
+            "Selected region",
+            C.regionPicker.activeForeground
+          ),
+          inactiveForeground: color(
+            "Other regions (faded)",
+            C.regionPicker.inactiveForeground
+          ),
+        })
+        .meta({ label: "Destination region list", collapsed: true })
+        .prefault({}),
+
+      link: z
+        .object({
+          foreground: color("Link text", C.link.foreground),
+          hoverForeground: color("Link on hover", C.link.hoverForeground),
+        })
+        .meta({ label: "Footer links", collapsed: true })
+        .prefault({}),
+
+      effects: z
+        .object({
+          ring: color("Keyboard focus outline", C.effects.ring),
+          shadow: color("Shadows", C.effects.shadow),
+        })
+        .meta({ label: "Focus & shadows", collapsed: true })
+        .prefault({}),
     })
-    // `.prefault({})` re-parses so the leaf defaults fill a missing group.
     .meta({ label: "Colours", collapsed: false })
     .prefault({}),
 })

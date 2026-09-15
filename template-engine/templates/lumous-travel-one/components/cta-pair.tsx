@@ -8,14 +8,15 @@ const BUTTON_SIZE = {
   lg: "h-[54px] gap-2.5 px-[30px] text-[1.0625rem]",
 } as const
 
-// Hover styles key off the shared `group` link so both halves react together.
+// Each variant paints only from its own `design.colors` button group. Hover
+// styles key off the shared `group` link so both halves react together.
 const BUTTON_VARIANT = {
   primary:
-    "bg-lt-primary text-lt-on-primary lt-glow-sm group-hover:brightness-110",
+    "bg-lt-button-primary-background text-lt-button-primary-foreground lt-glow-sm group-hover:bg-lt-button-primary-hover-background",
   secondary:
-    "text-lt-strong group-hover:border-lt-primary group-hover:text-lt-primary border border-lt-border/20",
-  white:
-    "bg-lt-on-image text-lt-on-light lt-shadow-button font-light group-hover:brightness-95",
+    "text-lt-button-secondary-foreground border border-lt-button-secondary-border/20 group-hover:border-lt-button-secondary-hover-border group-hover:text-lt-button-secondary-hover-foreground",
+  header:
+    "bg-lt-button-header-background text-lt-button-header-foreground lt-shadow-button font-light group-hover:bg-lt-button-header-hover-background",
 } as const
 
 const ICON_SIZE = {
@@ -28,7 +29,7 @@ const ICON_SIZE = {
  * Button plus trailing icon button, the pairing the design uses for every CTA.
  * Both halves are one link so they read, click and hover as a single button.
  * On `lt-mobile` only one half remains: the rounded label by default, or the
- * icon button when `mobile="icon"`.
+ * icon button when `mobile="icon"`. `withIcon={false}` renders the label alone.
  */
 export function CtaPair({
   label,
@@ -36,6 +37,7 @@ export function CtaPair({
   variant = "primary",
   size = "md",
   mobile = "label",
+  withIcon = true,
   className,
 }: {
   label: unknown
@@ -43,12 +45,14 @@ export function CtaPair({
   variant?: keyof typeof BUTTON_VARIANT
   size?: keyof typeof BUTTON_SIZE
   mobile?: "label" | "icon"
+  withIcon?: boolean
   className?: string
 }) {
   const text = trimmed(label)
   if (text.length === 0) return null
   const target = trimmed(href) || "#"
   const iconSize = size === "lg" ? 20 : 18
+  const iconOnMobile = withIcon && mobile === "icon"
 
   return (
     <Link
@@ -64,25 +68,27 @@ export function CtaPair({
           "ease-lt-standard tracking-lt-snug inline-flex items-center justify-center rounded-full leading-none font-semibold whitespace-nowrap transition-all duration-200",
           BUTTON_SIZE[size],
           BUTTON_VARIANT[variant],
-          mobile === "icon" ? "lt-mobile:hidden" : undefined
+          iconOnMobile ? "lt-mobile:hidden" : undefined
         )}
       >
         {text}
       </span>
-      <span
-        aria-hidden="true"
-        className={join(
-          "text-lt-strong group-hover:border-lt-primary group-hover:text-lt-primary ease-lt-standard border-lt-border/20 inline-flex items-center justify-center rounded-full border transition-colors duration-200",
-          ICON_SIZE[size],
-          mobile === "icon" ? undefined : "lt-mobile:hidden"
-        )}
-      >
-        <ArrowUpRight
-          size={iconSize}
-          weight={ICON_WEIGHT}
-          className="ease-lt-standard transition-transform duration-200 group-hover:rotate-45"
-        />
-      </span>
+      {withIcon ? (
+        <span
+          aria-hidden="true"
+          className={join(
+            "text-lt-button-secondary-foreground border-lt-button-secondary-border/20 group-hover:border-lt-button-secondary-hover-border group-hover:text-lt-button-secondary-hover-foreground ease-lt-standard inline-flex items-center justify-center rounded-full border transition-colors duration-200",
+            ICON_SIZE[size],
+            iconOnMobile ? undefined : "lt-mobile:hidden"
+          )}
+        >
+          <ArrowUpRight
+            size={iconSize}
+            weight={ICON_WEIGHT}
+            className="ease-lt-standard transition-transform duration-200 group-hover:rotate-45"
+          />
+        </span>
+      ) : null}
     </Link>
   )
 }
