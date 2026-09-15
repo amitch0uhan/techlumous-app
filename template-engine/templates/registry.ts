@@ -5,7 +5,7 @@ import { template as lumousMarkOne } from "./lumous-mark-one"
 import { template as lumousTravelOne } from "./lumous-travel-one"
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-type AnyTemplateModule = TemplateModule<any>
+type AnyTemplateModule = TemplateModule<any, any>
 
 export const templates: Record<string, AnyTemplateModule> = {
   [helloWorld.meta.slug]: helloWorld,

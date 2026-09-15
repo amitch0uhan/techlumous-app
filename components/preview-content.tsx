@@ -54,6 +54,7 @@ export default async function PreviewContent({
       slug={template.slug}
       name={template.name}
       content={template.default_content}
+      design={template.default_design}
       allowViewportResize={capabilities.canResizePreview}
     />
   )

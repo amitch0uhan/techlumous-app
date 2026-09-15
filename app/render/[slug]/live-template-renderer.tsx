@@ -12,14 +12,19 @@ import { getTemplate } from "@/templates/registry"
 interface LiveTemplateRendererProps {
   slug: string
   initialContent: unknown
+  initialDesign: unknown
 }
 
 export function LiveTemplateRenderer({
   slug,
   initialContent,
+  initialDesign,
 }: LiveTemplateRendererProps) {
   const template = getTemplate(slug)
-  const [content, setContent] = useState(initialContent)
+  const [snapshot, setSnapshot] = useState({
+    content: initialContent,
+    design: initialDesign,
+  })
   const rendererReadyRef = useRef(false)
   const formReadyRef = useRef(false)
 
@@ -55,18 +60,21 @@ export function LiveTemplateRenderer({
       }
 
       if (
-        event.data.type === "content-update" &&
+        event.data.type === "snapshot-update" &&
         rendererReadyRef.current &&
         formReadyRef.current
       ) {
-        const nextContent = event.data.content
+        const nextSnapshot = {
+          content: event.data.content,
+          design: event.data.design,
+        }
         // Commit before acknowledging, so the parent only reveals the preview
-        // once the template DOM holds the user's content.
-        flushSync(() => setContent(nextContent))
+        // once the template DOM holds the user's content and design.
+        flushSync(() => setSnapshot(nextSnapshot))
         parent.postMessage(
           {
             channel: TEMPLATE_LIVE_CHANNEL,
-            type: "content-applied",
+            type: "snapshot-applied",
             slug,
           },
           window.location.origin
@@ -88,5 +96,5 @@ export function LiveTemplateRenderer({
   if (!template) return null
 
   const { Template } = template
-  return <Template content={content} />
+  return <Template {...snapshot} />
 }

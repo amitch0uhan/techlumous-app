@@ -1,19 +1,35 @@
 "use client"
 
-import { useEffect } from "react"
-import type { ZodType } from "zod"
+import { useEffect, useState } from "react"
+import { z, type ZodType } from "zod"
 import { CircleNotchIcon, ArrowCircleUpRightIcon } from "@phosphor-icons/react"
 
 import { SchemaFormScrollArea } from "@/components/schema-form-scroll-area"
 import { Button, IconButton } from "@/components/ui/button"
 import { Card, CardFooter, CardTitle } from "@/components/ui/card"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { SchemaForm } from "@/lib/schema-form"
 import { cn } from "@/lib/utils"
+
+type Tab = "content" | "design" | "seo"
+type TabList = {
+  label: string
+  value: Tab
+}
+
+const tabsList: TabList[] = [
+  { label: "Content", value: "content" },
+  { label: "Design", value: "design" },
+  { label: "SEO", value: "seo" },
+]
 
 interface TemplateSchemaEditFormProps {
   projectId: string
   schema?: ZodType
   value?: unknown
+  designSchema?: ZodType
+  designValue?: unknown
+  onDesignChange: (next: unknown) => void
   onChange: (next: unknown) => void
   onReady?: () => void
   onSave: () => void
@@ -32,6 +48,9 @@ export function TemplateSchemaEditForm({
   projectId,
   schema,
   value,
+  designSchema,
+  designValue,
+  onDesignChange,
   onChange,
   onReady,
   onSave,
@@ -45,9 +64,11 @@ export function TemplateSchemaEditForm({
   isOpen,
   className,
 }: TemplateSchemaEditFormProps) {
+  const [activeTab, setActiveTab] = useState<Tab>("content")
+
   useEffect(() => {
-    if (schema) onReady?.()
-  }, [onReady, schema])
+    if (schema && designSchema) onReady?.()
+  }, [onReady, schema, designSchema])
 
   return (
     <Card
@@ -61,19 +82,48 @@ export function TemplateSchemaEditForm({
         className
       )}
     >
-      <CardTitle className="p-3 text-base font-medium">Edit Content</CardTitle>
+      <CardTitle className="p-3 text-base font-medium">Edit template</CardTitle>
+
+      <Tabs
+        value={activeTab}
+        onValueChange={(value) => setActiveTab(value as Tab)}
+        className="mb-2"
+      >
+        <TabsList className="h-9 w-full rounded-none bg-card/60 px-1 pb-0">
+          {tabsList.map(({ label, value }) => (
+            <TabsTrigger
+              key={value}
+              value={value}
+              className="rounded-t-lg rounded-b-none border-0 px-3 py-0 font-mono text-sm tab:px-4 data-active:bg-background data-active:text-card-foreground dark:data-active:bg-background"
+            >
+              {label}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+      </Tabs>
 
       <SchemaFormScrollArea
         aria-label="Schema fields"
-        className="min-h-0 flex-1"
+        className="min-h-0 flex-1 pt-2"
       >
         <div className="pt-3">
-          {schema ? (
+          {activeTab === "seo" ? (
+            <p className="px-4 text-sm text-muted-foreground">
+              SEO settings are coming soon.
+            </p>
+          ) : activeTab === "design" &&
+            designSchema instanceof z.ZodObject &&
+            Object.keys(designSchema.shape).length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              No design settings for this template
+            </p>
+          ) : schema && designSchema ? (
             <SchemaForm
-              schema={schema}
+              key={activeTab}
+              schema={activeTab === "design" ? designSchema : schema}
               projectId={projectId}
-              value={value}
-              onChange={onChange}
+              value={activeTab === "design" ? designValue : value}
+              onChange={activeTab === "design" ? onDesignChange : onChange}
               layout="beside"
             />
           ) : (

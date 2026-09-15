@@ -58,9 +58,9 @@ preview and editor use the same component and schema as the published engine.
   generated form editing, image-field validation, and publish validation.
 - `app/render/[slug]/page.tsx` and its live renderer load the complete template
   from `template-engine/templates/registry.ts`.
-- The studio embeds this route in a same-origin iframe and sends content updates
+- The studio embeds this route in a same-origin iframe and sends complete snapshot updates
   through the template live-message protocol. Templates do not need to know
-  about that protocol; they only receive a new `content` prop.
+  about that protocol; they only receive new `content` and `design` props.
 
 When a schema changes, inspect the schema form only to confirm the field shape
 is supported. Do not move editor UI or message handling into the template.
@@ -72,7 +72,7 @@ is the studio-facing projection of `meta.ts` (excluding `status`) plus
 `defaultContent`:
 
 ```text
-slug, name, version, category, tags, description, thumbnail, default_content
+slug, name, version, category, tags, description, thumbnail, default_content, default_design
 ```
 
 Code registration alone makes a template renderable by slug but does not
@@ -93,7 +93,7 @@ At runtime, `template-engine/app/page.tsx`:
 2. Reads published content through `template-engine/lib/content.ts`.
 3. Uses `defaultContent` only when the required environment pointers are absent
    or no content is returned.
-4. Renders `<Template content={content} />` with ISR revalidation set to 60
+4. Renders `<Template content={content} design={design} />` with ISR revalidation set to 60
    seconds.
 
 The runtime environment contract is:
@@ -179,3 +179,22 @@ Consequences:
 - **Component code changed but the live site did not:** deploy again; ISR updates
   content, not source code.
 
+
+## Separate content and design contract
+
+Every module exports two inferred Zod types, two schemas and two defaults. Both
+defaults must parse. Use `designSchema = z.object({})` and `defaultDesign = {}`
+when there are no design controls. Travel One stores its 17-color palette in
+`design.colors`; Hello World's theme remains content, and Mark One's fixed CSS
+palette is unchanged. Register both schemas and design defaults in the studio
+schema registry without importing renderers.
+
+The studio uses independent Content/Design tabs with one save and publish flow.
+Save both drafts atomically; validate both schemas before publishing. The iframe
+applies a complete `{ content, design }` snapshot before acknowledging readiness.
+The published engine selects `published_content,published_design` together and
+never reads drafts. Each missing value falls back directly to its corresponding
+template default. Content and design remain separate throughout the catalog,
+editor, publishing and runtime paths. Apply
+`docs/template-content-design-migration.md` before rollout and refresh the catalog
+cache. Source changes require a build; publishing either dataset uses ISR.

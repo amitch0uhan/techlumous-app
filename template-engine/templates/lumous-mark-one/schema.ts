@@ -201,3 +201,7 @@ export const defaultContent: LumousMarkOneContent = {
     tagline: "Made with intent, not templates",
   },
 }
+
+export const designSchema = z.object({})
+export type LumousMarkOneDesign = z.infer<typeof designSchema>
+export const defaultDesign: LumousMarkOneDesign = {}

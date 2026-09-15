@@ -1,3 +1,4 @@
+import { getTemplateDesignSchema } from "@/template-engine/templates/schema-registry"
 import { createHash } from "node:crypto"
 
 import { requireAuthenticatedUserId } from "@/lib/supabase/auth"
@@ -54,6 +55,7 @@ type DeploymentOrchestratorDependencies = {
   updateProject: typeof updateProject
   getTemplateById: typeof getTemplateById
   getTemplateContentSchema: typeof getTemplateContentSchema
+  getTemplateDesignSchema: typeof getTemplateDesignSchema
   getUserIntegrationByProvider: typeof getUserIntegrationByProvider
   getVaultSecret: typeof getVaultSecret
   resolveVercelProject: typeof resolveVercelProject
@@ -76,6 +78,7 @@ const defaultDependencies: DeploymentOrchestratorDependencies = {
   updateProject,
   getTemplateById,
   getTemplateContentSchema,
+  getTemplateDesignSchema,
   getUserIntegrationByProvider,
   getVaultSecret,
   resolveVercelProject,
@@ -94,7 +97,7 @@ const publicErrorMessages: Record<DeploymentOrchestratorCode, string> = {
   PROJECT_NOT_FOUND: "Project not found.",
   ACTIVE_DEPLOYMENT: "A deployment is already in progress.",
   MISSING_TEMPLATE: "Select a valid template before deploying.",
-  INVALID_CONTENT: "Fix the template content before deploying.",
+  INVALID_CONTENT: "Fix the template content or design before deploying.",
   VERCEL_RECONNECT_REQUIRED: "Reconnect Vercel before deploying.",
   VERCEL_PROJECT_FAILED: "Failed to prepare the Vercel project.",
   ENVIRONMENT_SYNC_FAILED: "Failed to configure the Vercel environment.",
@@ -134,6 +137,21 @@ function projectDraftContent(project: Project, defaultContent: unknown) {
   }
 
   return defaultContent
+}
+
+function projectDraftDesign(project: Project, defaultDesign: unknown) {
+  if (project.draft_design && Object.keys(project.draft_design).length > 0) {
+    return project.draft_design
+  }
+
+  if (
+    project.published_design &&
+    Object.keys(project.published_design).length > 0
+  ) {
+    return project.published_design
+  }
+
+  return defaultDesign
 }
 
 function hasLiveDeployment(deployment: DeploymentState): boolean {
@@ -301,18 +319,37 @@ export async function orchestrateProjectDeployment(
   const parsedContent = schema.safeParse(
     projectDraftContent(project, template.default_content)
   )
-  if (!parsedContent.success || !isContentRecord(parsedContent.data)) {
+  const parsedDesign = dependencies.getTemplateDesignSchema(
+    template.slug
+  )?.safeParse(
+    projectDraftDesign(project, template.default_design)
+  )
+  if (
+    !parsedContent.success ||
+    !isContentRecord(parsedContent.data) ||
+    !parsedDesign?.success ||
+    !isContentRecord(parsedDesign.data)
+  ) {
     return failure("INVALID_CONTENT", existingDeployment)
   }
 
   const isLive = hasLiveDeployment(existingDeployment)
   const releaseStartedAt = new Date()
+  const releasedContentHash = contentHash({
+    content: parsedContent.data,
+    design: parsedDesign.data,
+  })
 
   // Stage 4: Publish the validated draft. The first deployment also persists
   // template defaults as the initial draft.
   await dependencies.updateProject(project.id, {
-    ...(!isLive && { draft_content: parsedContent.data }),
+    ...(!isLive && {
+      draft_content: parsedContent.data,
+      draft_design: parsedDesign.data,
+    }),
     published_content: parsedContent.data,
+    published_design: parsedDesign.data,
+    ...(isLive && { deployed_content_hash: releasedContentHash }),
     status: "published",
   })
 
@@ -490,7 +527,7 @@ export async function orchestrateProjectDeployment(
             expectedUpdatedAt: current.updated_at,
             deploymentId: result.deploymentId,
             productionUrl: result.url,
-            contentHash: contentHash(parsedContent.data),
+            contentHash: releasedContentHash,
           })) ?? current)
         : current
 

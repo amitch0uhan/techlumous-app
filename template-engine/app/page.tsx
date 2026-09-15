@@ -37,7 +37,9 @@ export default async function Page() {
     `[template-engine] rendering "${template.meta.slug}" (${template.meta.name})`
   )
 
-  const { Template, defaultContent } = template
-  const content = (await fetchProjectContent()) ?? defaultContent
-  return <Template content={content} />
+  const { Template, defaultContent, defaultDesign } = template
+  const published = await fetchProjectContent()
+  const content = published?.published_content ?? defaultContent
+  const design = published?.published_design ?? defaultDesign
+  return <Template content={content} design={design} />
 }

@@ -23,6 +23,7 @@ interface ResizableTemplatePreviewProps {
   slug: string
   name: string
   content: unknown
+  design: unknown
   formReady: boolean
   viewport: PreviewViewport
   isSchemaFormOpen: boolean
@@ -33,6 +34,7 @@ export function ResizableTemplatePreview({
   slug,
   name,
   content,
+  design,
   formReady,
   viewport,
   isSchemaFormOpen,
@@ -65,6 +67,7 @@ export function ResizableTemplatePreview({
         slug={slug}
         name={name}
         content={content}
+        design={design}
         formReady={formReady}
       />
     </ResizablePanel>

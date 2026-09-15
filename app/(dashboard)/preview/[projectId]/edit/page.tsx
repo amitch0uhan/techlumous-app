@@ -30,6 +30,10 @@ export default async function ProjectEditorPage({
     [project.draft_content, project.published_content].find(hasContent) ??
     template?.default_content ??
     {}
+  const initialDesign =
+    [project.draft_design, project.published_design].find(hasContent) ??
+    template?.default_design ??
+    {}
 
   return (
     <div className="sm:-m-4 lg:-m-6">
@@ -42,6 +46,7 @@ export default async function ProjectEditorPage({
           !!project.deployment_url
         }
         initialPublishedContent={project.published_content}
+        initialPublishedDesign={project.published_design}
         initialDeployment={{
           status: project.deploy_status ?? "not_deployed",
           liveUrl: project.deployment_url,
@@ -56,6 +61,7 @@ export default async function ProjectEditorPage({
                 name: template.name,
                 slug: template.slug,
                 initialContent,
+                initialDesign,
               }
             : null
         }

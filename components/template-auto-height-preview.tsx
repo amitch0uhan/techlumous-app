@@ -15,6 +15,7 @@ interface TemplateAutoHeightPreviewProps {
   slug: string
   name: string
   content: unknown
+  design: unknown
   formReady: boolean
   className?: string
 }
@@ -23,6 +24,7 @@ export function TemplateAutoHeightPreview({
   slug,
   name,
   content,
+  design,
   formReady,
   className,
 }: TemplateAutoHeightPreviewProps) {
@@ -33,8 +35,8 @@ export function TemplateAutoHeightPreview({
   const measureStyleRef = useRef<HTMLStyleElement | null>(null)
   const appliedHeightRef = useRef(-1)
   const hasMountedRef = useRef(false)
-  // Until the renderer confirms the user's content, it still shows defaults.
-  const [isContentApplied, setIsContentApplied] = useState(false)
+  // Until the renderer confirms the user's snapshot, it still shows defaults.
+  const [isSnapshotApplied, setIsSnapshotApplied] = useState(false)
 
   const postToRenderer = useCallback((message: TemplateLiveMessage) => {
     const frame = iframeRef.current
@@ -53,18 +55,19 @@ export function TemplateAutoHeightPreview({
     })
   }, [formReady, postToRenderer, slug])
 
-  const sendContentUpdate = useCallback(() => {
+  const sendSnapshotUpdate = useCallback(() => {
     if (!formReady || !rendererReadyRef.current || !frameLoadedRef.current) {
       return
     }
 
     postToRenderer({
       channel: TEMPLATE_LIVE_CHANNEL,
-      type: "content-update",
+      type: "snapshot-update",
       slug,
       content,
+      design,
     })
-  }, [content, formReady, postToRenderer, slug])
+  }, [content, design, formReady, postToRenderer, slug])
 
   useEffect(() => {
     frameLoadedRef.current = false
@@ -83,8 +86,8 @@ export function TemplateAutoHeightPreview({
         return
       }
 
-      if (event.data.type === "content-applied") {
-        setIsContentApplied(true)
+      if (event.data.type === "snapshot-applied") {
+        setIsSnapshotApplied(true)
         return
       }
 
@@ -95,22 +98,22 @@ export function TemplateAutoHeightPreview({
 
       rendererReadyRef.current = true
       sendFormReady()
-      sendContentUpdate()
+      sendSnapshotUpdate()
     }
 
     window.addEventListener("message", handleMessage)
     return () => window.removeEventListener("message", handleMessage)
-  }, [sendContentUpdate, sendFormReady, slug])
+  }, [sendSnapshotUpdate, sendFormReady, slug])
 
   useEffect(() => {
     if (!formReady) return
     sendFormReady()
-    sendContentUpdate()
-  }, [formReady, sendContentUpdate, sendFormReady])
+    sendSnapshotUpdate()
+  }, [formReady, sendSnapshotUpdate, sendFormReady])
 
   useEffect(() => {
-    sendContentUpdate()
-  }, [content, sendContentUpdate])
+    sendSnapshotUpdate()
+  }, [content, design, sendSnapshotUpdate])
 
   const resizeFrame = useCallback(() => {
     const frame = iframeRef.current
@@ -156,7 +159,7 @@ export function TemplateAutoHeightPreview({
       const doc = frame.contentDocument
 
       sendFormReady()
-      sendContentUpdate()
+      sendSnapshotUpdate()
 
       if (!doc?.body) return
 
@@ -222,7 +225,7 @@ export function TemplateAutoHeightPreview({
         }
       }
     },
-    [resizeFrame, sendContentUpdate, sendFormReady]
+    [resizeFrame, sendSnapshotUpdate, sendFormReady]
   )
 
   const rewireOnReshow = useEffectEvent(() => {
@@ -263,11 +266,11 @@ export function TemplateAutoHeightPreview({
         className={cn(
           "block min-h-[calc(100dvh-6rem)] w-full border-0 bg-transparent",
           // Hidden, not removed: the frame must keep loading and measuring.
-          !isContentApplied && "invisible",
+          !isSnapshotApplied && "invisible",
           className
         )}
       />
-      {!isContentApplied && (
+      {!isSnapshotApplied && (
         <div className="absolute inset-0">
           <PreviewTemplateSkeleton />
         </div>

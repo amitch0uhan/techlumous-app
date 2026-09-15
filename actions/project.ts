@@ -26,46 +26,50 @@ const selectTemplateSchema = z.object({
   templateId: z.uuid(),
 })
 
-const saveProjectContentSchema = z.object({
+const saveProjectDraftSchema = z.object({
   projectId: z.uuid(),
+  draftDesign: z.record(z.string(), z.unknown()),
   draftContent: z.record(z.string(), z.unknown()),
 })
 
-export type SaveProjectContentState =
+export type SaveProjectDraftState =
   { status: "success"; message: string } | { status: "error"; message: string }
 
-export async function saveProjectContentAction(
+export async function saveProjectDraftAction(
   projectId: string,
-  content: unknown
-): Promise<SaveProjectContentState> {
+  content: unknown,
+  design: unknown
+): Promise<SaveProjectDraftState> {
   const userId = await requireAuthenticatedUserId()
   if (!userId) {
     return {
       status: "error",
-      message: "You must be authenticated to save project content",
+      message: "You must be authenticated to save the project draft",
     }
   }
 
-  const parsed = saveProjectContentSchema.safeParse({
+  const parsed = saveProjectDraftSchema.safeParse({
     projectId,
     draftContent: content,
+    draftDesign: design,
   })
   if (!parsed.success) {
-    return { status: "error", message: "Invalid project content" }
+    return { status: "error", message: "Invalid project content or design" }
   }
 
   try {
     await updateProject(parsed.data.projectId, {
       draft_content: parsed.data.draftContent,
+      draft_design: parsed.data.draftDesign,
     })
     revalidatePath(`/preview/${parsed.data.projectId}/edit`)
     revalidatePath("/")
     return { status: "success", message: "Draft saved" }
   } catch (err) {
-    console.error("Failed to save project content", err)
+    console.error("Failed to save project draft", err)
     return {
       status: "error",
-      message: "Failed to save content",
+      message: "Failed to save draft",
     }
   }
 }

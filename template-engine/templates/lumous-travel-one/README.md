@@ -34,8 +34,8 @@ Carousel index state and scroll reveal come from the engine-wide hooks in
 
 ## Content contract
 
-- The schema is flat at the top level: 51 fields, all scalars except the
-  `colors` group and the collections listed below.
+- The schema is flat at the top level: content fields, all scalars except the
+  collections listed below.
 - Section visibility is a `z.boolean()`, which the schema-form engine renders as
   a switch. Each `show*` toggle is declared immediately before the fields of the
   section it controls, so in the studio form the switch sits directly above that
@@ -43,9 +43,9 @@ Carousel index state and scroll reveal come from the engine-wide hooks in
   before a control existed still renders; content saved under the earlier
   `z.enum(["show", "hide"])` still works too, since `Template.tsx` treats the
   string `"hide"` and boolean `false` the same way.
-- **Every colour the template paints is editable.** The `colors` group holds 17
+- **Every colour the template paints is editable.** The `design.colors` group holds 17
   six-digit hex values, one per design role, and is declared first so it renders
-  at the top of the form. It is the only nested object in the schema — seventeen
+  in the Design tab. It is the only nested object in the design schema — seventeen
   sibling `*Color` scalars would swamp the flat top level — and it is marked
   `collapsed` so the swatches do not push the rest of the panel below the fold.
 
@@ -73,11 +73,9 @@ Carousel index state and scroll reveal come from the engine-wide hooks in
   user break the fade) and the shared `PlaceholderLogo`, which paints its own
   `#F3F3F3` as an SVG attribute that no class here can override.
 
-  Compatibility: every leaf carries a `.default()` and the group carries
-  `.prefault({})`, so content saved before the group existed still validates and
-  is backfilled on publish. `Template.tsx` additionally reads the superseded flat
-  `primaryColor` / `secondaryColor` / `onPrimaryColor` keys as a fallback, so an
-  existing project keeps the accent it chose.
+  Every leaf carries a `.default()` and the group carries `.prefault({})`, so a
+  partial design object is completed during publish validation. The renderer
+  consumes colors only from `design`; content contains no palette fields.
 
 - The uploaded logo (`logoUrl`) renders inside a fixed-height box whose width
   grows with the artwork up to a cap, with `object-contain` so it is never
@@ -196,4 +194,4 @@ Then open `http://localhost:3100`.
 Both code registries already include this slug. The template remains `draft` and
 no database catalog row is created by this implementation. Before release,
 upload a public thumbnail, set `meta.thumbnail`, and use the established
-database administration process to synchronize metadata and `defaultContent`.
+database administration process to synchronize metadata, `defaultContent` and `defaultDesign`.

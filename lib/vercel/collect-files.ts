@@ -33,7 +33,7 @@ const registrySource = (
 import { template } from "./${slug}"
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-type AnyTemplateModule = TemplateModule<any>
+type AnyTemplateModule = TemplateModule<any, any>
 
 export const templates: Record<string, AnyTemplateModule> = {
   [template.meta.slug]: template,

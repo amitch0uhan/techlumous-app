@@ -37,3 +37,7 @@ export const defaultContent: HelloWorldContent = {
     { label: "GitHub", href: "https://github.com" },
   ],
 }
+
+export const designSchema = z.object({})
+export type HelloWorldDesign = z.infer<typeof designSchema>
+export const defaultDesign: HelloWorldDesign = {}

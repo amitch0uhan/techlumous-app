@@ -3,7 +3,7 @@ import { createClient } from "@supabase/supabase-js"
 /**
  * Fetches this project's published content from Supabase using the anon key.
  * Row access is enforced by RLS (anon may only read published rows) and
- * column grants (anon may only read id/published_content/status).
+ * column grants (anon may only read id/published_content/published_design/status).
  *
  * Returns null when the env pointers are absent (local dev — caller falls
  * back to the template's defaultContent). Throws when the fetch fails so a
@@ -11,7 +11,10 @@ import { createClient } from "@supabase/supabase-js"
  * loudly, at runtime a failed ISR regeneration keeps serving the last good
  * page.
  */
-export async function fetchProjectContent(): Promise<unknown | null> {
+export async function fetchProjectContent(): Promise<{
+  published_content: unknown
+  published_design: unknown
+} | null> {
   const url = process.env.SUPABASE_URL
   const key = process.env.SUPABASE_ANON_KEY
   const projectId = process.env.PROJECT_ID
@@ -23,7 +26,7 @@ export async function fetchProjectContent(): Promise<unknown | null> {
   // Select only published content; saved drafts must never reach the live site.
   const { data, error } = await supabase
     .from("projects")
-    .select("published_content")
+    .select("published_content,published_design")
     .eq("id", projectId)
     .eq("status", "published")
     .single()
@@ -32,5 +35,5 @@ export async function fetchProjectContent(): Promise<unknown | null> {
     throw new Error(`[template-engine] content fetch failed: ${error.message}`)
   }
 
-  return data.published_content
+  return data
 }

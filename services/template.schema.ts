@@ -13,6 +13,7 @@ export const templateSchema = z.object({
   tags: z.array(z.string()),
   description: z.string(),
   thumbnail: z.string(),
+  default_design: z.record(z.string(), z.unknown()),
   default_content: z.record(z.string(), z.unknown()),
   created_at: z.string(),
   updated_at: z.string(),

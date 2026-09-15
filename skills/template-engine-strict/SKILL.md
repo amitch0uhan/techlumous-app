@@ -134,7 +134,7 @@ published JSON.
 
 ## 4. Keep the Template Boundary Intact
 
-- Render from the `content` prop only; do not fetch data or add database writes
+- Render from the `content` and `design` props only; do not fetch data or add database writes
   to a template.
 - Keep template-specific CSS, fonts, helpers, and assets in the template's own
   folder.
@@ -174,3 +174,22 @@ Before reporting a template change complete:
 If a requirement conflicts with these rules, pause and report the conflict. A
 feature request does not silently waive either the closed dependency allowlist
 or defensive content rendering.
+
+## Separate content and design contract
+
+Every module exports two inferred Zod types, two schemas and two defaults. Both
+defaults must parse. Use `designSchema = z.object({})` and `defaultDesign = {}`
+when there are no design controls. Travel One stores its 17-color palette in
+`design.colors`; Hello World's theme remains content, and Mark One's fixed CSS
+palette is unchanged. Register both schemas and design defaults in the studio
+schema registry without importing renderers.
+
+The studio uses independent Content/Design tabs with one save and publish flow.
+Save both drafts atomically; validate both schemas before publishing. The iframe
+applies a complete `{ content, design }` snapshot before acknowledging readiness.
+The published engine selects `published_content,published_design` together and
+never reads drafts. Each missing value falls back directly to its corresponding
+template default. Keep colors exclusively in design storage and props; do not copy
+them into content or add a compatibility resolver. Apply
+`docs/template-content-design-migration.md` before rollout and refresh the catalog
+cache. Source changes require a build; publishing either dataset uses ISR.

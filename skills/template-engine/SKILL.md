@@ -36,11 +36,13 @@ Every template is a folder under `template-engine/templates/<slug>/` and must
 export one uniform `template` module from `index.ts`:
 
 ```ts
-export interface TemplateModule<TContent> {
+export interface TemplateModule<TContent, TDesign> {
   meta: TemplateMeta
   contentSchema: ZodType<TContent>
   defaultContent: TContent
-  Template: (props: { content: TContent }) => ReactElement
+  designSchema: ZodType<TDesign>
+  defaultDesign: TDesign
+  Template: (props: { content: TContent; design: TDesign }) => ReactElement
 }
 ```
 
@@ -54,7 +56,7 @@ Preserve these invariants:
   component props.
 - `defaultContent` must successfully parse with `contentSchema` and must be
   complete enough to render the entire template.
-- The `Template` component must render solely from its `content` prop. Do not
+- The `Template` component must render solely from its `content` and `design` props. Do not
   fetch project data or read studio state from inside a template.
 - `index.ts` must export a value named exactly `template`. The file-upload
   deployment generates a single-template registry that depends on this name.
@@ -172,8 +174,8 @@ folder instead.
   laid over it (the "on" colour — button text, icons on a filled control) as its
   own field, defaulted to the design value. A light accent paired with the fixed
   dark-on-accent text otherwise renders an unreadable label. Reference:
-  `colors.accentForeground` / `--color-lt-on-primary` in `lumous-travel-one`.
-- Make a template's palette editable as **one `colors` group of semantic roles**,
+  `design.colors.accentForeground` / `--color-lt-on-primary` in `lumous-travel-one`.
+- Make a template's palette editable as **one `design.colors` group of semantic roles**,
   declared first in the schema so it renders at the top of the form, marked
   `collapsed`, with `widget: "color"` on each leaf. Name roles for the job
   (`panelSurface`, `onImage`, `scrim`) rather than the shade, and keep the set
@@ -205,7 +207,15 @@ export const contentSchema = z.object({
   ctaHref: link("CTA destination"),
   logoUrl: image("Logo"),
   showHero: visibility("Show hero"),
-  accent: color("Accent", "#3AAE7E"),
+})
+
+export const designSchema = z.object({
+  colors: z
+    .object({
+      accent: color("Accent", "#3AAE7E"),
+    })
+    .meta({ label: "Colours", collapsed: true })
+    .prefault({}),
 })
 ```
 
@@ -214,8 +224,8 @@ unlike `schema-registry.ts` and `taxonomy.ts`, which are excluded from
 single-template packaging and must never be imported by a template.
 
 `color(label, fallback)` deliberately takes a second argument: a colour leaf
-carries its own `.default()`, which is what lets a colour group be added to an
-existing schema without invalidating already-saved content.
+carries its own `.default()`, allowing `designSchema` to complete a partial
+palette during publication validation.
 
 Reach for raw `.meta()` only for a shape the builders do not cover. The
 authoritative widget list is the `WidgetId` union in
@@ -285,7 +295,7 @@ content contract when the image is rendered.
   object group, put a `.default()` on every leaf **and** `.prefault({})` on the
   group — a plain `.default({})` short-circuits and hands back an empty object
   instead of re-parsing through the leaf defaults.
-- The deployed renderer runs `<Template content={publishedContent}>` with no
+- The deployed renderer runs `<Template content={publishedContent} design={publishedDesign}>` with no
   schema parse and no error boundary above it, so a template must also read a
   new nested value defensively (`content.group ?? {}`) or an already-published
   site throws on the next deployment.
@@ -329,3 +339,22 @@ State:
 - Whether the content shape stayed backward-compatible.
 - Whether registry and catalog synchronization is complete.
 - Which root and engine checks passed, and any check not run.
+
+## Separate content and design contract
+
+Every module exports two inferred Zod types, two schemas and two defaults. Both
+defaults must parse. Use `designSchema = z.object({})` and `defaultDesign = {}`
+when there are no design controls. Travel One stores its 17-color palette in
+`design.colors`; Hello World's theme remains content, and Mark One's fixed CSS
+palette is unchanged. Register both schemas and design defaults in the studio
+schema registry without importing renderers.
+
+The studio uses independent Content/Design tabs with one save and publish flow.
+Save both drafts atomically; validate both schemas before publishing. The iframe
+applies a complete `{ content, design }` snapshot before acknowledging readiness.
+The published engine selects `published_content,published_design` together and
+never reads drafts. Each missing value falls back directly to its corresponding
+template default. Keep colors exclusively in `default_design`, `draft_design` and
+`published_design`; do not copy them into content or add a compatibility resolver.
+Apply `docs/template-content-design-migration.md` before rollout and refresh the
+catalog cache. Source changes require a build; publishing either dataset uses ISR.

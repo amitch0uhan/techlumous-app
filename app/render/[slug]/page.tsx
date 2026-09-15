@@ -21,6 +21,7 @@ export default async function RenderPage({
     <LiveTemplateRenderer
       slug={slug}
       initialContent={template.defaultContent}
+      initialDesign={template.defaultDesign}
     />
   )
 }

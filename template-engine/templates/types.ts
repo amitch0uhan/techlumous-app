@@ -15,13 +15,16 @@ export interface TemplateMeta {
   status: "published" | "draft" | "deprecated"
 }
 
-export type TemplateComponent<TContent> = (props: {
+export type TemplateComponent<TContent, TDesign> = (props: {
   content: TContent
+  design: TDesign
 }) => ReactElement
 
-export interface TemplateModule<TContent = unknown> {
+export interface TemplateModule<TContent = unknown, TDesign = unknown> {
   meta: TemplateMeta
   contentSchema: ZodType<TContent>
+  designSchema: ZodType<TDesign>
+  defaultDesign: TDesign
   defaultContent: TContent
-  Template: TemplateComponent<TContent>
+  Template: TemplateComponent<TContent, TDesign>
 }
