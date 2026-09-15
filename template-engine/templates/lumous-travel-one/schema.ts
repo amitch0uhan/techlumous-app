@@ -2,12 +2,6 @@ import { z } from "zod"
 
 import { area, color, image, link, text, visibility } from "@/templates/fields"
 
-// Source of truth for the content type (z.infer) and the studio edit form.
-// Field builders come from the shared `templates/fields.ts`; `.meta()` picks the
-// widget. Headlines take *asterisk* pairs for emphasis.
-
-// Role-named palette, shared by the per-field defaults and defaultContent.colors.
-// White/black roles are only ever painted through an opacity modifier or color-mix.
 const DEFAULT_COLORS = {
   canvas: "#07080A",
   navSurface: "#0F0F12",
@@ -28,7 +22,7 @@ const DEFAULT_COLORS = {
   shadow: "#000000",
 } as const
 
-export const contentSchema = z.object({
+export const designSchema = z.object({
   // colours
   colors: z
     .object({
@@ -61,9 +55,15 @@ export const contentSchema = z.object({
       shadow: color("Shadow", DEFAULT_COLORS.shadow),
     })
     // `.prefault({})` re-parses so the leaf defaults fill a missing group.
-    .meta({ label: "Colours", collapsed: true })
+    .meta({ label: "Colours", collapsed: false })
     .prefault({}),
+})
+export type LumousTravelOneDesign = z.infer<typeof designSchema>
+export const defaultDesign: LumousTravelOneDesign = {
+  colors: { ...DEFAULT_COLORS },
+}
 
+export const contentSchema = z.object({
   brandName: text("Brand name"),
   logoUrl: image("Logo"),
 
@@ -190,8 +190,6 @@ export const contentSchema = z.object({
 export type LumousTravelOneContent = z.infer<typeof contentSchema>
 
 export const defaultContent: LumousTravelOneContent = {
-  colors: { ...DEFAULT_COLORS },
-
   brandName: "Lumous Travel One",
   logoUrl: "",
 

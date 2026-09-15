@@ -101,6 +101,10 @@ export const contentSchema = z.object({
 
 export type MyTemplateContent = z.infer<typeof contentSchema>
 
+export const designSchema = z.object({})
+export type MyTemplateDesign = z.infer<typeof designSchema>
+export const defaultDesign: MyTemplateDesign = {}
+
 export const defaultContent: MyTemplateContent = {
   heading: "A useful default heading",
   body: "Realistic copy that exercises the intended layout.",
@@ -132,7 +136,7 @@ Schema design checklist:
 - Colours use `widget: "color"` (swatch + hex, via `color(label, fallback)` —
   the second argument supplies the required per-leaf `.default()`). Expose the
   palette as one
-  `colors` group of semantic roles declared first in the schema and marked
+  `colors` group of semantic roles in `designSchema` and marked
   `collapsed`, rather than as scattered top-level `*Color` scalars. Always
   include the readable "on" colour placed over an accent (button text / icons)
   so a light accent does not leave an unreadable label.
@@ -151,11 +155,11 @@ Schema design checklist:
 Create `Template.tsx`:
 
 ```tsx
-import type { MyTemplateContent } from "./schema"
+import type { MyTemplateContent, MyTemplateDesign } from "./schema"
 
 import "./styles.css"
 
-export function Template({ content }: { content: MyTemplateContent }) {
+export function Template({ content }: { content: MyTemplateContent; design: MyTemplateDesign }) {
   return (
     <main>
       <h1>{content.hero.heading}</h1>
@@ -216,13 +220,15 @@ Create `index.ts`:
 import type { TemplateModule } from "@/templates/types"
 
 import { meta } from "./meta"
-import { contentSchema, defaultContent, type MyTemplateContent } from "./schema"
+import { contentSchema, defaultContent, designSchema, defaultDesign, type MyTemplateContent, type MyTemplateDesign } from "./schema"
 import { Template } from "./Template"
 
-export const template: TemplateModule<MyTemplateContent> = {
+export const template: TemplateModule<MyTemplateContent, MyTemplateDesign> = {
   meta,
   contentSchema,
   defaultContent,
+  designSchema,
+  defaultDesign,
   Template,
 }
 ```
@@ -271,6 +277,7 @@ meta.tags          -> tags
 meta.description   -> description
 meta.thumbnail     -> thumbnail
 defaultContent     -> default_content
+defaultDesign      -> default_design
 ```
 
 Do not include `meta.status` unless the database schema is deliberately changed
@@ -312,3 +319,22 @@ Before changing an existing schema:
 
 Never silently ship a schema change that makes existing published content
 unrenderable.
+
+## Separate content and design contract
+
+Every module exports two inferred Zod types, two schemas and two defaults. Both
+defaults must parse. Use `designSchema = z.object({})` and `defaultDesign = {}`
+when there are no design controls. Travel One stores its 17-color palette in
+`design.colors`; Hello World's theme remains content, and Mark One's fixed CSS
+palette is unchanged. Register both schemas and design defaults in the studio
+schema registry without importing renderers.
+
+The studio uses independent Content/Design tabs with one save and publish flow.
+Save both drafts atomically; validate both schemas before publishing. The iframe
+applies a complete `{ content, design }` snapshot before acknowledging readiness.
+The published engine selects `published_content,published_design` together and
+never reads drafts. Each missing value falls back directly to its corresponding
+template default. Keep editable colors exclusively in the design schema, defaults,
+storage and prop. Apply `docs/template-content-design-migration.md` before rollout
+and refresh the catalog cache. Source changes require a build; publishing either
+dataset uses ISR.

@@ -23,7 +23,6 @@ import {
   type Destination,
   type FooterLink,
   type HeroCard,
-  type LegacyColors,
   type PackageItem,
   type PartialContent,
   type Testimonial,
@@ -58,7 +57,13 @@ const NUMBERED_SECTIONS = [
   "contact",
 ] as const
 
-export function Template({ content }: { content: Content }) {
+export function Template({
+  content,
+  design,
+}: {
+  content: Content
+  design: { colors: Colors }
+}) {
   const c = (content ?? {}) as PartialContent
 
   const heroCards = list<HeroCard>(c.heroCards)
@@ -95,11 +100,9 @@ export function Template({ content }: { content: Content }) {
   }
 
   // Redeclare the palette on the root so every `*-lt-*` utility and styles.css
-  // class resolves to the studio value. `hue()` guards content predating `colors`.
-  const colors = (c.colors ?? {}) as Colors
-  const legacy = c as LegacyColors
-  const hue = (value: unknown, fallback: string, older?: unknown) =>
-    trimmed(value) || trimmed(older) || fallback
+  // class resolves to the studio design value.
+  const colors = (design?.colors ?? {}) as Colors
+  const hue = (value: unknown, fallback: string) => trimmed(value) || fallback
 
   const brandStyle = {
     ...fontTokens,
@@ -109,21 +112,9 @@ export function Template({ content }: { content: Content }) {
     "--color-lt-card-surface": hue(colors.cardSurface, "#131317"),
     "--color-lt-panel-surface": hue(colors.panelSurface, "#1C1C22"),
 
-    "--color-lt-primary": hue(
-      colors.accentPrimary,
-      "#3AAE7E",
-      legacy.primaryColor
-    ),
-    "--color-lt-secondary": hue(
-      colors.accentSecondary,
-      "#1F6B4E",
-      legacy.secondaryColor
-    ),
-    "--color-lt-on-primary": hue(
-      colors.accentForeground,
-      "#06120D",
-      legacy.onPrimaryColor
-    ),
+    "--color-lt-primary": hue(colors.accentPrimary, "#3AAE7E"),
+    "--color-lt-secondary": hue(colors.accentSecondary, "#1F6B4E"),
+    "--color-lt-on-primary": hue(colors.accentForeground, "#06120D"),
 
     "--color-lt-strong": hue(colors.textStrong, "#FFFFFF"),
     "--color-lt-body": hue(colors.textBody, "#E8E6DF"),

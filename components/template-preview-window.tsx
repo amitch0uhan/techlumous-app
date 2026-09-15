@@ -15,6 +15,7 @@ interface TemplatePreviewWindowProps {
   slug: string
   name: string
   content: unknown
+  design: unknown
   allowViewportResize?: boolean
   className?: string
 }
@@ -23,6 +24,7 @@ export function TemplatePreviewWindow({
   slug,
   name,
   content,
+  design,
   allowViewportResize = true,
   className,
 }: TemplatePreviewWindowProps) {
@@ -56,6 +58,7 @@ export function TemplatePreviewWindow({
               slug={slug}
               name={name}
               content={content}
+              design={design}
               formReady
               viewport={viewport}
               isSchemaFormOpen={false}
@@ -66,6 +69,7 @@ export function TemplatePreviewWindow({
               slug={slug}
               name={name}
               content={content}
+              design={design}
               formReady
             />
           )}

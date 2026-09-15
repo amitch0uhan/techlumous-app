@@ -1,4 +1,4 @@
-import type { LumousTravelOneContent } from "./schema"
+import type { LumousTravelOneContent, LumousTravelOneDesign } from "./schema"
 
 // Content is editable, possibly older JSON: read through loose shapes + optional chaining.
 export type Content = LumousTravelOneContent
@@ -9,14 +9,7 @@ export type Testimonial = Partial<Content["testimonials"][number]>
 export type WhyItem = Partial<Content["whyItems"][number]>
 export type PackageItem = Partial<Content["packages"][number]>
 export type FooterLink = Partial<Content["footerLinks"][number]>
-export type Colors = Partial<Content["colors"]>
-
-/** Pre-`colors`-group content carried three flat accent keys; still honoured. */
-export type LegacyColors = {
-  primaryColor?: unknown
-  secondaryColor?: unknown
-  onPrimaryColor?: unknown
-}
+export type Colors = Partial<LumousTravelOneDesign["colors"]>
 
 export const join = (...parts: Array<string | false | null | undefined>) =>
   parts.filter(Boolean).join(" ")

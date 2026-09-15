@@ -1,6 +1,11 @@
 import type { HelloWorldContent } from "./schema"
 
-export function Template({ content }: { content: HelloWorldContent }) {
+export function Template({
+  content,
+}: {
+  content: HelloWorldContent
+  design: Record<string, never>
+}) {
   const dark = content.theme === "dark"
   const bg = dark
     ? "radial-gradient(circle at 50% 30%, #1e293b, #020617)"

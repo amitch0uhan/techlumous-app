@@ -14,7 +14,7 @@ template-engine/
   lib/content.ts               # Published-content read boundary
   templates/
     types.ts                   # TemplateModule and TemplateMeta contracts
-    fields.ts                  # Shared Zod field builders for content schemas
+    fields.ts                  # Shared Zod field builders for content/design schemas
     taxonomy.ts                # Categories and suggested tags
     registry.ts                # Complete template modules by slug
     schema-registry.ts         # Zod schemas by slug for studio operations
@@ -40,7 +40,7 @@ template-agnostic behaviour belongs there.
   uses the template default. ISR revalidates published content every 60 seconds.
 - The studio imports the same registry through its `@/templates/*` alias. The
   live preview sends new content to the renderer; templates only receive a
-  `content` prop and do not know about editor state or the message protocol.
+  `content` and `design` props and do not know about editor state or the message protocol.
 - Deployment uploads the engine plus only the selected template folder and a
   generated single-template registry. Do not import another template, the
   schema registry, taxonomy, or root-app-only code from a template.
@@ -50,11 +50,11 @@ template-agnostic behaviour belongs there.
 ## Template rules
 
 - Every template folder must export `template` from `index.ts` with `meta`,
-  `contentSchema`, `defaultContent`, and `Template`.
+  `contentSchema`, `defaultContent`, `designSchema`, `defaultDesign`, and `Template`.
 - The folder name, `meta.slug`, both registry keys, catalog slug, and
   `TEMPLATE_SLUG` must be the same lowercase kebab-case value.
-- `contentSchema` is the source of truth. `defaultContent` must parse against it
-  and the renderer must be typed from `z.infer`. Build fields with the shared
+- `contentSchema` and `designSchema` are the sources of truth. Their defaults
+  must parse against them and the renderer must be typed from `z.infer`. Build fields with the shared
   builders in `templates/fields.ts` (`text`, `area`, `link`, `image`,
   `visibility`, `color`) instead of hand-writing `.meta()`.
 - Keep styles, fonts, helpers, and assets inside the template folder. The engine
@@ -116,3 +116,22 @@ The environment variables are optional for local default rendering. Keep
 
 See [`references/new-template.md`](../skills/template-engine/references/new-template.md)
 for the complete checklist and compatibility guidance.
+
+## Separate content and design contract
+
+Every module exports two inferred Zod types, two schemas and two defaults. Both
+defaults must parse. Use `designSchema = z.object({})` and `defaultDesign = {}`
+when there are no design controls. Travel One stores its 17-color palette in
+`design.colors`; Hello World's theme remains content, and Mark One's fixed CSS
+palette is unchanged. Register both schemas and design defaults in the studio
+schema registry without importing renderers.
+
+The studio uses independent Content/Design tabs with one save and publish flow.
+Save both drafts atomically; validate both schemas before publishing. The iframe
+applies a complete `{ content, design }` snapshot before acknowledging readiness.
+The published engine selects `published_content,published_design` together and
+never reads drafts. Each missing value falls back directly to its corresponding
+template default. Content and design stay separate in catalog, draft and published
+storage; no runtime compatibility projection copies colors back into content.
+Apply `docs/template-content-design-migration.md` before rollout and refresh the
+catalog cache. Source changes require a build; publishing either dataset uses ISR.

@@ -13,13 +13,14 @@ export type TemplateLiveMessage =
     }
   | {
       channel: typeof TEMPLATE_LIVE_CHANNEL
-      type: "content-update"
+      type: "snapshot-update"
       slug: string
       content: unknown
+      design: unknown
     }
   | {
       channel: typeof TEMPLATE_LIVE_CHANNEL
-      type: "content-applied"
+      type: "snapshot-applied"
       slug: string
     }
 
@@ -39,7 +40,15 @@ export function isTemplateLiveMessage(
     typeof message.slug === "string" &&
     (message.type === "form-ready" ||
       message.type === "renderer-ready" ||
-      message.type === "content-update" ||
-      message.type === "content-applied")
+      (message.type === "snapshot-update" &&
+        "content" in message &&
+        "design" in message &&
+        isRecord(message.content) &&
+        isRecord(message.design)) ||
+      message.type === "snapshot-applied")
   )
+}
+
+function isRecord(value: unknown) {
+  return value !== null && typeof value === "object" && !Array.isArray(value)
 }

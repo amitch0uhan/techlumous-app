@@ -8,7 +8,9 @@ export const projectSchema = z.object({
   user_id: z.uuid(),
   template_id: z.uuid().nullable(),
   name: z.string(),
+  draft_design: z.record(z.string(), z.unknown()).nullable(),
   draft_content: z.record(z.string(), z.unknown()).nullable(),
+  published_design: z.record(z.string(), z.unknown()).nullable(),
   published_content: z.record(z.string(), z.unknown()).nullable(),
   status: z.string().nullable(),
   vercel_project_id: z.string().nullable(),
@@ -25,14 +27,18 @@ export const projectSchema = z.object({
 export const insertProjectSchema = z.object({
   name: z.string().min(1),
   template_id: z.uuid().nullable().optional(),
+  draft_design: z.record(z.string(), z.unknown()).nullable().optional(),
   draft_content: z.record(z.string(), z.unknown()).optional(),
   status: z.string().optional(),
 })
 
 export const updateProjectSchema = z.object({
+  deployed_content_hash: z.string().optional(),
   name: z.string().min(1).optional(),
   template_id: z.uuid().nullable().optional(),
+  draft_design: z.record(z.string(), z.unknown()).nullable().optional(),
   draft_content: z.record(z.string(), z.unknown()).optional(),
+  published_design: z.record(z.string(), z.unknown()).nullable().optional(),
   published_content: z.record(z.string(), z.unknown()).optional(),
   status: z.string().optional(),
 })

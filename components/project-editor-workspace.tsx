@@ -17,7 +17,7 @@ import {
   getProjectDeploymentAction,
   type DeploymentActionSnapshot,
 } from "@/actions/deploy"
-import { saveProjectContentAction } from "@/actions/project"
+import { saveProjectDraftAction } from "@/actions/project"
 import {
   EditorTopBar,
   type PreviewViewport,
@@ -35,7 +35,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { getTemplateContentSchema } from "@/templates/schema-registry"
+import {
+  getTemplateContentSchema,
+  getTemplateDesignSchema,
+} from "@/templates/schema-registry"
 import { isActiveDeploymentStatus } from "@/types/deployment"
 import { cn } from "@/lib/utils"
 
@@ -46,10 +49,12 @@ interface ProjectEditorWorkspaceProps {
     name: string
     slug: string
     initialContent: unknown
+    initialDesign: unknown
   } | null
   initialDeployment: DeploymentActionSnapshot
   hasLiveDeployment: boolean
   initialPublishedContent: unknown
+  initialPublishedDesign: unknown
   isVercelConnected: boolean
 }
 
@@ -60,11 +65,24 @@ export function ProjectEditorWorkspace({
   initialDeployment,
   hasLiveDeployment: initialHasLiveDeployment,
   initialPublishedContent,
+  initialPublishedDesign,
   isVercelConnected,
 }: ProjectEditorWorkspaceProps) {
   const contentSchema = useMemo(
     () => (template ? getTemplateContentSchema(template.slug) : undefined),
     [template]
+  )
+
+  const designSchema = template
+    ? getTemplateDesignSchema(template.slug)
+    : undefined
+  const [design, setDesign] = useState<unknown>(template?.initialDesign)
+  const [savedDesign, setSavedDesign] = useState<unknown>(
+    template?.initialDesign
+  )
+  const savedDesignRef = useRef<unknown>(template?.initialDesign)
+  const [publishedDesign, setPublishedDesign] = useState<unknown>(
+    initialPublishedDesign
   )
 
   const [content, setContent] = useState<unknown>(
@@ -94,20 +112,26 @@ export function ProjectEditorWorkspace({
   const [isSchemaFormOpen, setIsSchemaFormOpen] = useState(true)
   const router = useRouter()
   const isDirty = useMemo(
-    () => JSON.stringify(content) !== JSON.stringify(savedContent),
-    [content, savedContent]
+    () =>
+      JSON.stringify([content, design]) !==
+      JSON.stringify([savedContent, savedDesign]),
+    [content, design, savedContent, savedDesign]
   )
   const isContentValid = useMemo(
-    () => !!contentSchema?.safeParse(content).success,
-    [content, contentSchema]
+    () =>
+      !!contentSchema?.safeParse(content).success &&
+      !!designSchema?.safeParse(design).success,
+    [content, contentSchema, design, designSchema]
   )
   const hasLiveDeployment =
     initialHasLiveDeployment ||
     (deployment.status === "ready" && !!deployment.liveUrl)
   const releaseOperation = hasLiveDeployment ? "publish" : "deploy"
   const hasUnpublishedChanges = useMemo(
-    () => JSON.stringify(savedContent) !== JSON.stringify(publishedContent),
-    [publishedContent, savedContent]
+    () =>
+      JSON.stringify([savedContent, savedDesign]) !==
+      JSON.stringify([publishedContent, publishedDesign]),
+    [publishedContent, savedContent, publishedDesign, savedDesign]
   )
   const hasActiveDeployment = isActiveDeploymentStatus(deployment.status)
   const handleFetchStatus = useCallback(async () => {
@@ -146,7 +170,8 @@ export function ProjectEditorWorkspace({
       releaseOperation === "publish" ? "publishing" : "deploying"
 
     if (!template) return `Select a template before ${operationLabel}`
-    if (!isContentValid) return `Fix invalid content before ${operationLabel}`
+    if (!isContentValid)
+      return `Fix invalid content or design before ${operationLabel}`
     if (isDirty) return `Save changes before ${operationLabel}`
     if (isSaving) return "Wait for saving to finish"
     if (hasActiveDeployment) return "A deployment is already in progress"
@@ -170,17 +195,19 @@ export function ProjectEditorWorkspace({
 
   const handleSave = useCallback(async () => {
     setIsSaving(true)
-    const result = await saveProjectContentAction(projectId, content)
+    const result = await saveProjectDraftAction(projectId, content, design)
     setIsSaving(false)
 
     if (result.status === "success") {
       savedContentRef.current = content
       setSavedContent(content)
+      savedDesignRef.current = design
+      setSavedDesign(design)
       toast.success(result.message)
     } else {
       toast.error(result.message)
     }
-  }, [content, projectId])
+  }, [content, design, projectId])
 
   const handleDeploy = useCallback(async () => {
     if (deployingRef.current) return
@@ -217,6 +244,7 @@ export function ProjectEditorWorkspace({
 
       if (result.status === "success") {
         setPublishedContent(savedContent)
+        setPublishedDesign(savedDesign)
         toast.success(result.message)
       } else {
         toast.error(result.message)
@@ -232,7 +260,7 @@ export function ProjectEditorWorkspace({
       deployingRef.current = false
       setIsDeploying(false)
     }
-  }, [deployment, projectId, releaseOperation, savedContent])
+  }, [deployment, projectId, releaseOperation, savedContent, savedDesign])
 
   useEffect(() => {
     if (!isActiveDeploymentStatus(deployment.status)) return
@@ -333,6 +361,7 @@ export function ProjectEditorWorkspace({
   useLayoutEffect(() => {
     return () => {
       setContent(savedContentRef.current)
+      setDesign(savedDesignRef.current)
       setFormReady(false)
     }
   }, [])
@@ -383,6 +412,7 @@ export function ProjectEditorWorkspace({
                 slug={template.slug}
                 name={template.name}
                 content={content}
+                design={design}
                 formReady={formReady}
                 viewport={viewport}
                 isSchemaFormOpen={isSchemaFormOpen}
@@ -398,6 +428,9 @@ export function ProjectEditorWorkspace({
           <TemplateSchemaEditForm
             projectId={projectId}
             schema={contentSchema}
+            designSchema={designSchema}
+            designValue={design}
+            onDesignChange={setDesign}
             value={content}
             onChange={setContent}
             onReady={handleFormReady}

@@ -215,3 +215,13 @@ a `deploymentId`. Useful for "deploy HEAD of main" UX.
 | 404  | `repoId` not found or project not found                      |
 | 409  | Concurrent identical deployment already in progress          |
 | 429  | Rate limit — back off and retry                              |
+
+## Content/design rollout
+
+Apply and verify [the database migration](template-content-design-migration.md)
+before deploying the new runtime. Modules now accept `{ content, design }`;
+the engine reads both published columns together with 60-second ISR. Single-template
+packages include `templates/resolve.ts` and both module defaults, with no dependency
+on the excluded schema registry. Publishing validates both datasets and mirrors
+Travel One colors into published content so older engines keep working. Draft saves
+do not change published pages. No remote migration or redeployment is automatic.

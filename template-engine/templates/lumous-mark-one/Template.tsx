@@ -34,7 +34,12 @@ const jetbrainsMono = JetBrains_Mono({
 
 const fontVars = `${archivo.variable} ${inter.variable} ${jetbrainsMono.variable}`
 
-export function Template({ content }: { content: LumousMarkOneContent }) {
+export function Template({
+  content,
+}: {
+  content: LumousMarkOneContent
+  design: Record<string, never>
+}) {
   const { brand, nav, hero, features, about, contact, footer } = content
   // Which discipline is open; -1 means all collapsed. First is open by default.
   const [open, setOpen] = useState(0)
