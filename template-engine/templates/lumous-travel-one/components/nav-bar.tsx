@@ -14,10 +14,12 @@ export function NavBar({
   ctaHref: unknown
 }) {
   return (
-    <nav className="relative z-10 flex flex-wrap items-center justify-between gap-4">
-      <a href="#top" className="text-lt-on-image flex items-center gap-3">
+    // The header surface colours the brand name both over the hero photo and
+    // on the standalone bar; the bar background itself is only NavSection's.
+    <nav className="lt-surface-header relative z-10 flex flex-wrap items-center justify-between gap-4">
+      <a href="#top" className="text-lt-foreground flex items-center gap-3">
         <BrandMark logo={logo} brandName={brandName} size={38} maxWidth={200} />
-        <span className="font-lt-display tracking-lt-snug text-lt-on-image text-[clamp(15px,1.2vw,18px)] font-light">
+        <span className="font-lt-display tracking-lt-snug text-lt-foreground text-[clamp(15px,1.2vw,18px)] font-light">
           {brandName}
         </span>
       </a>
@@ -25,7 +27,7 @@ export function NavBar({
       <CtaPair
         label={ctaLabel}
         href={ctaHref}
-        variant="white"
+        variant="header"
         size="md"
         mobile="icon"
       />
@@ -40,7 +42,7 @@ export function NavSection({ children }: { children: React.ReactNode }) {
       id="top"
       className={join(
         SECTION_RADIUS,
-        "bg-lt-nav-surface relative py-[clamp(16px,2.2vw,28px)]"
+        "lt-surface-header bg-lt-background relative py-[clamp(16px,2.2vw,28px)]"
       )}
     >
       <div className={CONTENT}>{children}</div>

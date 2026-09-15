@@ -170,28 +170,77 @@ folder instead.
   corners off a non-round logo. Keep any generated placeholder mark on its own
   separate path so this box never changes the default look. Reference:
   `brandMark` in `lumous-travel-one`.
-- When an accent or brand colour is editable, also expose the readable colour
-  laid over it (the "on" colour — button text, icons on a filled control) as its
-  own field, defaulted to the design value. A light accent paired with the fixed
-  dark-on-accent text otherwise renders an unreadable label. Reference:
-  `design.colors.accentForeground` / `--color-lt-on-primary` in `lumous-travel-one`.
-- Make a template's palette editable as **one `design.colors` group of semantic roles**,
-  declared first in the schema so it renders at the top of the form, marked
-  `collapsed`, with `widget: "color"` on each leaf. Name roles for the job
-  (`panelSurface`, `onImage`, `scrim`) rather than the shade, and keep the set
-  curated — collapse near-identical one-offs onto the nearest role instead of
-  exposing every literal. Redeclare the whole set as custom properties on the
-  template root so one inline layer drives every utility. Two mechanics make
-  this cheap, both proven in `lumous-travel-one`:
-  - An **opacity modifier works on any `@theme` colour token**, so the many
-    alpha steps stay at their call sites and still follow the token:
-    `border-white/20` becomes `border-lt-border/20`, unchanged visually.
-  - A **Tailwind arbitrary value cannot contain a `color-mix()`**, because it
-    has spaces. Any gradient or box-shadow whose colour must track a token has
-    to become a real class in the template's `styles.css`
-    (`.lt-scrim-hero`, `.lt-shadow-card`). Keep the alpha ladder fixed in that
-    rule — it is what holds text legible over an arbitrary photograph — and let
-    only the hue be editable.
+- Build every template's colours with the **surface + component colour
+  system** below. It is mandatory: it exists because a flat list of global
+  roles (`textStrong`, `border`, `onImage`, …) ended up painting unrelated
+  elements on different backgrounds, so one edit changed things the user never
+  meant to touch, and a dark section could not sit on a light page. Reference
+  implementation: `lumous-travel-one` (`schema.ts`, `lib.ts` `paletteStyle()`,
+  `styles.css`, README "Colour system").
+
+### Colour system rules
+
+1. **Surface groups for free text.** Give every distinct area its own group —
+   typically `page`, `header`, `section` (tinted/highlighted panels), `photo`
+   (text over imagery), `footer` — each with the roles it renders:
+   `background`, `heading`, `foreground`, `mutedForeground`, `border`. Headlines,
+   paragraphs, eyebrows and labels take their colour from the surface they sit
+   on, never from a global text colour.
+2. **Component colour contract.** Every distinct component category — each
+   button variant, icon/arrow buttons, tags/pills/badges, each card type,
+   accordions/lists, inputs, links, progress bars/counters, nav items, and any
+   new component — gets **its own group** with the roles it actually paints:
+   `background`, `foreground` (text/icon), `border`, plus `hover*`, `active*`,
+   `muted*` for every visible state or secondary text. Two elements share a
+   group only if they are the same component category with the same design
+   intent; the same category styled differently in another area (hero arrows
+   over a photo vs. carousel arrows on the page) gets a separate group. A
+   component paints only from its own group.
+3. **Naming.** Keys use industry names: `background`, `foreground`, `heading`,
+   `mutedForeground`, `border`, `overlay`, `ring`, `hoverBackground`,
+   `activeForeground`, … Group keys are camelCase surface/component names
+   (`page`, `buttonPrimary`, `testimonialCard`). **Labels** are plain language
+   and say where the colour shows: leaf labels describe the element
+   ("Button text", "Keyboard focus outline"); group labels list the sections
+   affected ("Page (About, Testimonials, Packages, Contact)"). The editor has no
+   help-text field, so the label must carry that context.
+4. **Three CSS layers.**
+   - Palette: a `paletteStyle(design.colors)` helper writes every leaf onto the
+     template root with a per-leaf fallback to the schema default. Surface
+     leaves become raw `--<prefix>-<surface>-<role>` vars (no utilities);
+     component leaves become `--color-<prefix>-<component>-<role>`.
+   - Surface tokens: `--color-<prefix>-background / heading / foreground /
+     muted-foreground / subtle-foreground / border`, remapped by a
+     `.<prefix>-surface-<name>` class that sets **all** of them from its group
+     (so nothing leaks from a parent surface).
+   - Component tokens: one `@theme` token per component role.
+   Register the tokens in `@theme` with `transparent` placeholders: a `:root`
+   token cannot `var()` a variable declared on the template root.
+5. **Forbidden.** A component using a raw palette var; a text/border token used
+   outside its surface; an `onPanel`-style prop that switches colours per call
+   site; a background derived from a brand colour (`color-mix` of primary into
+   a panel) without its own control; inline `style={{ background }}` colours;
+   duplicated hex defaults in the renderer or CSS.
+6. **Single source of defaults.** Hex defaults live once, in a
+   `DEFAULT_COLORS` object in `schema.ts`; `defaultDesign` is
+   `designSchema.parse({})`.
+7. **Always include** a filled component's matching `foreground`, and an
+   `effects.ring` colour used by one shared `:focus-visible` rule.
+8. **Editor layout.** Top `colors` group `collapsed: false`; every sub-group
+   `collapsed: true` with `.prefault({})`; list the groups a user edits most
+   (primary / outline button, page) first.
+9. **Two mechanics.**
+   - An **opacity modifier works on any `@theme` colour token**, so fixed alpha
+     steps stay at their call sites and still follow the field:
+     `border-lt-tag-border/[0.14]`. The field carries the hue; the design
+     carries the strength.
+   - A **Tailwind arbitrary value cannot contain a `color-mix()`**, because it
+     has spaces. Any gradient or box-shadow whose colour must track a token
+     becomes a class in `styles.css` (`.lt-scrim-hero`, `.lt-shadow-card`).
+10. **Colour audit before completion.** For every rendered element, name the
+    group it paints from and confirm it belongs to that element. Then test in
+    the studio with a light page and a dark section, and change each component
+    group once — only that component may change.
 
 ## Content Schema Rules
 
@@ -209,14 +258,39 @@ export const contentSchema = z.object({
   showHero: visibility("Show hero"),
 })
 
+export const DEFAULT_COLORS = {
+  page: { background: "#FFFFFF", foreground: "#111111" },
+  buttonPrimary: { background: "#3AAE7E", foreground: "#06120D" },
+} as const
+
 export const designSchema = z.object({
   colors: z
     .object({
-      accent: color("Accent", "#3AAE7E"),
+      page: z
+        .object({
+          background: color("Page background", DEFAULT_COLORS.page.background),
+          foreground: color("Body text", DEFAULT_COLORS.page.foreground),
+        })
+        .meta({ label: "Page (About, Contact)", collapsed: true })
+        .prefault({}),
+      buttonPrimary: z
+        .object({
+          background: color(
+            "Button background",
+            DEFAULT_COLORS.buttonPrimary.background
+          ),
+          foreground: color(
+            "Button text",
+            DEFAULT_COLORS.buttonPrimary.foreground
+          ),
+        })
+        .meta({ label: "Primary button (Hero, Contact)", collapsed: true })
+        .prefault({}),
     })
-    .meta({ label: "Colours", collapsed: true })
+    .meta({ label: "Colours", collapsed: false })
     .prefault({}),
 })
+export const defaultDesign = designSchema.parse({})
 ```
 
 That file ships with every deployment and is safe for a template to import —
@@ -344,8 +418,8 @@ State:
 
 Every module exports two inferred Zod types, two schemas and two defaults. Both
 defaults must parse. Use `designSchema = z.object({})` and `defaultDesign = {}`
-when there are no design controls. Travel One stores its 17-color palette in
-`design.colors`; Hello World's theme remains content, and Mark One's fixed CSS
+when there are no design controls. Travel One stores its surface + component
+palette in nested `design.colors` groups (see Colour system rules); Hello World's theme remains content, and Mark One's fixed CSS
 palette is unchanged. Register both schemas and design defaults in the studio
 schema registry without importing renderers.
 

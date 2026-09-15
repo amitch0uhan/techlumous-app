@@ -1,26 +1,13 @@
 import { trimmed } from "../lib"
 
-export function Eyebrow({
-  index,
-  label,
-  onPanel = false,
-}: {
-  index: string
-  label: unknown
-  onPanel?: boolean
-}) {
+/** Section number and label; colours follow the surface it sits on. */
+export function Eyebrow({ index, label }: { index: string; label: unknown }) {
   return (
     <div className="font-lt-label text-lt-xs tracking-lt-eyebrow flex flex-col gap-1.5 font-extralight uppercase">
       {index.length > 0 ? (
-        <span
-          className={onPanel ? "text-lt-section-text/55" : "text-lt-subtle"}
-        >
-          {index}
-        </span>
+        <span className="text-lt-subtle-foreground">{index}</span>
       ) : null}
-      <span className={onPanel ? "text-lt-section-text" : "text-lt-body"}>
-        {trimmed(label)}
-      </span>
+      <span className="text-lt-foreground">{trimmed(label)}</span>
     </div>
   )
 }

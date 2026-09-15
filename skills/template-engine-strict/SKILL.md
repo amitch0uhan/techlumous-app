@@ -153,7 +153,29 @@ published JSON.
 - Do not alter auth, RLS, publishing, or unrelated studio behavior to make a
   template compile.
 
-## 5. Required Review Before Completion
+## 5. Colours Follow the Surface + Component Contract
+
+Every template's editable colours follow the Colour system rules in
+[the template-engine skill](../template-engine/SKILL.md). Reject or fix, before
+completion:
+
+- A flat, global colour list (`textStrong`, `border`, `onImage`) reused across
+  unrelated elements instead of surface groups and per-component groups.
+- A component category without its own colour group, or two different
+  component categories sharing one group.
+- A component that reads a raw palette var, or a text/border token used outside
+  the surface it belongs to.
+- A per-call-site colour switch prop (`onPanel`, `dark`, `inverse`) instead of a
+  surface class.
+- A background derived from a brand colour (`color-mix` of primary into a
+  panel) with no control of its own, or an inline `style` colour.
+- A hex default written anywhere other than the schema's `DEFAULT_COLORS`.
+- A colour key that is not an industry role name, or an editor label that does
+  not say where the colour shows.
+- A filled component without its `foreground`, or no `effects.ring` focus
+  colour.
+
+## 6. Required Review Before Completion
 
 Before reporting a template change complete:
 
@@ -170,6 +192,8 @@ Before reporting a template change complete:
    anything to repair a failed check under this skill.
 7. Test with complete defaults and with representative partial object/array
    content so the renderer remains usable instead of crashing.
+8. Run the colour audit from rule 5: every rendered element maps to exactly
+   one surface or component group, recorded in the template README.
 
 If a requirement conflicts with these rules, pause and report the conflict. A
 feature request does not silently waive either the closed dependency allowlist
@@ -179,8 +203,8 @@ or defensive content rendering.
 
 Every module exports two inferred Zod types, two schemas and two defaults. Both
 defaults must parse. Use `designSchema = z.object({})` and `defaultDesign = {}`
-when there are no design controls. Travel One stores its 17-color palette in
-`design.colors`; Hello World's theme remains content, and Mark One's fixed CSS
+when there are no design controls. Travel One stores its surface + component
+palette in nested `design.colors` groups; Hello World's theme remains content, and Mark One's fixed CSS
 palette is unchanged. Register both schemas and design defaults in the studio
 schema registry without importing renderers.
 

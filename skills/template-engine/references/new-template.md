@@ -134,12 +134,21 @@ Schema design checklist:
   toggle immediately before that section's own fields so the form shows the
   switch above the content it controls.
 - Colours use `widget: "color"` (swatch + hex, via `color(label, fallback)` —
-  the second argument supplies the required per-leaf `.default()`). Expose the
-  palette as one
-  `colors` group of semantic roles in `designSchema` and marked
-  `collapsed`, rather than as scattered top-level `*Color` scalars. Always
-  include the readable "on" colour placed over an accent (button text / icons)
-  so a light accent does not leave an unreadable label.
+  the second argument supplies the required per-leaf `.default()`). Follow the
+  **Colour system rules** in the parent skill exactly:
+  - one `design.colors` group of nested groups — a group per surface (`page`,
+    `header`, `section`, `photo`, `footer`, …) and a group per distinct
+    component category (`buttonPrimary`, `tag`, `testimonialCard`, …);
+  - industry key names (`background`, `foreground`, `mutedForeground`,
+    `border`, `hover*`, `active*`) with plain-language labels that say where
+    each colour shows; group labels list the sections affected;
+  - every filled component has its matching `foreground`; include
+    `effects.ring` for keyboard focus;
+  - defaults live once in `DEFAULT_COLORS`; `defaultDesign =
+    designSchema.parse({})`.
+- Colour audit: list every component in the template README with the colour
+  group it paints from. No two unrelated elements may share a group, and no
+  element may use a text/border token from a different surface.
 - Any new field needs a `.default()`, and any new object group needs
   `.default()` on every leaf plus `.prefault({})` on the group — nothing
   backfills a new key, so without this every existing project fails publish
@@ -186,10 +195,40 @@ If using Tailwind, the local `styles.css` starts with:
 ```css
 @import "tailwindcss";
 
+/* Placeholders only register utilities; paletteStyle() sets real values on
+   the template root (a :root token cannot read a var set further down). */
 @theme {
-  --color-my-template-accent: #000000;
+  /* surface tokens, remapped per surface */
+  --color-mt-background: transparent;
+  --color-mt-heading: transparent;
+  --color-mt-foreground: transparent;
+  --color-mt-muted-foreground: transparent;
+  --color-mt-border: transparent;
+  /* component tokens, one per component role */
+  --color-mt-button-primary-background: transparent;
+  --color-mt-button-primary-foreground: transparent;
+}
+
+/* Each surface class sets every surface token from its own palette group. */
+.mt-surface-page {
+  --color-mt-background: var(--mt-page-background);
+  --color-mt-heading: var(--mt-page-heading);
+  --color-mt-foreground: var(--mt-page-foreground);
+  --color-mt-muted-foreground: var(--mt-page-muted-foreground);
+  --color-mt-border: var(--mt-page-border);
+}
+
+.mt-root :where(a, button):focus-visible {
+  outline: 2px solid var(--color-mt-ring);
+  outline-offset: 3px;
 }
 ```
+
+The root element gets `mt-root mt-surface-page bg-mt-background` and
+`style={paletteStyle(design?.colors)}`; each other surface wraps its area in
+`mt-surface-<name> bg-mt-background`. Copy `paletteStyle()` from
+`lumous-travel-one/lib.ts` (surface leaves → `--mt-<surface>-<role>`,
+component leaves → `--color-mt-<component>-<role>`).
 
 Keep custom token and keyframe names template-specific. Load template fonts in
 the component and attach their variable classes at the template root.

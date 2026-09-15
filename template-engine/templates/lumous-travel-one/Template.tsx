@@ -17,6 +17,7 @@ import { WhyUs } from "./components/why-us"
 import {
   list,
   pad,
+  paletteStyle,
   trimmed,
   type Colors,
   type Content,
@@ -99,36 +100,11 @@ export function Template({
     return index < 0 ? "" : `(${pad(index + 1)})`
   }
 
-  // Redeclare the palette on the root so every `*-lt-*` utility and styles.css
-  // class resolves to the studio design value.
-  const colors = (design?.colors ?? {}) as Colors
-  const hue = (value: unknown, fallback: string) => trimmed(value) || fallback
-
+  // Write the whole palette onto the root so every `*-lt-*` utility, surface
+  // class and styles.css effect resolves to the studio design value.
   const brandStyle = {
     ...fontTokens,
-
-    "--color-lt-canvas": hue(colors.canvas, "#07080A"),
-    "--color-lt-nav-surface": hue(colors.navSurface, "#0F0F12"),
-    "--color-lt-card-surface": hue(colors.cardSurface, "#131317"),
-    "--color-lt-panel-surface": hue(colors.panelSurface, "#1C1C22"),
-
-    "--color-lt-primary": hue(colors.accentPrimary, "#3AAE7E"),
-    "--color-lt-secondary": hue(colors.accentSecondary, "#1F6B4E"),
-    "--color-lt-on-primary": hue(colors.accentForeground, "#06120D"),
-
-    "--color-lt-strong": hue(colors.textStrong, "#FFFFFF"),
-    "--color-lt-body": hue(colors.textBody, "#E8E6DF"),
-    "--color-lt-muted": hue(colors.textMuted, "#B4B1A7"),
-    "--color-lt-subtle": hue(colors.textSubtle, "#807D75"),
-
-    "--color-lt-section-text": hue(colors.sectionText, "#FFFFFF"),
-
-    "--color-lt-on-image": hue(colors.onImage, "#FFFFFF"),
-    "--color-lt-on-light": hue(colors.onLight, "#0A0A0B"),
-
-    "--color-lt-border": hue(colors.border, "#FFFFFF"),
-    "--color-lt-scrim": hue(colors.scrim, "#07080A"),
-    "--color-lt-shadow": hue(colors.shadow, "#000000"),
+    ...paletteStyle(design?.colors),
   } as CSSProperties
 
   const rootRef = useRef<HTMLDivElement | null>(null)
@@ -150,7 +126,7 @@ export function Template({
     <div
       ref={rootRef}
       style={brandStyle}
-      className="bg-lt-canvas text-lt-body font-lt-body min-h-screen overflow-x-hidden"
+      className="lt-root lt-surface-page bg-lt-background text-lt-foreground font-lt-body min-h-screen overflow-x-hidden"
     >
       <div className="flex flex-col gap-[clamp(24px,3vw,56px)] p-[clamp(8px,1vw,16px)]">
         {show.hero ? (

@@ -43,39 +43,8 @@ Carousel index state and scroll reveal come from the engine-wide hooks in
   before a control existed still renders; content saved under the earlier
   `z.enum(["show", "hide"])` still works too, since `Template.tsx` treats the
   string `"hide"` and boolean `false` the same way.
-- **Every colour the template paints is editable.** The `design.colors` group holds 17
-  six-digit hex values, one per design role, and is declared first so it renders
-  in the Design tab. It is the only nested object in the design schema — seventeen
-  sibling `*Color` scalars would swamp the flat top level — and it is marked
-  `collapsed` so the swatches do not push the rest of the panel below the fold.
-
-  | Prop                                                     | Paints                                                                                                                   |
-  | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-  | `canvas` / `navSurface` / `cardSurface` / `panelSurface` | the four opaque surfaces                                                                                                 |
-  | `accentPrimary` / `accentSecondary` / `accentForeground` | buttons, glow, both tinted section panels, and the label sitting on an accent fill                                       |
-  | `textStrong` / `textBody` / `textMuted` / `textSubtle`   | the warm off-panel text ramp                                                                                             |
-  | `sectionText`                                            | all text inside the two tinted panels (destinations, why-us), isolated from every other role                             |
-  | `onImage` / `onLight`                                    | text and controls over photography (hero, nav lockup, package cards, the white button fill); the label on a light button |
-  | `border` / `scrim` / `shadow`                            | hairlines, the two image overlays, drop shadows                                                                          |
-
-  `Template.tsx` redeclares all 17 as `--color-lt-*` custom properties on the
-  template root, so every `*-lt-*` utility, every opacity modifier built on one,
-  and the scrim/shadow/glow classes resolve to the studio value. The literals in
-  the `@theme` block are only reached if that inline layer is absent.
-
-  Several roles default to plain white or black because they are only ever
-  painted through an opacity modifier (`border-lt-border/20`) or a `color-mix()`.
-  The token carries the hue; the call site carries the strength — which is why
-  the eight distinct `border-*` alphas still come from one `border` field.
-
-  Colours that are deliberately **not** exposed: the region picker's
-  `mask-image` (an alpha mask, not a visible colour — exposing it would let a
-  user break the fade) and the shared `PlaceholderLogo`, which paints its own
-  `#F3F3F3` as an SVG attribute that no class here can override.
-
-  Every leaf carries a `.default()` and the group carries `.prefault({})`, so a
-  partial design object is completed during publish validation. The renderer
-  consumes colors only from `design`; content contains no palette fields.
+- **Every colour the template paints is editable**, grouped by where it shows.
+  See [Colour system](#colour-system).
 
 - The uploaded logo (`logoUrl`) renders inside a fixed-height box whose width
   grows with the artwork up to a cap, with `object-contain` so it is never
@@ -97,6 +66,72 @@ Carousel index state and scroll reveal come from the engine-wide hooks in
   empty source and there is no bundled artwork to fall back to. The surrounding
   layout keeps its size and background, so the result is a gap rather than a
   collapsed section.
+
+## Colour system
+
+`design.colors` is a group of nested groups (each a collapsible accordion in
+the Design tab). Keys use web conventions — `background`, `foreground`,
+`heading`, `mutedForeground`, `border`, and `hover*` / `active*` for states —
+while the editor labels say in plain words where each colour shows.
+`DEFAULT_COLORS` in `schema.ts` is the only place a default hex lives.
+
+**Surface groups** colour free text (headlines, paragraphs, eyebrows, labels)
+by the area it sits in, so a dark section can sit on a light page:
+
+| Group     | Editor label                                       | Where                                       |
+| --------- | -------------------------------------------------- | ------------------------------------------- |
+| `page`    | Page (About, Testimonials, Packages, Contact)      | the page ground and its sections            |
+| `header`  | Header / navigation                                | brand name; bar background when hero hidden |
+| `section` | Highlighted sections (Destinations, Why choose us) | both tinted panels                          |
+| `photo`   | Hero photo                                         | hero overlay and the text on it             |
+| `footer`  | Footer                                             | footer ground, brand name, copyright        |
+
+**Component groups** — each distinct component category owns its colours and
+paints from nothing else:
+
+| Component                           | Group             |
+| ----------------------------------- | ----------------- |
+| Primary CTA, package "More details" | `buttonPrimary`   |
+| Outline CTA and every arrow circle  | `buttonSecondary` |
+| Nav CTA                             | `buttonHeader`    |
+| Destinations / Packages arrows      | `arrowButton`     |
+| Hero trip arrows                    | `heroArrow`       |
+| Hero progress bar and counter       | `heroProgress`    |
+| Hero tags, package tags             | `tag`             |
+| Hero trip cards                     | `tripCard`        |
+| Testimonial cards                   | `testimonialCard` |
+| Package cards                       | `packageCard`     |
+| Why-us accordion rows               | `accordion`       |
+| Destinations region list            | `regionPicker`    |
+| Footer links                        | `link`            |
+| Focus ring, all shadows             | `effects`         |
+
+How it is wired (three layers):
+
+1. **Palette** — `paletteStyle()` in `lib.ts` writes every leaf onto the
+   template root, falling back per leaf to `DEFAULT_COLORS`. Surface leaves
+   become raw `--lt-<surface>-<role>` vars with no utilities; component leaves
+   become `--color-lt-<component>-<role>`.
+2. **Surface tokens** — `bg-lt-background`, `text-lt-heading`,
+   `text-lt-foreground`, `text-lt-muted-foreground`, `text-lt-subtle-foreground`,
+   `border-lt-border`. The `.lt-surface-*` classes in `styles.css` remap them
+   from their own group; `subtle` is derived from muted + background.
+3. **Component tokens** — `bg-lt-button-primary-background`,
+   `text-lt-tag-foreground`, … one utility per component role.
+
+Borders, dividers, tracks and glass fills keep a fixed opacity at the call site
+(`border-lt-tag-border/[0.14]`): the field carries the hue, the design carries
+the strength. The `@theme` block holds only `transparent` placeholders that
+register the utilities — a `:root` token cannot read a var set on the template
+root.
+
+Not exposed: the region picker's `mask-image` (an alpha mask) and the shared
+`PlaceholderLogo` (paints its own `#F3F3F3`).
+
+Every leaf carries a `.default()` and every group `.prefault({})`, so partial
+designs complete during publish validation. Designs saved under the retired
+flat keys (`canvas`, `accentPrimary`, …) are not mapped: they parse to the new
+defaults. See `docs/lumous-travel-one-colors-v2.md` for the catalog reset.
 
 ## Section order and numbering
 
