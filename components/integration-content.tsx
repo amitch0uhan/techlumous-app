@@ -5,33 +5,29 @@ import { listUserIntegrations } from "@/services/user-integration"
 import type { UserIntegration } from "@/services/user-integration.schema"
 
 function vercelCardStatus(
-  integration: Omit<UserIntegration, "credentials" | "token"> | null
+  integration: Omit<UserIntegration, "credentials" | "token"> | undefined
 ): "none" | "connected" | "disconnected" {
-  if (integration?.provider !== "vercel") return "none"
-  if (integration.status === "CONNECTED") return "connected"
-  if (integration.status === "DISCONNECTED") return "disconnected"
+  if (integration?.status === "CONNECTED") return "connected"
+  if (integration?.status === "DISCONNECTED") return "disconnected"
   return "none"
 }
 
 export async function IntegrationContent() {
   const integrations = await listUserIntegrations()
 
+  // The Vercel card always renders; the user's row (if any) only drives its status.
+  const status = vercelCardStatus(
+    integrations.find((item) => item.provider === "vercel")
+  )
+
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {integrations.map((item) => {
-        const status = vercelCardStatus(item)
-        return (
-          <IntegrationCard
-            key={item.id}
-            name="Vercel"
-            description="Deploy and manage your projects on Vercel."
-            status={status}
-            action={
-              status === "connected" ? disconnectIntegration : connectVercel
-            }
-          />
-        )
-      })}
+      <IntegrationCard
+        name="Vercel"
+        description="Deploy and manage your projects on Vercel."
+        status={status}
+        action={status === "connected" ? disconnectIntegration : connectVercel}
+      />
     </div>
   )
 }
