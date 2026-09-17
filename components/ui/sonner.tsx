@@ -5,29 +5,34 @@ import { Toaster as Sonner, type ToasterProps } from "sonner"
 import {
   CheckCircleIcon,
   InfoIcon,
-  WarningIcon,
-  XCircleIcon,
-  SpinnerIcon,
+  WarningCircleIcon,
 } from "@phosphor-icons/react"
 
-const Toaster = ({ ...props }: ToasterProps) => {
+/**
+ * Default icons for the three toast types. A call site can override one per
+ * toast with `toast.error("...", { icon: <TrashIcon /> })`, or replace them
+ * globally by passing an `icons` prop to this Toaster.
+ */
+const defaultIcons: ToasterProps["icons"] = {
+  info: <InfoIcon weight="regular" />,
+  success: <CheckCircleIcon weight="regular" />,
+  error: <WarningCircleIcon weight="regular" />,
+}
+
+const Toaster = ({ icons, ...props }: ToasterProps) => {
   const { theme = "system" } = useTheme()
 
   return (
     <Sonner
       theme={theme as ToasterProps["theme"]}
+      position="bottom-left"
+      closeButton
       className="toaster group"
-      icons={{
-        success: <CheckCircleIcon className="size-4" />,
-        info: <InfoIcon className="size-4" />,
-        warning: <WarningIcon className="size-4" />,
-        error: <XCircleIcon className="size-4" />,
-        loading: <SpinnerIcon className="size-4 animate-spin" />,
-      }}
+      icons={{ ...defaultIcons, ...icons }}
       style={
         {
           "--normal-bg": "var(--popover)",
-          "--normal-text": "var(--text-foreground)",
+          "--normal-text": "var(--foreground)",
           "--normal-border": "var(--border)",
           "--border-radius": "var(--radius)",
         } as React.CSSProperties

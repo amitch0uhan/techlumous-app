@@ -40,6 +40,13 @@
   --shadow-card: 0 4px 14px 0
     color-mix(in oklab, var(--card-foreground) 25%, transparent);
   --editor-nested-group-overlay: oklch(0 0 0 / 4%);
+  --toast-success: oklch(0.6 0.15 150);
+  --toast-error: var(--destructive);
+  --toast-warning: oklch(0.72 0.16 75);
+  --toast-info: var(--primary);
+  --toast-shadow-color: var(--foreground);
+  --toast-tint: 16%;
+  --toast-surface: oklch(96.808% 0.0184 232.723);
   --skeleton-base: color-mix(in oklab, var(--muted-foreground) 6%, transparent);
   --skeleton-highlight: color-mix(
     in oklab,
@@ -83,6 +90,13 @@
   --shadow-card: 0 4px 14px 0
     color-mix(in oklab, var(--card-foreground) 15%, transparent);
   --editor-nested-group-overlay: oklch(1 0 0 / 4%);
+  --toast-success: oklch(0.72 0.17 152);
+  --toast-error: var(--destructive);
+  --toast-warning: oklch(0.8 0.15 80);
+  --toast-info: var(--primary);
+  --toast-shadow-color: oklch(0 0 0);
+  --toast-tint: 22%;
+  --toast-surface: oklch(0.29 0.035 236);
   --skeleton-base: color-mix(in oklab, var(--muted-foreground) 8%, transparent);
   --skeleton-highlight: color-mix(
     in oklab,
@@ -261,4 +275,110 @@
     transparent 1px
   );
   background-size: 24px 24px;
+}
+
+/* Toast (sonner) — borderless card with a left-to-right accent wash that fades
+   out by 80% of the width. --toast-accent drives the wash, the solid icon chip
+   and the drop shadow; each type just re-points that one variable. */
+[data-sonner-toast].cn-toast[data-styled="true"] {
+  --toast-accent: var(--toast-info);
+  --toast-title-color: var(--foreground);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 42px 12px 12px;
+  border: none;
+  border-radius: var(--radius-xl);
+  background:
+    linear-gradient(
+      90deg,
+      color-mix(in oklab, var(--toast-accent) var(--toast-tint), transparent) 0%,
+      transparent 80%
+    ),
+    var(--toast-surface);
+  box-shadow:
+    0 1px 3px 0 color-mix(in oklab, var(--toast-shadow-color) 12%, transparent),
+    0 8px 26px -14px color-mix(in oklab, var(--toast-accent) 55%, transparent);
+}
+
+[data-sonner-toast].cn-toast[data-type="success"] {
+  --toast-accent: var(--toast-success);
+}
+
+[data-sonner-toast].cn-toast[data-type="warning"] {
+  --toast-accent: var(--toast-warning);
+}
+
+[data-sonner-toast].cn-toast[data-type="error"] {
+  --toast-accent: var(--toast-error);
+  --toast-title-color: var(--toast-error);
+}
+
+/* Icon chip — solid accent, no border */
+[data-sonner-toast].cn-toast[data-styled="true"] [data-icon] {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  height: 36px;
+  width: 36px;
+  margin: 0;
+  border: none;
+  border-radius: var(--radius-xl);
+  background: color-mix(in oklab, var(--toast-accent) 15%, transparent);
+  color: var(--toast-accent);
+}
+
+[data-sonner-toast].cn-toast[data-styled="true"] [data-icon] svg {
+  height: 24px;
+  width: 24px;
+  margin: 0;
+}
+
+/* Text stack */
+[data-sonner-toast].cn-toast[data-styled="true"] [data-content] {
+  gap: 2px;
+  min-width: 0;
+}
+
+[data-sonner-toast].cn-toast[data-styled="true"] [data-title] {
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+  color: var(--toast-title-color);
+}
+
+[data-sonner-toast].cn-toast[data-styled="true"] [data-description] {
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--muted-foreground);
+}
+
+/* Close button — bare icon, no background or border in any state */
+[data-sonner-toast].cn-toast[data-styled="true"] [data-close-button] {
+  inset-inline-start: auto;
+  inset-inline-end: 12px;
+  top: 50%;
+  height: 20px;
+  width: 20px;
+  transform: translateY(-50%);
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  color: var(--muted-foreground);
+  opacity: 1;
+  transition: color 150ms ease;
+}
+
+[data-sonner-toast].cn-toast[data-styled="true"] [data-close-button] svg {
+  height: 16px;
+  width: 16px;
+}
+
+[data-sonner-toast].cn-toast[data-styled="true"]:hover
+  [data-close-button]:hover {
+  border: none;
+  background: transparent;
+  color: var(--foreground);
 }
