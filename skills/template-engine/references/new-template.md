@@ -117,8 +117,12 @@ export const defaultContent: MyTemplateContent = {
 
 Schema design checklist:
 
-- Keep props flat and easy to edit. Do not create nested object props or arrays
-  of objects for convenience; obtain explicit user approval for an exception.
+- Keep props flat and easy to edit. The one standing exception is a single
+  collapsible object per page section (`hero`, `about`, `contact`, `footer`,
+  …) grouping only that section's own flat fields — this is best practice,
+  not something to flag. Do not nest further inside a section object, and do
+  not create any other nested object prop or array of objects for
+  convenience; obtain explicit user approval for that kind of exception.
 - Every editable field has a useful label.
 - Prefer the shared builders in `@/templates/fields` over raw `.meta()` — they
   are the executable record of the combinations that actually work:
@@ -139,6 +143,11 @@ Schema design checklist:
   - one `design.colors` group of nested groups — a group per surface (`page`,
     `header`, `section`, `photo`, `footer`, …) and a group per distinct
     component category (`buttonPrimary`, `tag`, `testimonialCard`, …);
+  - a group is a *type* of surface/component, reused by every instance that
+    shares the same treatment — e.g. one `section` group with one colour
+    input for every tinted panel on the page, not one group per section.
+    Split a group into more than one only when the design itself assigns
+    genuinely different colours to different instances;
   - industry key names (`background`, `foreground`, `mutedForeground`,
     `border`, `hover*`, `active*`) with plain-language labels that say where
     each colour shows; group labels list the sections affected;

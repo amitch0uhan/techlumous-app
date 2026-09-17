@@ -10,6 +10,27 @@ show the change, then stop and wait for the user's explicit, separate
 instruction to commit, push, or open a PR. A prior instruction to make a
 change is not itself authorization to commit or push it.
 
+## Branch naming convention
+
+Any branch created for a change — whether a regular branch or a worktree
+branch — must follow `<prefix>/<kebab-case-description>` (e.g.
+`fix/toast-deploy-reason`). Pick the prefix that matches the change:
+
+- `feat/` — new feature or functionality
+- `fix/` — bug fix
+- `chore/` — maintenance, tooling, dependency, or config change
+- `docs/` — documentation-only change
+- `refactor/` — code restructuring with no behavior change
+- `test/` — test-only change
+- `ui/` — visual/styling change with no behavior change
+- `design/` — design-system or visual design work
+- `mig/` — data or schema migration
+- `agent/` — agent/automation-specific change
+
+Keep the description short, lowercase, and hyphenated (no spaces or
+underscores). This applies to any branch an AI assistant creates in this
+repo, not only worktree branches.
+
 ## Worktree policy
 
 Do not create a separate git worktree (or other isolated workspace copy) on
@@ -19,9 +40,33 @@ isolating automatically, including under any autonomous or background
 session's default of isolating before every change. Rely on the user's own
 prompt to say when a worktree is wanted; in most cases none is, so do not
 assume one is needed unless the user says so. When a worktree is created,
-name/branch it after the change using this repo's existing branch-prefix
-convention (`feat/`, `fix/`, `chore/`, `docs/`, `refactor/`, `test/`, `ui/`,
-`design/`, `mig/`, `agent/`) rather than a generic "worktree" label.
+name/branch it after the change using the branch naming convention above
+rather than a generic "worktree" label.
+
+## Template engine work
+
+When creating, modifying, registering, previewing, or reviewing anything
+under `template-engine/` — a new template, a content/design schema change,
+metadata, styling, or template dependencies — read these files first, in
+order, and follow them exactly rather than summarizing from memory:
+
+1. [`skills/template-engine/SKILL.md`](skills/template-engine/SKILL.md) —
+   core module contract, scope boundaries, and the mandatory styling/colour
+   system rules.
+2. [`skills/template-engine/references/new-template.md`](skills/template-engine/references/new-template.md)
+   — required steps before adding a template or changing a content schema.
+3. [`skills/template-engine/references/architecture.md`](skills/template-engine/references/architecture.md)
+   — read when the task touches preview, publishing, Supabase content,
+   deployment, or shared app integration.
+4. [`skills/template-engine-strict/SKILL.md`](skills/template-engine-strict/SKILL.md)
+   — mandatory dependency allowlist and defensive content-access rules for
+   every template implementation or review; apply it even in
+   auto-approval/auto-permission mode.
+
+These files are written to be assistant-agnostic. Claude Code additionally
+auto-discovers them as a skill through thin pointer files under
+`.claude/skills/template-engine/` and `.claude/skills/template-engine-strict/`
+that link back here — do not duplicate their content there, to avoid drift.
 
 ## Project overview
 
