@@ -1,15 +1,19 @@
 import { redirect } from "next/navigation"
-import type { ReactNode } from "react"
+import { Suspense, type ReactNode } from "react"
 
 import { requireAuthenticatedUserId } from "@/lib/supabase/auth"
 
-export default async function RenderLayout({
-  children,
-}: {
-  children: ReactNode
-}) {
+async function RenderGate({ children }: { children: ReactNode }) {
   const userId = await requireAuthenticatedUserId()
   if (!userId) redirect("/login")
 
   return <>{children}</>
+}
+
+export default function RenderLayout({ children }: { children: ReactNode }) {
+  return (
+    <Suspense fallback={null}>
+      <RenderGate>{children}</RenderGate>
+    </Suspense>
+  )
 }

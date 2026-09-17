@@ -1,15 +1,37 @@
+import { Suspense } from "react"
 import Image from "next/image"
 import { redirect } from "next/navigation"
 
 import { LoginForm } from "@/components/login-form"
 import { Logo } from "@/components/logo"
+import { Skeleton } from "@/components/ui/skeleton"
 import { requireAuthenticatedUserId } from "@/lib/supabase/auth"
 
-export default async function LoginPage() {
+async function LoginGate() {
   const userId = await requireAuthenticatedUserId()
 
   if (userId) redirect("/")
 
+  return <LoginForm />
+}
+
+function LoginGateFallback() {
+  return (
+    <div className="flex flex-col gap-6" aria-busy="true">
+      <div className="flex flex-col gap-2">
+        <Skeleton className="h-6 w-40" />
+        <Skeleton className="h-3.5 w-full max-w-xs" />
+      </div>
+      <div className="flex flex-col gap-2">
+        <Skeleton className="h-3.5 w-16" />
+        <Skeleton className="h-9 w-full" />
+      </div>
+      <Skeleton className="h-9 w-full" />
+    </div>
+  )
+}
+
+export default function LoginPage() {
   return (
     <div className="grid min-h-svh p-2 lg:grid-cols-2">
       <div className="relative hidden overflow-hidden rounded-lg bg-muted lg:block">
@@ -41,7 +63,9 @@ export default async function LoginPage() {
         </div>
         <div className="flex flex-1 items-center justify-center">
           <div className="w-full max-w-sm">
-            <LoginForm />
+            <Suspense fallback={<LoginGateFallback />}>
+              <LoginGate />
+            </Suspense>
           </div>
         </div>
       </div>

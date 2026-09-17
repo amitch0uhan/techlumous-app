@@ -10,7 +10,9 @@ export function Header() {
       <div className="relative flex h-14 items-center px-3 md:px-6">
         <Logo showName size={24} />
         <div className="absolute left-1/2 -translate-x-1/2">
-          <MainNav />
+          <Suspense fallback={null}>
+            <MainNav />
+          </Suspense>
         </div>
         <div className="ml-auto">
           <Suspense fallback={<AccountMenuSkeleton />}>
