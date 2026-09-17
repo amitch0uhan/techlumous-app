@@ -43,6 +43,31 @@ assume one is needed unless the user says so. When a worktree is created,
 name/branch it after the change using the branch naming convention above
 rather than a generic "worktree" label.
 
+## Template engine work
+
+When creating, modifying, registering, previewing, or reviewing anything
+under `template-engine/` — a new template, a content/design schema change,
+metadata, styling, or template dependencies — read these files first, in
+order, and follow them exactly rather than summarizing from memory:
+
+1. [`skills/template-engine/SKILL.md`](skills/template-engine/SKILL.md) —
+   core module contract, scope boundaries, and the mandatory styling/colour
+   system rules.
+2. [`skills/template-engine/references/new-template.md`](skills/template-engine/references/new-template.md)
+   — required steps before adding a template or changing a content schema.
+3. [`skills/template-engine/references/architecture.md`](skills/template-engine/references/architecture.md)
+   — read when the task touches preview, publishing, Supabase content,
+   deployment, or shared app integration.
+4. [`skills/template-engine-strict/SKILL.md`](skills/template-engine-strict/SKILL.md)
+   — mandatory dependency allowlist and defensive content-access rules for
+   every template implementation or review; apply it even in
+   auto-approval/auto-permission mode.
+
+These files are written to be assistant-agnostic. Claude Code additionally
+auto-discovers them as a skill through thin pointer files under
+`.claude/skills/template-engine/` and `.claude/skills/template-engine-strict/`
+that link back here — do not duplicate their content there, to avoid drift.
+
 ## Project overview
 
 This is a Next.js 16 App Router project using React 19, TypeScript in strict mode, Tailwind CSS v4, and shadcn/ui.

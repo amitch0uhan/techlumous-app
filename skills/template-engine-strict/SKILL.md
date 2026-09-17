@@ -114,16 +114,19 @@ Design every template's content contract as flat as practical:
 
 - Prefer top-level scalar props such as `heroHeading`, `heroBody`, and
   `contactUrl` over nested object props such as `hero.heading` and
-  `contact.url`.
+  `contact.url`, **except** for one collapsible object per page section
+  (`hero`, `about`, `contact`, `footer`, …) grouping only that section's own
+  flat fields — that single level of section grouping is best practice, not
+  an exception that needs flagging. Do not nest further inside it.
 - Prefer arrays of primitive values when the UI allows it. Avoid arrays of
   objects, especially arrays of objects nested inside another object or array.
-- Do not introduce a nested object or an array of objects merely for visual
-  grouping. Flatten it or use separate top-level props where that remains
-  understandable and editable.
-- If the requested design genuinely needs a nested object or array of objects,
-  stop and flag the proposed shape to the user before implementation. Explain
-  why a flat shape is insufficient and wait for confirmation; do not silently
-  choose a complex schema.
+- Do not introduce any other nested object or an array of objects merely for
+  visual grouping. Flatten it or use separate top-level props (or a single
+  section object, per above) where that remains understandable and editable.
+- If the requested design genuinely needs a nested object or array of objects
+  beyond the one-level section grouping, stop and flag the proposed shape to
+  the user before implementation. Explain why a flat shape is insufficient and
+  wait for confirmation; do not silently choose a complex schema.
 - This gate applies to new templates and to new fields in existing templates.
   Do not silently flatten an existing template's stored schema because that is a
   breaking content migration; flag it and get explicit direction.
@@ -163,6 +166,11 @@ completion:
   unrelated elements instead of surface groups and per-component groups.
 - A component category without its own colour group, or two different
   component categories sharing one group.
+- A separate colour group created per section/element *instance* for what is
+  actually one repeated treatment (e.g. `sectionOne`/`sectionTwo` colour
+  groups for two tinted panels that share the same design) instead of one
+  reused group — or the reverse: two genuinely different treatments forced to
+  share a single group.
 - A component that reads a raw palette var, or a text/border token used outside
   the surface it belongs to.
 - A per-call-site colour switch prop (`onPanel`, `dark`, `inverse`) instead of a

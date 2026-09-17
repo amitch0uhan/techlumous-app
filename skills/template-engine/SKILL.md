@@ -185,7 +185,15 @@ folder instead.
    (text over imagery), `footer` — each with the roles it renders:
    `background`, `heading`, `foreground`, `mutedForeground`, `border`. Headlines,
    paragraphs, eyebrows and labels take their colour from the surface they sit
-   on, never from a global text colour.
+   on, never from a global text colour. A group is a **type** of surface or
+   component, not a count of how many times it appears on the page: if three
+   different sections all use the same tinted-panel treatment, they all read
+   from the single `section` group with one colour input — do not create
+   `sectionOne`, `sectionTwo`, or a group per section name. Split a surface or
+   component into more than one group only when the design itself assigns
+   genuinely different colours to different instances (e.g. About is tinted
+   green while Contact is tinted blue); in that case, name each group for its
+   distinct treatment, not for the section it happens to appear in first.
 2. **Component colour contract.** Every distinct component category — each
    button variant, icon/arrow buttons, tags/pills/badges, each card type,
    accordions/lists, inputs, links, progress bars/counters, nav items, and any
@@ -335,11 +343,18 @@ Use these editor-safe shapes:
 - Optional, nullable, default, prefault, and readonly wrappers only after
   checking how an empty value should be created by the form.
 
-Keep new content props as flat as practical. Prefer top-level scalar props and
-arrays of primitive values; do not introduce nested objects or arrays of objects
-just for grouping. If the requested design genuinely requires either shape,
-flag the proposed schema to the user and get confirmation before implementing
-it. Existing nested schemas are legacy contracts and must not be flattened
+The first rule of content schema design is to keep fields as flat as
+practical: prefer top-level scalar props and arrays of primitive values. The
+one standing exception, considered best practice rather than something that
+needs case-by-case approval, is a single collapsible object per page section
+— `hero`, `about`, `contact`, `footer`, and so on — grouping only that
+section's own flat fields (`about: { heading, body, imageUrl }` rather than
+separate top-level `aboutHeading`, `aboutBody`, `aboutImageUrl` props). Do not
+nest further inside a section object. Any other nested object or array of
+objects (grouping unrelated fields, an array whose items are objects, a
+section object nested inside another object) still needs the proposed shape
+flagged to the user with confirmation obtained before implementing it.
+Existing nested schemas are legacy contracts and must not be flattened
 silently because that would break stored content.
 
 Do not assume arbitrary Zod constructs have a matching editor. Booleans resolve
