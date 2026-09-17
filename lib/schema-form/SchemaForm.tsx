@@ -11,6 +11,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion"
 import { Button } from "@/components/ui/button"
+import { FieldError } from "@/components/ui/field"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 import { cn } from "@/lib/utils"
@@ -57,6 +58,7 @@ interface FieldProps {
   value: unknown
   onChange: (next: unknown) => void
   layout?: SchemaFieldLayout
+  errors?: Record<string, string>
   className?: string
   trailingAction?: React.ReactNode
   groupLevel?: number
@@ -72,6 +74,7 @@ export function Field({
   value,
   onChange,
   layout = "above",
+  errors,
   className = "",
   trailingAction,
   groupLevel = 0,
@@ -94,6 +97,7 @@ export function Field({
             value={obj[child.key]}
             onChange={(next) => onChange({ ...obj, [child.key]: next })}
             layout={child.labelLayout ?? layout}
+            errors={errors}
             groupLevel={childGroupLevel}
             trailingAction={
               !isVisibleGroup && index === 0 ? trailingAction : undefined
@@ -202,6 +206,7 @@ export function Field({
                           )
                         }
                         layout={field.labelLayout ?? layout}
+                        errors={errors}
                         groupLevel={groupLevel + 1}
                         trailingAction={
                           <Button
@@ -233,6 +238,7 @@ export function Field({
 
   const Widget = widgets[widget] ?? widgets.text
   const labelLayout = field.labelLayout ?? layout
+  const error = errors?.[fieldPath.join(".")]
   return (
     <div
       className={cn(
@@ -260,7 +266,9 @@ export function Field({
           projectId={projectId}
           value={value}
           onChange={onChange}
+          invalid={Boolean(error)}
         />
+        <FieldError className="mt-1 pl-1">{error}</FieldError>
       </div>
       {trailingAction && (
         <div
@@ -282,12 +290,14 @@ export function SchemaForm({
   value,
   onChange,
   layout = "above",
+  errors,
 }: {
   schema: ZodType
   projectId?: string
   value: unknown
   onChange: (next: unknown) => void
   layout?: SchemaFieldLayout
+  errors?: Record<string, string>
 }) {
   const root = React.useMemo(() => normalize(schema), [schema])
   return (
@@ -297,6 +307,7 @@ export function SchemaForm({
       value={value}
       onChange={onChange}
       layout={layout}
+      errors={errors}
       isRoot
     />
   )

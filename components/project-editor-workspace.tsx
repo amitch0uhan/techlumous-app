@@ -19,6 +19,10 @@ import {
 } from "@/actions/deploy"
 import { saveProjectDraftAction } from "@/actions/project"
 import {
+  showInvalidFieldsToast,
+  showVercelReconnectToast,
+} from "@/components/deploy-blocked-toast"
+import {
   EditorTopBar,
   type PreviewViewport,
   type PreviewViewportPreset,
@@ -40,7 +44,14 @@ import {
   getTemplateDesignSchema,
 } from "@/templates/schema-registry"
 import { isActiveDeploymentStatus } from "@/types/deployment"
+import { getSchemaErrors, getSchemaIssues } from "@/lib/schema-form"
 import { cn } from "@/lib/utils"
+
+// Tooltip blockers disable the deploy button; the rest explain themselves on click.
+type DeployBlocker =
+  | { type: "tooltip"; message: string }
+  | { type: "invalid-content" }
+  | { type: "vercel-reconnect" }
 
 interface ProjectEditorWorkspaceProps {
   projectId: string
@@ -108,6 +119,7 @@ export function ProjectEditorWorkspace({
   const [pendingHref, setPendingHref] = useState<string | null>(null)
   const [showLeaveDialog, setShowLeaveDialog] = useState(false)
   const [formReady, setFormReady] = useState(false)
+  const [showFieldErrors, setShowFieldErrors] = useState(false)
   const [viewport, setViewport] = useState<PreviewViewport>("desktop")
   const [isSchemaFormOpen, setIsSchemaFormOpen] = useState(true)
   const router = useRouter()
@@ -122,6 +134,15 @@ export function ProjectEditorWorkspace({
       !!contentSchema?.safeParse(content).success &&
       !!designSchema?.safeParse(design).success,
     [content, contentSchema, design, designSchema]
+  )
+  const contentErrors = useMemo(
+    () =>
+      showFieldErrors ? getSchemaErrors(contentSchema, content) : undefined,
+    [content, contentSchema, showFieldErrors]
+  )
+  const designErrors = useMemo(
+    () => (showFieldErrors ? getSchemaErrors(designSchema, design) : undefined),
+    [design, designSchema, showFieldErrors]
   )
   const hasLiveDeployment =
     initialHasLiveDeployment ||
@@ -155,31 +176,45 @@ export function ProjectEditorWorkspace({
       setIsFetchingStatus(false)
     }
   }, [isFetchingStatus, projectId])
-  const canDeploy =
-    !!template &&
-    isContentValid &&
-    !isDirty &&
-    !isSaving &&
-    !hasActiveDeployment &&
-    (releaseOperation === "publish"
-      ? hasUnpublishedChanges
-      : !needsVercelReconnect)
+  const releaseAction =
+    releaseOperation === "publish" ? "publishing" : "deploying"
 
-  const deployDisabledReason = useMemo(() => {
-    const operationLabel =
-      releaseOperation === "publish" ? "publishing" : "deploying"
-
-    if (!template) return `Select a template before ${operationLabel}`
-    if (!isContentValid)
-      return `Fix invalid content or design before ${operationLabel}`
-    if (isDirty) return `Save changes before ${operationLabel}`
-    if (isSaving) return "Wait for saving to finish"
-    if (hasActiveDeployment) return "A deployment is already in progress"
+  const deployBlocker = useMemo((): DeployBlocker | undefined => {
+    if (!template) {
+      return {
+        type: "tooltip",
+        message: `Select a template for this project before ${releaseAction}.`,
+      }
+    }
+    if (isSaving) {
+      return {
+        type: "tooltip",
+        message: `Your draft is still saving. You can ${releaseOperation} once it finishes.`,
+      }
+    }
+    if (hasActiveDeployment) {
+      return {
+        type: "tooltip",
+        message:
+          "A deployment is already in progress. Wait for it to finish before starting another.",
+      }
+    }
+    if (!isContentValid) return { type: "invalid-content" }
+    if (isDirty) {
+      return {
+        type: "tooltip",
+        message: `You have unsaved changes. Save your draft before ${releaseAction} so your latest edits are included.`,
+      }
+    }
     if (releaseOperation === "publish" && !hasUnpublishedChanges) {
-      return "No unpublished changes"
+      return {
+        type: "tooltip",
+        message:
+          "Your live site already matches your saved draft. Save new changes to publish again.",
+      }
     }
     if (releaseOperation === "deploy" && needsVercelReconnect) {
-      return "Reconnect Vercel before deploying"
+      return { type: "vercel-reconnect" }
     }
     return undefined
   }, [
@@ -189,9 +224,12 @@ export function ProjectEditorWorkspace({
     isDirty,
     isSaving,
     needsVercelReconnect,
+    releaseAction,
     releaseOperation,
     template,
   ])
+  const deployDisabledReason =
+    deployBlocker?.type === "tooltip" ? deployBlocker.message : undefined
 
   const handleSave = useCallback(async () => {
     setIsSaving(true)
@@ -211,6 +249,30 @@ export function ProjectEditorWorkspace({
 
   const handleDeploy = useCallback(async () => {
     if (deployingRef.current) return
+
+    if (deployBlocker?.type === "invalid-content") {
+      setShowFieldErrors(true)
+      showInvalidFieldsToast(
+        [
+          ...getSchemaIssues(contentSchema, content).map((issue) => ({
+            ...issue,
+            section: "Content" as const,
+          })),
+          ...getSchemaIssues(designSchema, design).map((issue) => ({
+            ...issue,
+            section: "Design" as const,
+          })),
+        ],
+        releaseAction
+      )
+      return
+    }
+    if (deployBlocker?.type === "vercel-reconnect") {
+      showVercelReconnectToast()
+      return
+    }
+    if (deployBlocker) return
+
     deployingRef.current = true
 
     const isPublishing = releaseOperation === "publish"
@@ -260,7 +322,19 @@ export function ProjectEditorWorkspace({
       deployingRef.current = false
       setIsDeploying(false)
     }
-  }, [deployment, projectId, releaseOperation, savedContent, savedDesign])
+  }, [
+    content,
+    contentSchema,
+    deployBlocker,
+    deployment,
+    design,
+    designSchema,
+    projectId,
+    releaseAction,
+    releaseOperation,
+    savedContent,
+    savedDesign,
+  ])
 
   useEffect(() => {
     if (!isActiveDeploymentStatus(deployment.status)) return
@@ -363,6 +437,7 @@ export function ProjectEditorWorkspace({
       setContent(savedContentRef.current)
       setDesign(savedDesignRef.current)
       setFormReady(false)
+      setShowFieldErrors(false)
     }
   }, [])
 
@@ -430,6 +505,8 @@ export function ProjectEditorWorkspace({
             schema={contentSchema}
             designSchema={designSchema}
             designValue={design}
+            contentErrors={contentErrors}
+            designErrors={designErrors}
             onDesignChange={setDesign}
             value={content}
             onChange={setContent}
@@ -440,7 +517,6 @@ export function ProjectEditorWorkspace({
             isSaving={isSaving}
             isDeploying={isDeploying}
             operation={releaseOperation}
-            canDeploy={canDeploy}
             deployDisabledReason={deployDisabledReason}
             isOpen={isSchemaFormOpen}
           />
