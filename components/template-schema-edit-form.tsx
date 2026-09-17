@@ -8,6 +8,11 @@ import { SchemaFormScrollArea } from "@/components/schema-form-scroll-area"
 import { Button, IconButton } from "@/components/ui/button"
 import { Card, CardFooter, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 import { SchemaForm } from "@/lib/schema-form"
 import { cn } from "@/lib/utils"
 
@@ -29,6 +34,8 @@ interface TemplateSchemaEditFormProps {
   value?: unknown
   designSchema?: ZodType
   designValue?: unknown
+  contentErrors?: Record<string, string>
+  designErrors?: Record<string, string>
   onDesignChange: (next: unknown) => void
   onChange: (next: unknown) => void
   onReady?: () => void
@@ -38,7 +45,6 @@ interface TemplateSchemaEditFormProps {
   isSaving: boolean
   isDeploying: boolean
   operation: "deploy" | "publish"
-  canDeploy: boolean
   deployDisabledReason?: string
   isOpen: boolean
   className?: string
@@ -50,6 +56,8 @@ export function TemplateSchemaEditForm({
   value,
   designSchema,
   designValue,
+  contentErrors,
+  designErrors,
   onDesignChange,
   onChange,
   onReady,
@@ -59,7 +67,6 @@ export function TemplateSchemaEditForm({
   isSaving,
   isDeploying,
   operation,
-  canDeploy,
   deployDisabledReason,
   isOpen,
   className,
@@ -124,6 +131,7 @@ export function TemplateSchemaEditForm({
               projectId={projectId}
               value={activeTab === "design" ? designValue : value}
               onChange={activeTab === "design" ? onDesignChange : onChange}
+              errors={activeTab === "design" ? designErrors : contentErrors}
               layout="beside"
             />
           ) : (
@@ -143,26 +151,35 @@ export function TemplateSchemaEditForm({
           >
             {isSaving ? "Saving..." : "Save draft"}
           </Button>
-          <IconButton
-            type="button"
-            // variant="secondary"
-            icon={isDeploying ? CircleNotchIcon : ArrowCircleUpRightIcon}
-            iconPosition="end"
-            iconClassName={cn(isDeploying && "animate-spin")}
-            className="rounded-full pl-3"
-            onClick={onDeploy}
-            disabled={!canDeploy || isDeploying}
-            aria-busy={isDeploying}
-            title={deployDisabledReason}
-          >
-            {isDeploying
-              ? operation === "publish"
-                ? "Publishing..."
-                : "Deploying..."
-              : operation === "publish"
-                ? "Publish changes"
-                : "Deploy"}
-          </IconButton>
+          <Tooltip disabled={!deployDisabledReason || isDeploying}>
+            <TooltipTrigger
+              render={
+                <IconButton
+                  type="button"
+                  icon={isDeploying ? CircleNotchIcon : ArrowCircleUpRightIcon}
+                  iconPosition="end"
+                  iconClassName={cn(isDeploying && "animate-spin")}
+                  // focusableWhenDisabled uses aria-disabled, keeping it hoverable.
+                  className="rounded-full pl-3 aria-disabled:opacity-50"
+                  onClick={onDeploy}
+                  disabled={isDeploying || !!deployDisabledReason}
+                  focusableWhenDisabled
+                  aria-busy={isDeploying}
+                />
+              }
+            >
+              {isDeploying
+                ? operation === "publish"
+                  ? "Publishing..."
+                  : "Deploying..."
+                : operation === "publish"
+                  ? "Publish changes"
+                  : "Deploy"}
+            </TooltipTrigger>
+            <TooltipContent side="top" align="end">
+              {deployDisabledReason}
+            </TooltipContent>
+          </Tooltip>
         </div>
       </CardFooter>
     </Card>

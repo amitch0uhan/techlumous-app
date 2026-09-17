@@ -28,4 +28,5 @@ export interface WidgetProps {
   projectId?: string
   value: unknown
   onChange: (next: unknown) => void
+  invalid?: boolean
 }
