@@ -13,6 +13,27 @@ to commit, push, or open a PR. A prior instruction to make a change is not
 itself authorization to commit or push it. This applies to any AI assistant
 working in this repo, not only Claude.
 
+## Branch naming convention
+
+Any branch created for a change — whether a regular branch or a worktree
+branch — must follow `<prefix>/<kebab-case-description>` (e.g.
+`fix/toast-deploy-reason`). Pick the prefix that matches the change:
+
+- `feat/` — new feature or functionality
+- `fix/` — bug fix
+- `chore/` — maintenance, tooling, dependency, or config change
+- `docs/` — documentation-only change
+- `refactor/` — code restructuring with no behavior change
+- `test/` — test-only change
+- `ui/` — visual/styling change with no behavior change
+- `design/` — design-system or visual design work
+- `mig/` — data or schema migration
+- `agent/` — agent/automation-specific change
+
+Keep the description short, lowercase, and hyphenated (no spaces or
+underscores). This applies to any branch an AI assistant creates in this
+repo, not only worktree branches.
+
 ## Worktree policy
 
 Do not use the EnterWorktree tool (or otherwise create a separate git
@@ -22,12 +43,10 @@ default to isolating automatically, including under a background/autonomous
 session's default of isolating before every change. Rely on the user's own
 prompt to say when a worktree is wanted; in most cases none is, so do not
 assume one is needed unless the user says so. When a worktree is created,
-name it after the change using this repo's existing branch-prefix convention
-(`feat/`, `fix/`, `chore/`, `docs/`, `refactor/`, `test/`, `ui/`, `design/`,
-`mig/`, `agent/`) rather than a generic "worktree" label — note that the
-EnterWorktree tool itself still prefixes the underlying branch name with
-`worktree-`, which cannot be changed from here, so this only controls the
-segment after that prefix.
+name it after the change using the branch naming convention above rather
+than a generic "worktree" label — note that the EnterWorktree tool itself
+still prefixes the underlying branch name with `worktree-`, which cannot be
+changed from here, so this only controls the segment after that prefix.
 
 ## Commands
 

@@ -35,10 +35,11 @@ const IMAGE_BUCKET =
 const USER_ID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 
-function TextWidget({ value, onChange, field }: WidgetProps) {
+function TextWidget({ value, onChange, field, invalid }: WidgetProps) {
   return (
     <Input
       variant="schema"
+      aria-invalid={invalid || undefined}
       value={String(value ?? "")}
       placeholder={field.label}
       onChange={(e) => onChange(e.target.value)}
@@ -46,10 +47,11 @@ function TextWidget({ value, onChange, field }: WidgetProps) {
   )
 }
 
-function TextareaWidget({ value, onChange, field }: WidgetProps) {
+function TextareaWidget({ value, onChange, field, invalid }: WidgetProps) {
   return (
     <Textarea
       variant="schema"
+      aria-invalid={invalid || undefined}
       value={String(value ?? "")}
       placeholder={field.label}
       onChange={(e) => onChange(e.target.value)}
@@ -57,11 +59,12 @@ function TextareaWidget({ value, onChange, field }: WidgetProps) {
   )
 }
 
-function UrlWidget({ value, onChange, field }: WidgetProps) {
+function UrlWidget({ value, onChange, field, invalid }: WidgetProps) {
   return (
     <Input
       variant="schema"
       type="url"
+      aria-invalid={invalid || undefined}
       value={String(value ?? "")}
       placeholder={field.label}
       onChange={(e) => onChange(e.target.value)}
@@ -69,11 +72,12 @@ function UrlWidget({ value, onChange, field }: WidgetProps) {
   )
 }
 
-function SwitchWidget({ value, onChange, field }: WidgetProps) {
+function SwitchWidget({ value, onChange, field, invalid }: WidgetProps) {
   return (
     <Switch
       checked={Boolean(value)}
       aria-label={field.label}
+      aria-invalid={invalid || undefined}
       onCheckedChange={onChange}
     />
   )
@@ -81,7 +85,7 @@ function SwitchWidget({ value, onChange, field }: WidgetProps) {
 
 const HEX_PATTERN = /^#[0-9a-fA-F]{6}$/
 
-function ColorWidget({ value, onChange, field }: WidgetProps) {
+function ColorWidget({ value, onChange, field, invalid }: WidgetProps) {
   const raw = typeof value === "string" ? value : ""
   // The picker only accepts `#rrggbb`; the text input stays authoritative for partial edits.
   const swatch = HEX_PATTERN.test(raw) ? raw : "#000000"
@@ -97,6 +101,7 @@ function ColorWidget({ value, onChange, field }: WidgetProps) {
       />
       <Input
         variant="schema"
+        aria-invalid={invalid || undefined}
         value={raw}
         placeholder={field.label}
         spellCheck={false}
@@ -287,13 +292,17 @@ function ImageWidget({
   )
 }
 
-function SelectWidget({ value, onChange, field }: WidgetProps) {
+function SelectWidget({ value, onChange, field, invalid }: WidgetProps) {
   return (
     <Select
       value={String(value ?? "")}
       onValueChange={(next) => onChange(next)}
     >
-      <SelectTrigger variant="schema" className="w-full">
+      <SelectTrigger
+        variant="schema"
+        aria-invalid={invalid || undefined}
+        className="w-full"
+      >
         <SelectValue />
       </SelectTrigger>
       <SelectContent>
