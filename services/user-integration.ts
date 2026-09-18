@@ -11,7 +11,7 @@ import {
   type UpdateUserIntegration,
   type UserIntegration,
 } from "./user-integration.schema"
-import { cacheLife, cacheTag, updateTag } from "next/cache"
+import { cacheLife, cacheTag, revalidateTag } from "next/cache"
 import { redirect } from "next/navigation"
 
 const TABLE = "user_integration"
@@ -82,7 +82,7 @@ export async function createUserIntegration(
     throw new Error("Failed to create integration: not authenticated")
   }
 
-  updateTag(`intergration-${userId}`)
+  revalidateTag(`intergration-${userId}`, { expire: 0 })
 
   const payload = insertUserIntegrationSchema.parse(input)
   const supabase = await createClient()
@@ -157,7 +157,7 @@ export async function updateUserIntegration(
     throw new Error("Failed to update integration: not authenticated")
   }
 
-  updateTag(`intergration-${userId}`)
+  revalidateTag(`intergration-${userId}`, { expire: 0 })
 
   const payload = updateUserIntegrationSchema.parse(input)
   const supabase = await createClient()
@@ -180,7 +180,7 @@ export async function deleteUserIntegration(id: string): Promise<void> {
   if (!userId) {
     throw new Error("Failed to delete integration: not authenticated")
   }
-  updateTag(`intergration-${userId}`)
+  revalidateTag(`intergration-${userId}`, { expire: 0 })
 
   const supabase = await createClient()
 
