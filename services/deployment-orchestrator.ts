@@ -1,3 +1,5 @@
+import "server-only"
+
 import { getTemplateDesignSchema } from "@/template-engine/templates/schema-registry"
 import { createHash } from "node:crypto"
 
@@ -319,11 +321,9 @@ export async function orchestrateProjectDeployment(
   const parsedContent = schema.safeParse(
     projectDraftContent(project, template.default_content)
   )
-  const parsedDesign = dependencies.getTemplateDesignSchema(
-    template.slug
-  )?.safeParse(
-    projectDraftDesign(project, template.default_design)
-  )
+  const parsedDesign = dependencies
+    .getTemplateDesignSchema(template.slug)
+    ?.safeParse(projectDraftDesign(project, template.default_design))
   if (
     !parsedContent.success ||
     !isContentRecord(parsedContent.data) ||

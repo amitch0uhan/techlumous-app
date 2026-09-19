@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache"
 import { z } from "zod"
 
+import { getProjectTemplateState } from "@/lib/project-template-access"
 import { requireAuthenticatedUserId } from "@/lib/supabase/auth"
 import { VercelApiError } from "@/lib/vercel/api"
 import { deleteProject as deleteVercelProject } from "@/lib/vercel/projects"
@@ -13,6 +14,7 @@ import {
   updateProject,
 } from "@/services/project"
 import { insertProjectSchema } from "@/services/project.schema"
+import { getTemplateById } from "@/services/template"
 import { getUserIntegrationByProvider } from "@/services/user-integration"
 import { getVaultSecret } from "@/services/vault-secret"
 import {
@@ -141,16 +143,28 @@ export async function selectTemplateAction(
   }
 
   try {
-    const project = await getProject(parsed.data.projectId)
-    if (!project) {
+    const [state, template] = await Promise.all([
+      getProjectTemplateState(
+        parsed.data.projectId,
+        parsed.data.templateId,
+        userId
+      ),
+      getTemplateById(parsed.data.templateId),
+    ])
+
+    if (state.kind === "invalid") {
       return { status: "error", message: "Project not found" }
     }
 
-    if (project.template_id) {
+    if (state.kind !== "unselected") {
       return {
         status: "error",
         message: "Template already selected for this project",
       }
+    }
+
+    if (!template) {
+      return { status: "error", message: "Template not found" }
     }
 
     await updateProject(parsed.data.projectId, {
@@ -158,6 +172,8 @@ export async function selectTemplateAction(
     })
 
     revalidatePath("/")
+    revalidatePath("/preview")
+    revalidatePath(`/preview/${parsed.data.projectId}/edit`)
     return { status: "success", message: "Template selected" }
   } catch (err) {
     console.error("Failed to select template", err)

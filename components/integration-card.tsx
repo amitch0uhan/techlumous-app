@@ -37,7 +37,7 @@ const ACTION = {
   connected: {
     label: "Disconnect",
     variant: "destructive",
-    extra: "text-foreground",
+    extra: "text-red!",
   },
   none: {
     label: "Connect",
