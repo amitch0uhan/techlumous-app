@@ -1,4 +1,6 @@
 import { getRequestDeviceCapabilities } from "@/lib/device-capabilities.server"
+import { getProjectTemplateState } from "@/lib/project-template-access"
+import type { PreviewProjectActionProps } from "./preview-project-action"
 import { cn } from "@/lib/utils"
 import { getTemplate } from "@/services/template"
 import Link from "next/link"
@@ -11,7 +13,7 @@ import { redirect } from "next/navigation"
 export default async function PreviewContent({
   searchParams,
 }: {
-  searchParams: Promise<{ template?: string }>
+  searchParams: Promise<{ template?: string; project?: string }>
 }) {
   const emptyState = (slug?: string) => (
     <div className="page">
@@ -33,10 +35,8 @@ export default async function PreviewContent({
     </div>
   )
 
-  const [{ template: requested }, capabilities] = await Promise.all([
-    searchParams,
-    getRequestDeviceCapabilities(),
-  ])
+  const [{ template: requested, project: projectId }, capabilities] =
+    await Promise.all([searchParams, getRequestDeviceCapabilities()])
   const slug = requested
 
   if (!slug) return emptyState()
@@ -49,6 +49,27 @@ export default async function PreviewContent({
     return emptyState(slug)
   }
 
+  let projectAction: PreviewProjectActionProps | undefined
+  if (projectId) {
+    const state = await getProjectTemplateState(projectId, template.id, userId)
+    if (state.kind === "invalid" || state.kind === "mismatch") {
+      redirect(`/preview?template=${encodeURIComponent(template.slug)}`)
+    }
+
+    const editHref = `/preview/${state.project.id}/edit`
+    if (capabilities.canEditProjects) {
+      projectAction =
+        state.kind === "selected"
+          ? { type: "edit", href: editHref }
+          : {
+              type: "select",
+              projectId: state.project.id,
+              templateId: template.id,
+              editHref,
+            }
+    }
+  }
+
   return (
     <TemplatePreviewWindow
       slug={template.slug}
@@ -56,6 +77,7 @@ export default async function PreviewContent({
       content={template.default_content}
       design={template.default_design}
       allowViewportResize={capabilities.canResizePreview}
+      projectAction={projectAction}
     />
   )
 }

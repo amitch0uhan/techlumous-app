@@ -7,6 +7,10 @@ import {
   type PreviewViewport,
   type PreviewViewportPreset,
 } from "@/components/editor-top-bar"
+import {
+  PreviewProjectAction,
+  type PreviewProjectActionProps,
+} from "@/components/preview-project-action"
 import { ResizableTemplatePreview } from "@/components/resizable-template-preview"
 import { TemplateAutoHeightPreview } from "@/components/template-auto-height-preview"
 import { cn } from "@/lib/utils"
@@ -17,6 +21,7 @@ interface TemplatePreviewWindowProps {
   content: unknown
   design: unknown
   allowViewportResize?: boolean
+  projectAction?: PreviewProjectActionProps
   className?: string
 }
 
@@ -26,6 +31,7 @@ export function TemplatePreviewWindow({
   content,
   design,
   allowViewportResize = true,
+  projectAction,
   className,
 }: TemplatePreviewWindowProps) {
   const [viewport, setViewport] = useState<PreviewViewport>("desktop")
@@ -50,6 +56,9 @@ export function TemplatePreviewWindow({
           viewport={viewport}
           onViewportChange={updateViewport}
           allowViewportResize={allowViewportResize}
+          actions={
+            projectAction ? <PreviewProjectAction {...projectAction} /> : null
+          }
         />
 
         <div className="min-h-[calc(100dvh-6rem)] min-w-0 flex-1 overflow-hidden bg-white">

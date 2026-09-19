@@ -6,6 +6,7 @@ import {
   MonitorIcon,
   SidebarSimpleIcon,
 } from "@phosphor-icons/react"
+import type { ReactNode } from "react"
 
 import {
   DeploymentStatus,
@@ -49,6 +50,7 @@ interface EditorTopBarProps {
   allowViewportResize?: boolean
   isSchemaFormOpen?: boolean
   onToggleSchemaForm?: () => void
+  actions?: ReactNode
 }
 
 export function EditorTopBar({
@@ -63,6 +65,7 @@ export function EditorTopBar({
   allowViewportResize = true,
   isSchemaFormOpen,
   onToggleSchemaForm,
+  actions,
 }: EditorTopBarProps) {
   const deploymentState = projectStatus
     ? resolveDeploymentState(projectStatus)
@@ -95,6 +98,7 @@ export function EditorTopBar({
       )}
 
       <div className="flex shrink-0 items-center gap-2">
+        {actions}
         {isDeploymentInProgress && onFetchStatus ? (
           <IconButton
             type="button"

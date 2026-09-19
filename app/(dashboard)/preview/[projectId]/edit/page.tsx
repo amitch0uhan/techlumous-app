@@ -1,9 +1,11 @@
 import { Suspense } from "react"
-import { notFound } from "next/navigation"
+import { notFound, redirect } from "next/navigation"
+import { z } from "zod"
 
 import { EditorTopBarSkeleton } from "@/components/editor-top-bar-skeleton"
 import { PreviewTemplateSkeleton } from "@/components/preview-skeleton"
 import { ProjectEditorWorkspace } from "@/components/project-editor-workspace"
+import { requireAuthenticatedUserId } from "@/lib/supabase/auth"
 import { getProject } from "@/services/project"
 import { getTemplateById } from "@/services/template"
 import { getUserIntegrationByProvider } from "@/services/user-integration"
@@ -46,15 +48,24 @@ async function ProjectEditor({
   params: Promise<{ projectId: string }>
 }) {
   const { projectId } = await params
+  if (!z.uuid().safeParse(projectId).success) notFound()
+
+  const userId = await requireAuthenticatedUserId()
+  if (!userId) redirect("/login")
+
   const project = await getProject(projectId)
   if (!project) notFound()
+  if (!project.template_id) redirect(`/templates?project=${project.id}`)
 
-  const template = project.template_id
-    ? await getTemplateById(project.template_id)
-    : null
-  const integration = await getUserIntegrationByProvider({
-    validateToken: false,
-  })
+  const [template, integration] = await Promise.all([
+    getTemplateById(project.template_id),
+    getUserIntegrationByProvider({
+      validateToken: false,
+    }),
+  ])
+
+  if (!template) redirect(`/templates?project=${project.id}`)
+
   const initialContent =
     [project.draft_content, project.published_content].find(hasContent) ??
     template?.default_content ??

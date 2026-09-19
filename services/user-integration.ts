@@ -1,4 +1,4 @@
-"use server"
+import "server-only"
 
 import { requireAuthenticatedUserId } from "@/lib/supabase/auth"
 import { createClient } from "@/lib/supabase/server"

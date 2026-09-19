@@ -19,7 +19,7 @@ function PreviewPageFallback() {
 export default function Page({
   searchParams,
 }: {
-  searchParams: Promise<{ template?: string }>
+  searchParams: Promise<{ template?: string; project?: string }>
 }) {
   return (
     <Suspense fallback={<PreviewPageFallback />}>
