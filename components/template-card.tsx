@@ -11,6 +11,8 @@ interface TemplateCardProps {
   templateId: string
   title: string
   image: string
+  imageBlurDataURL?: string
+  imageLoading?: "eager" | "lazy"
   type: string
   slug: string
   projectId?: string
@@ -21,6 +23,8 @@ export function TemplateCard({
   templateId,
   title,
   image,
+  imageBlurDataURL,
+  imageLoading,
   type,
   slug,
   projectId,
@@ -43,7 +47,11 @@ export function TemplateCard({
           src={image}
           alt={title}
           fill
-          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 400px"
+          // 1 / 2 / 3 columns inside the max-w-7xl dashboard (~400px cell at full width).
+          sizes="(min-width: 1280px) 400px, (min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+          loading={imageLoading}
+          placeholder={imageBlurDataURL ? "blur" : "empty"}
+          blurDataURL={imageBlurDataURL || undefined}
           className="object-cover transition-transform duration-300 ease-out group-hover/card:scale-105"
         />
       </div>

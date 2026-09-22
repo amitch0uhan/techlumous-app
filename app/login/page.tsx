@@ -6,6 +6,7 @@ import { LoginForm } from "@/components/login-form"
 import { Logo } from "@/components/logo"
 import { Skeleton } from "@/components/ui/skeleton"
 import { requireAuthenticatedUserId } from "@/lib/supabase/auth"
+import loginBackground from "@/public/assets/glowing-bg-potrait.png"
 
 async function LoginGate() {
   const userId = await requireAuthenticatedUserId()
@@ -36,12 +37,14 @@ export default function LoginPage() {
     <div className="grid min-h-svh p-2 lg:grid-cols-2">
       <div className="relative hidden overflow-hidden rounded-lg bg-muted lg:block">
         <Image
-          src="/assets/glowing-bg-potrait.png"
+          src={loginBackground}
           alt="Techlumous"
           fill
-          priority
-          // sizes="50vw"
-          quality={100}
+          loading="eager"
+          fetchPriority="high"
+          sizes="50vw"
+          quality={90}
+          placeholder="blur"
           className="object-cover object-top"
         />
         <div className="absolute bottom-8 left-8 max-w-xs">
