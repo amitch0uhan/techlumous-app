@@ -131,6 +131,19 @@ function imageName(url: string) {
   }
 }
 
+function isOptimizableImage(url: string) {
+  try {
+    const { protocol, host, pathname } = new URL(url)
+    return (
+      protocol === "https:" &&
+      host === new URL(process.env.NEXT_PUBLIC_SUPABASE_URL ?? "").host &&
+      pathname.startsWith("/storage/v1/object/public/")
+    )
+  } catch {
+    return false
+  }
+}
+
 function isUploadedImage(url: string) {
   try {
     const marker = `/storage/v1/object/public/${IMAGE_BUCKET}/`
@@ -249,7 +262,8 @@ function ImageWidget({
               alt={field.label ?? fileName}
               width={80}
               height={45}
-              unoptimized
+              // Stored images can be multi-MB originals; resize them for this 80px thumb.
+              unoptimized={!isOptimizableImage(previewUrl)}
               className="size-full object-cover"
             />
           ) : (

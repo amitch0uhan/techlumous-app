@@ -1,4 +1,5 @@
 import { TemplateCard } from "@/components/template-card"
+import { getBlurDataURL } from "@/lib/image-placeholder"
 import { requireAuthenticatedUserId } from "@/lib/supabase/auth"
 import { listTemplates } from "@/services/template"
 import { redirect } from "next/navigation"
@@ -25,15 +26,22 @@ export async function TemplatesList({
     )
   }
 
+  const blurDataURLs = await Promise.all(
+    templates.map((template) => getBlurDataURL(template.thumbnail))
+  )
+
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {templates.map((template) => (
+      {templates.map((template, index) => (
         <TemplateCard
           key={template.id}
           templateId={template.id}
           title={template.name}
           type={formatCategory(template.category)}
           image={template.thumbnail}
+          imageBlurDataURL={blurDataURLs[index]}
+          // Only the first card is guaranteed above the fold on the smallest viewport.
+          imageLoading={index === 0 ? "eager" : undefined}
           slug={template.slug}
           projectId={projectId}
         />

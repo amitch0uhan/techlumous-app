@@ -35,13 +35,15 @@ import {
   normalizeDeploymentUrl,
 } from "@/components/deployment-status"
 import { cn } from "@/lib/utils"
-import Image from "next/image"
+import Image, { type StaticImageData } from "next/image"
 
 interface ProjectCardProps {
   projectId: string
   name: string
   url: string
-  image: string
+  image: string | StaticImageData
+  imageBlurDataURL?: string
+  imageLoading?: "eager" | "lazy"
   status?: string | null
   deploymentId?: string | null
   createdAt: string
@@ -232,6 +234,8 @@ export function ProjectCard({
   name,
   url,
   image,
+  imageBlurDataURL,
+  imageLoading,
   status,
   deploymentId,
   createdAt,
@@ -271,7 +275,22 @@ export function ProjectCard({
       )}
     >
       <div className="group relative aspect-video w-full shrink-0 overflow-hidden rounded-2xl lg:w-64 lg:basis-1/3">
-        <Image src={image} alt={name} fill className="size-full object-cover" />
+        <Image
+          src={image}
+          alt={name}
+          fill
+          sizes="(min-width: 1280px) 410px, (min-width: 1024px) 33vw, 100vw"
+          loading={imageLoading}
+          placeholder={
+            typeof image !== "string" || imageBlurDataURL ? "blur" : "empty"
+          }
+          blurDataURL={
+            typeof image === "string"
+              ? imageBlurDataURL || undefined
+              : undefined
+          }
+          className="size-full object-cover"
+        />
 
         {normalizedWebsiteUrl && (
           <a

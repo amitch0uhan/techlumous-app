@@ -2,7 +2,9 @@ import { CardSkeleton } from "@/components/card-skeleton"
 import { CreateProjectDrawer } from "@/components/create-project-drawer"
 import { ProjectCard } from "@/components/project-card"
 import { getRequestDeviceCapabilities } from "@/lib/device-capabilities.server"
+import { getBlurDataURL } from "@/lib/image-placeholder"
 import { cn } from "@/lib/utils"
+import projectDefaultImage from "@/public/assets/project_default.png"
 import type { Project } from "@/services/project.schema"
 import type { Template } from "@/services/template.schema"
 
@@ -55,6 +57,23 @@ export async function ProjectList({
     {} as Record<string, Template | undefined>
   )
 
+  // Projects often share a template, so blur each distinct thumbnail once.
+  const thumbnails = [
+    ...new Set(
+      Object.values(selectedTemplateForProject)
+        .map((template) => template?.thumbnail)
+        .filter((thumbnail): thumbnail is string => Boolean(thumbnail))
+    ),
+  ]
+  const blurDataURLs = new Map(
+    await Promise.all(
+      thumbnails.map(
+        async (thumbnail) =>
+          [thumbnail, await getBlurDataURL(thumbnail)] as const
+      )
+    )
+  )
+
   return (
     <>
       {projects.length === 0 ? (
@@ -79,25 +98,30 @@ export async function ProjectList({
         </div>
       ) : (
         <div className="flex flex-col gap-4">
-          {projects.map((project) => (
-            <ProjectCard
-              key={project.id}
-              projectId={project.id}
-              isTemplateSelected={!!project.template_id}
-              image={
-                selectedTemplateForProject[project.id]?.thumbnail ||
-                "/assets/project_default.png"
-              }
-              name={project.name}
-              url={project.deployment_url ?? "Not deployed"}
-              status={cardStatus(project.deploy_status)}
-              deploymentId={project.vercel_deployment_id}
-              createdAt={formatCreatedAt(project.created_at)}
-              websiteUrl={project.deployment_url}
-              lastDeployedAt={project.last_deployed_at}
-              canEditTemplate={capabilities.canEditProjects}
-            />
-          ))}
+          {projects.map((project, index) => {
+            const thumbnail = selectedTemplateForProject[project.id]?.thumbnail
+            return (
+              <ProjectCard
+                key={project.id}
+                projectId={project.id}
+                isTemplateSelected={!!project.template_id}
+                image={thumbnail || projectDefaultImage}
+                imageBlurDataURL={
+                  thumbnail ? blurDataURLs.get(thumbnail) : undefined
+                }
+                // The first card sits directly under the page heading.
+                imageLoading={index === 0 ? "eager" : undefined}
+                name={project.name}
+                url={project.deployment_url ?? "Not deployed"}
+                status={cardStatus(project.deploy_status)}
+                deploymentId={project.vercel_deployment_id}
+                createdAt={formatCreatedAt(project.created_at)}
+                websiteUrl={project.deployment_url}
+                lastDeployedAt={project.last_deployed_at}
+                canEditTemplate={capabilities.canEditProjects}
+              />
+            )
+          })}
         </div>
       )}
     </>
