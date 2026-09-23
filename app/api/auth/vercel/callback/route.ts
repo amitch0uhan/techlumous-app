@@ -55,10 +55,18 @@ export async function GET(request: Request) {
     return redirectClearing("/login?next=/integration")
   }
 
-  // 4. Exchange the code for an access token (server-side only).
+  // 4. Exchange the code for an access token (server-side only), then
+  // 5. assemble non-secret metadata for the credentials column. Building the
+  // credentials throws on a team ID mismatch, so it shares this error path.
   let token: VercelTokenResponse
+  let credentials: Record<string, unknown>
   try {
     token = await exchangeVercelCode(code)
+    credentials = buildVercelCredentials(token, {
+      configurationId,
+      teamId,
+      source,
+    })
   } catch (error) {
     console.error(error)
     return redirectClearing("/integration?error=token_exchange_failed")
@@ -66,13 +74,6 @@ export async function GET(request: Request) {
   if (!token.access_token) {
     return redirectClearing("/integration?error=token_exchange_failed")
   }
-
-  // 5. Assemble non-secret metadata for the credentials column.
-  const credentials = buildVercelCredentials(token, {
-    configurationId,
-    teamId,
-    source,
-  })
 
   // 6. Upsert, keyed on (current user, provider="vercel").
   try {

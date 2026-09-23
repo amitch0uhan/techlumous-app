@@ -21,9 +21,11 @@ import {
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
 } from "@/components/ui/dropdown-menu"
+import { useRouter } from "next/navigation"
 
 export function AccountMenuActions() {
   const { theme, setTheme } = useTheme()
+  const router = useRouter()
   const [isPending, startTransition] = useTransition()
 
   function handleSignOut() {
@@ -33,8 +35,8 @@ export function AccountMenuActions() {
         if (result?.error) {
           toast.error(result.error)
         }
-      } catch {
-        // Network failure or the action being unreachable
+        router.push("/login")
+      } catch (error) {
         toast.error("Unable to sign out. Please try again.")
       }
     })

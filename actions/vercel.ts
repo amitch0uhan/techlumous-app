@@ -20,7 +20,13 @@ export async function connectVercel(
   if (!userId) redirect("/login")
 
   const slug = process.env.VERCEL_INTEGRATION_SLUG
-  if (!slug) return { error: "Missing VERCEL_INTEGRATION_SLUG env var" }
+  if (!slug) {
+    console.error("Vercel connect failed: VERCEL_INTEGRATION_SLUG is not set")
+    return {
+      error:
+        "Vercel connection is unavailable right now. Please try again later.",
+    }
+  }
 
   const state = randomBytes(32).toString("hex")
 
