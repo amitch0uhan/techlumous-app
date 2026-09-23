@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache"
 import { z } from "zod"
 
 import { requireAuthenticatedUserId } from "@/lib/supabase/auth"
-import { getDeploymentStatus } from "@/lib/vercel/deploy"
+import { getDeploymentStatus, getPublicUrl } from "@/lib/vercel/deploy"
 import { getUserIntegrationByProvider } from "@/services/user-integration"
 import { getVaultSecret } from "@/services/vault-secret"
 import {
@@ -193,11 +193,7 @@ export async function fetchDeploymentStatusAction(
         expectedDeploymentId: deployment.vercel_deployment_id,
         deploymentId: response.id,
         status: deploymentStatus,
-        deploymentUrl: response.url
-          ? response.url.startsWith("http")
-            ? response.url
-            : `https://${response.url}`
-          : null,
+        deploymentUrl: getPublicUrl(response) ?? null,
         error,
         updatedAt: buildFinishedAt,
       }

@@ -66,6 +66,7 @@ export type VercelReadyState =
 interface VercelDeployment {
   id: string
   url?: string
+  alias?: string[]
   readyState: VercelReadyState
   inspectorUrl?: string
   errorMessage?: string
@@ -77,12 +78,28 @@ export type DeploymentStatusResult = Pick<
   VercelDeployment,
   | "id"
   | "url"
+  | "alias"
   | "readyState"
   | "inspectorUrl"
   | "errorMessage"
   | "errorCode"
   | "buildContainerFinishedAt"
 >
+
+/**
+ * The public URL of a live deployment (e.g. "https://project.vercel.app").
+ * `url` is the unique per-deployment host, so the shortest alias is used instead.
+ */
+export function getPublicUrl(
+  deployment: Pick<VercelDeployment, "readyState" | "alias">
+): string | undefined {
+  if (deployment.readyState !== "READY" || !deployment.alias?.length) {
+    return undefined
+  }
+
+  const [shortest] = [...deployment.alias].sort((a, b) => a.length - b.length)
+  return `https://${shortest}`
+}
 
 const DEFAULT_TIMEOUT_MS = 10 * 60_000
 const DEFAULT_POLL_INTERVAL_MS = 5000
@@ -316,11 +333,7 @@ export async function deployFiles(
     status: ready ? "ready" : "error",
     projectId: project.id,
     deploymentId: deployment.id,
-    url: deployment.url
-      ? deployment.url.startsWith("http")
-        ? deployment.url
-        : `https://${deployment.url}`
-      : undefined,
+    url: getPublicUrl(deployment),
     inspectorUrl: deployment.inspectorUrl,
     readyState: deployment.readyState,
     errorCode: ready ? undefined : deployment.errorCode,

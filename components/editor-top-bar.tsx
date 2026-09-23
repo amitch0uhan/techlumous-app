@@ -1,6 +1,7 @@
 "use client"
 
 import {
+  ArrowClockwiseIcon,
   DeviceMobileCameraIcon,
   DeviceTabletCameraIcon,
   MonitorIcon,
@@ -16,6 +17,7 @@ import {
 import { IconButton } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Switcher, type SwitcherOption } from "@/components/ui/switcher"
+import { cn } from "@/lib/utils"
 
 export type PreviewViewportPreset = "desktop" | "tablet" | "mobile"
 export type PreviewViewport = PreviewViewportPreset | "custom"
@@ -103,6 +105,8 @@ export function EditorTopBar({
           <IconButton
             type="button"
             onClick={onFetchStatus}
+            icon={ArrowClockwiseIcon}
+            iconClassName={cn(fetchStatusPending && "animate-spin")}
             disabled={fetchStatusPending}
             aria-busy={fetchStatusPending}
             variant="outline"

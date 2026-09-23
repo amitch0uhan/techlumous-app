@@ -238,6 +238,8 @@ async function deleteProjectWithMode(
     return { status: "error", message: "Invalid project" }
   }
 
+  let deletedFromVercel = false
+
   try {
     const project = await getProject(parsed.data)
     if (!project || project.user_id !== userId) {
@@ -283,6 +285,7 @@ async function deleteProjectWithMode(
           }
         }
       }
+      deletedFromVercel = true
     }
 
     await deleteProject(parsed.data, userId)
@@ -296,6 +299,11 @@ async function deleteProjectWithMode(
     }
   } catch (err) {
     console.error("Failed to delete project", err)
-    return { status: "error", message: "Failed to delete project" }
+    return {
+      status: "error",
+      message: deletedFromVercel
+        ? "Project deleted from Vercel, but something went wrong removing it from Techlumous. Please try again."
+        : "Something went wrong while deleting the project. Please try again.",
+    }
   }
 }

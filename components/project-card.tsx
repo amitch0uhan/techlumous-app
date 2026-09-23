@@ -125,11 +125,22 @@ function DeleteProjectDialog({
   const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false)
   const [appOnlyDialogOpen, setAppOnlyDialogOpen] = React.useState(false)
   const [vercelError, setVercelError] = React.useState("")
+  const [isRemoving, setIsRemoving] = React.useState(false)
+  const deletedMessageRef = React.useRef<string | null>(null)
+  const isDeleting = isPending || isRemoving
+
+  // The card unmounts once the refreshed list no longer includes this
+  // project, so the toast waits for the UI to match the deletion.
+  React.useEffect(() => {
+    const deletedMessage = deletedMessageRef
+    return () => {
+      if (deletedMessage.current) toast.success(deletedMessage.current)
+    }
+  }, [])
 
   function finishDelete(message: string) {
-    setDeleteDialogOpen(false)
-    setAppOnlyDialogOpen(false)
-    toast.success(message)
+    deletedMessageRef.current = message
+    setIsRemoving(true)
     onDelete?.()
     router.refresh()
   }
@@ -189,9 +200,9 @@ function DeleteProjectDialog({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isPending}>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} disabled={isPending}>
-              {isPending ? "Deleting..." : "Delete Project"}
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} disabled={isDeleting}>
+              {isDeleting ? "Deleting..." : "Delete Project"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -213,14 +224,14 @@ function DeleteProjectDialog({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isPending}>
+            <AlertDialogCancel disabled={isDeleting}>
               Keep Project
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleAppOnlyDelete}
-              disabled={isPending}
+              disabled={isDeleting}
             >
-              {isPending ? "Deleting..." : "Delete Only From Techlumous"}
+              {isDeleting ? "Deleting..." : "Delete Only From Techlumous"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
