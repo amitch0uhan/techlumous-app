@@ -9,6 +9,10 @@ import {
   designSchema as lumousMarkOneDesignSchema,
 } from "./lumous-mark-one/schema"
 import {
+  contentSchema as lumousStudioOneSchema,
+  designSchema as lumousStudioOneDesignSchema,
+} from "./lumous-studio-one/schema"
+import {
   contentSchema as lumousTravelOneSchema,
   designSchema as lumousTravelOneDesignSchema,
 } from "./lumous-travel-one/schema"
@@ -16,6 +20,7 @@ import {
 const templateContentSchemas: Record<string, ZodType> = {
   "hello-world": helloWorldSchema,
   "lumous-mark-one": lumousMarkOneSchema,
+  "lumous-studio-one": lumousStudioOneSchema,
   "lumous-travel-one": lumousTravelOneSchema,
 }
 
@@ -26,6 +31,7 @@ export function getTemplateContentSchema(slug: string): ZodType | undefined {
 const templateDesignSchemas: Record<string, ZodType> = {
   "hello-world": helloWorldDesignSchema,
   "lumous-mark-one": lumousMarkOneDesignSchema,
+  "lumous-studio-one": lumousStudioOneDesignSchema,
   "lumous-travel-one": lumousTravelOneDesignSchema,
 }
 

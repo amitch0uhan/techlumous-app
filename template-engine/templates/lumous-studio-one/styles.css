@@ -1,0 +1,379 @@
+@import "tailwindcss";
+
+/* Lumous Studio design system. Every token is `ls-` prefixed.
+
+   Colour works in three layers (see README "Colour system"):
+   1. Palette: `paletteStyle()` in lib.ts writes every `design.colors` value
+      onto the template root. Surface roles, and the light / on-dark variants
+      of the card arrow and tag groups, land as raw `--ls-<group>-<role>` vars,
+      which have no utilities, so components cannot reach them directly.
+   2. Surface tokens: the contextual `--color-ls-background / heading /
+      foreground / muted-foreground / eyebrow / border` utilities for free
+      text. Each `.ls-surface-*` class remaps them from its own palette group,
+      and also picks the card-arrow and tag variant for components on it.
+   3. Component tokens: `--color-ls-<component>-<role>`, one per component
+      role, written by `paletteStyle()`. A component paints only from its
+      own group.
+
+   The `transparent` values below only register the utilities; real values
+   always come from the root (a `:root` token cannot see a var declared further
+   down the tree, so nothing here may `var()` a palette var). */
+@theme {
+  /* surface tokens (remapped by .ls-surface-*) */
+  --color-ls-background: transparent;
+  --color-ls-heading: transparent;
+  --color-ls-foreground: transparent;
+  --color-ls-muted-foreground: transparent;
+  --color-ls-eyebrow: transparent;
+  --color-ls-border: transparent;
+
+  /* surface-scoped component tokens (variant picked by .ls-surface-*) */
+  --color-ls-card-arrow-background: transparent;
+  --color-ls-card-arrow-foreground: transparent;
+  --color-ls-card-arrow-hover-background: transparent;
+  --color-ls-tag-foreground: transparent;
+  --color-ls-tag-border: transparent;
+
+  /* component tokens */
+  --color-ls-button-primary-background: transparent;
+  --color-ls-button-primary-foreground: transparent;
+  --color-ls-button-primary-hover-background: transparent;
+  --color-ls-button-primary-icon-background: transparent;
+  --color-ls-button-primary-icon-foreground: transparent;
+
+  --color-ls-button-outline-foreground: transparent;
+  --color-ls-button-outline-border: transparent;
+  --color-ls-button-outline-hover-background: transparent;
+  --color-ls-button-outline-hover-foreground: transparent;
+
+  --color-ls-button-secondary-foreground: transparent;
+  --color-ls-button-secondary-border: transparent;
+  --color-ls-button-secondary-hover-background: transparent;
+
+  --color-ls-button-accent-background: transparent;
+  --color-ls-button-accent-foreground: transparent;
+  --color-ls-button-accent-hover-background: transparent;
+
+  --color-ls-hero-pill-background: transparent;
+  --color-ls-hero-pill-foreground: transparent;
+
+  --color-ls-hero-icons-foreground: transparent;
+
+  --color-ls-process-step-number: transparent;
+  --color-ls-process-step-title: transparent;
+  --color-ls-process-step-subtitle: transparent;
+  --color-ls-process-step-body: transparent;
+  --color-ls-process-step-meta: transparent;
+  --color-ls-process-step-divider: transparent;
+
+  --color-ls-work-arrow-foreground: transparent;
+  --color-ls-work-arrow-border: transparent;
+  --color-ls-work-arrow-hover-background: transparent;
+  --color-ls-work-arrow-hover-foreground: transparent;
+
+  --color-ls-accordion-question: transparent;
+  --color-ls-accordion-answer: transparent;
+  --color-ls-accordion-divider: transparent;
+  --color-ls-accordion-icon: transparent;
+  --color-ls-accordion-icon-border: transparent;
+
+  --color-ls-status-badge-background: transparent;
+  --color-ls-status-badge-foreground: transparent;
+  --color-ls-status-badge-dot: transparent;
+
+  --color-ls-contact-link-foreground: transparent;
+  --color-ls-contact-link-hover-foreground: transparent;
+
+  --color-ls-social-link-foreground: transparent;
+  --color-ls-social-link-border: transparent;
+  --color-ls-social-link-hover-background: transparent;
+  --color-ls-social-link-hover-foreground: transparent;
+
+  --color-ls-footer-link-foreground: transparent;
+  --color-ls-footer-link-hover-foreground: transparent;
+
+  --color-ls-back-to-top-background: transparent;
+  --color-ls-back-to-top-foreground: transparent;
+  --color-ls-back-to-top-border: transparent;
+  --color-ls-back-to-top-hover-background: transparent;
+  --color-ls-back-to-top-hover-foreground: transparent;
+
+  --color-ls-skip-link-background: transparent;
+  --color-ls-skip-link-foreground: transparent;
+
+  --color-ls-ring: transparent;
+
+  /* Must stay literal: a var() to a next/font variable resolves to nothing on :root. */
+  --font-ls-display: "Bricolage Grotesque", system-ui, sans-serif;
+  --font-ls-body: "DM Sans", system-ui, sans-serif;
+  --font-ls-mono: "JetBrains Mono", ui-monospace, monospace;
+}
+
+/* The design's single layout switch: sticky side columns and the 3-column
+   audience grid only apply from 1000px up. */
+@custom-variant ls-wide (@media (width >= 1000px));
+
+/* --- Surfaces ---------------------------------------------------------------
+   Every class sets all surface tokens and both variant token sets so nothing
+   leaks in from a parent surface. Roles a group does not expose fall back to
+   the nearest role it does. */
+.ls-surface-page {
+  --color-ls-background: var(--ls-page-background);
+  --color-ls-heading: var(--ls-page-heading);
+  --color-ls-foreground: var(--ls-page-foreground);
+  --color-ls-muted-foreground: var(--ls-page-foreground);
+  --color-ls-eyebrow: var(--ls-page-eyebrow);
+  --color-ls-border: var(--ls-page-border);
+  --color-ls-card-arrow-background: var(--ls-card-arrow-background);
+  --color-ls-card-arrow-foreground: var(--ls-card-arrow-foreground);
+  --color-ls-card-arrow-hover-background: var(--ls-card-arrow-hover-background);
+  --color-ls-tag-foreground: var(--ls-tag-foreground);
+  --color-ls-tag-border: var(--ls-tag-border);
+}
+
+.ls-surface-accent {
+  --color-ls-background: var(--ls-accent-background);
+  --color-ls-heading: var(--ls-accent-heading);
+  --color-ls-foreground: var(--ls-accent-foreground);
+  --color-ls-muted-foreground: var(--ls-accent-foreground);
+  --color-ls-eyebrow: var(--ls-accent-heading);
+  --color-ls-border: var(--ls-accent-border);
+  --color-ls-card-arrow-background: var(--ls-card-arrow-background);
+  --color-ls-card-arrow-foreground: var(--ls-card-arrow-foreground);
+  --color-ls-card-arrow-hover-background: var(--ls-card-arrow-hover-background);
+  --color-ls-tag-foreground: var(--ls-tag-foreground);
+  --color-ls-tag-border: var(--ls-tag-border);
+}
+
+.ls-surface-highlight {
+  --color-ls-background: var(--ls-highlight-background);
+  --color-ls-heading: var(--ls-highlight-heading);
+  --color-ls-foreground: var(--ls-highlight-foreground);
+  --color-ls-muted-foreground: var(--ls-highlight-foreground);
+  --color-ls-eyebrow: var(--ls-highlight-heading);
+  --color-ls-border: var(--ls-highlight-border);
+  --color-ls-card-arrow-background: var(--ls-card-arrow-background);
+  --color-ls-card-arrow-foreground: var(--ls-card-arrow-foreground);
+  --color-ls-card-arrow-hover-background: var(--ls-card-arrow-hover-background);
+  --color-ls-tag-foreground: var(--ls-tag-foreground);
+  --color-ls-tag-border: var(--ls-tag-border);
+}
+
+.ls-surface-light {
+  --color-ls-background: var(--ls-light-background);
+  --color-ls-heading: var(--ls-light-heading);
+  --color-ls-foreground: var(--ls-light-foreground);
+  --color-ls-muted-foreground: var(--ls-light-muted-foreground);
+  --color-ls-eyebrow: var(--ls-light-eyebrow);
+  --color-ls-border: var(--ls-light-border);
+  --color-ls-card-arrow-background: var(--ls-card-arrow-background);
+  --color-ls-card-arrow-foreground: var(--ls-card-arrow-foreground);
+  --color-ls-card-arrow-hover-background: var(--ls-card-arrow-hover-background);
+  --color-ls-tag-foreground: var(--ls-tag-foreground);
+  --color-ls-tag-border: var(--ls-tag-border);
+}
+
+.ls-surface-card {
+  --color-ls-background: var(--ls-card-background);
+  --color-ls-heading: var(--ls-card-heading);
+  --color-ls-foreground: var(--ls-card-foreground);
+  --color-ls-muted-foreground: var(--ls-card-foreground);
+  --color-ls-eyebrow: var(--ls-card-heading);
+  --color-ls-border: var(--ls-card-border);
+  --color-ls-card-arrow-background: var(--ls-card-arrow-on-dark-background);
+  --color-ls-card-arrow-foreground: var(--ls-card-arrow-on-dark-foreground);
+  --color-ls-card-arrow-hover-background: var(
+    --ls-card-arrow-on-dark-hover-background
+  );
+  --color-ls-tag-foreground: var(--ls-tag-on-dark-foreground);
+  --color-ls-tag-border: var(--ls-tag-on-dark-border);
+}
+
+.ls-surface-footer {
+  --color-ls-background: var(--ls-footer-background);
+  --color-ls-heading: var(--ls-footer-heading);
+  --color-ls-foreground: var(--ls-footer-foreground);
+  --color-ls-muted-foreground: var(--ls-footer-muted-foreground);
+  --color-ls-eyebrow: var(--ls-footer-muted-foreground);
+  --color-ls-border: var(--ls-footer-border);
+  --color-ls-card-arrow-background: var(--ls-card-arrow-background);
+  --color-ls-card-arrow-foreground: var(--ls-card-arrow-foreground);
+  --color-ls-card-arrow-hover-background: var(--ls-card-arrow-hover-background);
+  --color-ls-tag-foreground: var(--ls-tag-foreground);
+  --color-ls-tag-border: var(--ls-tag-border);
+}
+
+/* One visible keyboard focus ring for every link and button. */
+.ls-root :where(a, button):focus-visible {
+  outline: 2px solid var(--color-ls-ring);
+  outline-offset: 3px;
+}
+
+/* --- Effects ----------------------------------------------------------------
+   Classes rather than Tailwind arbitrary values so the colour stops track the
+   editable tokens; the alpha and geometry are fixed by the design. */
+/* Call-to-action image frame: landscape while stacked, square beside the text.
+   A class rather than `aspect-* ls-wide:aspect-*`: another template's copy of
+   the base utility would override the variant in shared builds. */
+.ls-cta-media {
+  aspect-ratio: 4 / 3;
+}
+
+@media (width >= 1000px) {
+  .ls-cta-media {
+    aspect-ratio: 1;
+  }
+}
+
+/* Flush variant: full-width 4:3 under the text while stacked; beside it, the
+   image column stretches to the band's height (floored so it never collapses). */
+.ls-cta-media-flush {
+  aspect-ratio: 4 / 3;
+}
+
+@media (width >= 1000px) {
+  .ls-cta-media-flush {
+    aspect-ratio: auto;
+    min-height: 420px;
+  }
+}
+
+.ls-shadow-stack {
+  box-shadow: 0 -20px 50px
+    color-mix(in srgb, var(--color-ls-shadow) 28%, transparent);
+}
+
+.ls-glass {
+  background: color-mix(
+    in srgb,
+    var(--color-ls-back-to-top-background) 85%,
+    transparent
+  );
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.ls-glass:hover {
+  background: var(--color-ls-back-to-top-hover-background);
+}
+
+/* The pill word fades out at both ends as it scrolls past. */
+.ls-pill-mask {
+  -webkit-mask-image: linear-gradient(
+    90deg,
+    transparent,
+    #000 9%,
+    #000 91%,
+    transparent
+  );
+  mask-image: linear-gradient(
+    90deg,
+    transparent,
+    #000 9%,
+    #000 91%,
+    transparent
+  );
+}
+
+/* Hovering one process step dims the others (pure CSS, no state). */
+.ls-steps > li {
+  transition: opacity 0.35s ease;
+}
+
+.ls-steps:has(> li:hover) > li:not(:hover) {
+  opacity: 0.3;
+}
+
+/* --- Ambient motion ----------------------------------------------------------
+   CSS keyframes rather than GSAP loops: they never write to the DOM, so the
+   studio preview's mutation observer is not woken on every frame. */
+@keyframes ls-marquee {
+  from {
+    transform: translateX(-50%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.ls-marquee {
+  animation: ls-marquee 7s linear infinite;
+}
+
+/* Icons drift down through the hero; distance is a share of the layer height
+   (container query units), rotation and timing come from per-icon vars. */
+.ls-float-layer {
+  container-type: size;
+}
+
+@keyframes ls-float {
+  0% {
+    transform: translateY(-60px) rotate(var(--ls-rotate));
+    opacity: 0;
+  }
+  18% {
+    opacity: 0.42;
+  }
+  38% {
+    opacity: 0.42;
+  }
+  100% {
+    transform: translateY(85cqh) rotate(calc(var(--ls-rotate) + 35deg));
+    opacity: 0;
+  }
+}
+
+.ls-float {
+  opacity: 0;
+  animation: ls-float var(--ls-duration) linear var(--ls-delay) infinite;
+}
+
+/* Motion switched off in content, or by the visitor's system setting. */
+.ls-still .ls-marquee,
+.ls-still .ls-float {
+  animation: none;
+}
+
+.ls-still .ls-float-layer {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ls-root .ls-marquee,
+  .ls-root .ls-float {
+    animation: none;
+  }
+
+  .ls-root .ls-float-layer {
+    display: none;
+  }
+
+  .ls-root * {
+    transition: none !important;
+  }
+}
+
+/* In-page anchors (Skip to content, Back to top, Explore our work) glide. */
+html:has(.ls-root) {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html:has(.ls-root) {
+    scroll-behavior: auto;
+  }
+}
+
+/* Featured project frame: 4:3 like the others on phones, the design's wide
+   16:8 from 700px. A class rather than `aspect-* sm:aspect-*` (shared-build
+   override risk), and no min-height: with an aspect ratio it would force the
+   frame wider than a narrow card. */
+.ls-work-featured {
+  aspect-ratio: 4 / 3;
+}
+
+@media (width >= 700px) {
+  .ls-work-featured {
+    aspect-ratio: 16 / 8;
+  }
+}

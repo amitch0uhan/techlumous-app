@@ -2,6 +2,7 @@ import type { TemplateModule } from "@/templates/types"
 
 import { template as helloWorld } from "./hello-world"
 import { template as lumousMarkOne } from "./lumous-mark-one"
+import { template as lumousStudioOne } from "./lumous-studio-one"
 import { template as lumousTravelOne } from "./lumous-travel-one"
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -10,6 +11,7 @@ type AnyTemplateModule = TemplateModule<any, any>
 export const templates: Record<string, AnyTemplateModule> = {
   [helloWorld.meta.slug]: helloWorld,
   [lumousMarkOne.meta.slug]: lumousMarkOne,
+  [lumousStudioOne.meta.slug]: lumousStudioOne,
   [lumousTravelOne.meta.slug]: lumousTravelOne,
 }
 
