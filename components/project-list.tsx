@@ -4,7 +4,7 @@ import { ProjectCard } from "@/components/project-card"
 import { getRequestDeviceCapabilities } from "@/lib/device-capabilities.server"
 import { getBlurDataURL } from "@/lib/image-placeholder"
 import { cn } from "@/lib/utils"
-import projectDefaultImage from "@/public/assets/project_default.png"
+import projectDefaultImage from "@/public/assets/project_default.webp"
 import type { Project } from "@/services/project.schema"
 import type { Template } from "@/services/template.schema"
 

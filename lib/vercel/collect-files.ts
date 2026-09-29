@@ -18,8 +18,8 @@ const EXCLUDED_DEPLOYMENT_FILES = new Set([
 ])
 
 export interface CollectEngineFilesParams {
-  /** Template folder under templates/ to include (default "hello-world") */
-  templateSlug?: string
+  /** Template folder under templates/ to include */
+  templateSlug: string
   /** Absolute path to the template-engine folder (default: <cwd>/template-engine) */
   engineDir?: string
 }
@@ -49,9 +49,9 @@ export function listTemplates(): AnyTemplateModule[] {
 `
 
 export async function collectEngineFiles(
-  params: CollectEngineFilesParams = {}
+  params: CollectEngineFilesParams
 ): Promise<DeployFile[]> {
-  const slug = params.templateSlug ?? "hello-world"
+  const slug = params.templateSlug
   const engineDir =
     params.engineDir ?? path.join(process.cwd(), "template-engine")
 

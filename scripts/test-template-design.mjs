@@ -54,7 +54,7 @@ function load(file) {
   return loadedModule.exports
 }
 
-const slugs = ["hello-world", "lumous-mark-one", "lumous-travel-one"]
+const slugs = ["lumous-studio-one", "lumous-travel-one"]
 for (const slug of slugs) {
   const schema = load(`template-engine/templates/${slug}/schema.ts`)
   assert.ok(

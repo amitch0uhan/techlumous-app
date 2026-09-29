@@ -122,8 +122,8 @@ for the complete checklist and compatibility guidance.
 Every module exports two inferred Zod types, two schemas and two defaults. Both
 defaults must parse. Use `designSchema = z.object({})` and `defaultDesign = {}`
 when there are no design controls. Travel One stores its 17-color palette in
-`design.colors`; Hello World's theme remains content, and Mark One's fixed CSS
-palette is unchanged. Register both schemas and design defaults in the studio
+`design.colors`. Templates without design controls keep
+an empty design schema. Register both schemas and design defaults in the studio
 schema registry without importing renderers.
 
 The studio uses independent Content/Design tabs with one save and publish flow.

@@ -610,7 +610,7 @@ export const contentSchema = z.object({
         title: text("Title"),
         tags: z.array(z.string()).meta({ label: "Tags" }),
         body: area("Description"),
-        imageUrl: image("Image (transparent PNG works best)"),
+        imageUrl: image("Image (transparent webp works best)"),
         imageAlt: text("Image alt text"),
       })
     )
@@ -730,8 +730,7 @@ export const defaultContent: LumousStudioOneContent = {
 
   showFeature: true,
   feature: {
-    imageUrl:
-      "https://jspqdyqdbczgwyorxcvi.supabase.co/storage/v1/object/public/techlumous/templates/lumous-studio-one/hero.gif",
+    imageUrl: `https://${process.env.NEXT_PUBLIC_IMAGE_HOSTNAME}/storage/v1/object/public/techlumous/templates/lumous-studio-one/hero.gif`,
     imageAlt: "The Luma Studio team reviewing a brand identity",
   },
 
@@ -797,29 +796,25 @@ export const defaultContent: LumousStudioOneContent = {
     {
       title: "Brand strategy",
       body: "Positioning, audience insight and key messages that give every page and pitch a clear point of view.",
-      imageUrl:
-        "https://jspqdyqdbczgwyorxcvi.supabase.co/storage/v1/object/public/techlumous/templates/lumous-studio-one/brand_strategy.png",
+      imageUrl: `https://${process.env.NEXT_PUBLIC_IMAGE_HOSTNAME}/storage/v1/object/public/techlumous/templates/lumous-studio-one/brand_strategy.webp`,
       imageAlt: "A strategy workshop in progress",
     },
     {
       title: "Visual identity",
       body: "Logo, colour, type and a practical guidelines kit, so your brand looks consistent wherever it appears.",
-      imageUrl:
-        "https://jspqdyqdbczgwyorxcvi.supabase.co/storage/v1/object/public/techlumous/templates/lumous-studio-one/visual_identity.png",
+      imageUrl: `https://${process.env.NEXT_PUBLIC_IMAGE_HOSTNAME}/storage/v1/object/public/techlumous/templates/lumous-studio-one/visual_identity.webp`,
       imageAlt: "Pages from a brand identity system",
     },
     {
       title: "Website design",
       body: "Multi-page websites designed and built to explain your offer, earn trust and bring in enquiries.",
-      imageUrl:
-        "https://jspqdyqdbczgwyorxcvi.supabase.co/storage/v1/object/public/techlumous/templates/lumous-studio-one/website_design.png",
+      imageUrl: `https://${process.env.NEXT_PUBLIC_IMAGE_HOSTNAME}/storage/v1/object/public/techlumous/templates/lumous-studio-one/website_design.webp`,
       imageAlt: "A website design shown on a laptop",
     },
     {
       title: "Landing pages",
       body: "Focused campaign and launch pages, designed around a single action and ready in a matter of weeks.",
-      imageUrl:
-        "https://jspqdyqdbczgwyorxcvi.supabase.co/storage/v1/object/public/techlumous/templates/lumous-studio-one/landing_page.png",
+      imageUrl: `https://${process.env.NEXT_PUBLIC_IMAGE_HOSTNAME}/storage/v1/object/public/techlumous/templates/lumous-studio-one/landing_page.webp`,
       imageAlt: "A campaign landing page on a phone",
     },
   ],
@@ -835,8 +830,7 @@ export const defaultContent: LumousStudioOneContent = {
       body: "Brand identity and marketing site for a personal finance app, built to make saving feel calm rather than complicated.",
       meta: "Finance app · Identity, website",
       href: "https://example.com/work/bloom-finance",
-      imageUrl:
-        "https://jspqdyqdbczgwyorxcvi.supabase.co/storage/v1/object/public/techlumous/templates/lumous-studio-one/recent_1.png",
+      imageUrl: `https://${process.env.NEXT_PUBLIC_IMAGE_HOSTNAME}/storage/v1/object/public/techlumous/templates/lumous-studio-one/recent_1.webp`,
       imageAlt: "Bloom Finance app screens and brand visuals",
     },
     {
@@ -844,8 +838,7 @@ export const defaultContent: LumousStudioOneContent = {
       body: "A refreshed identity and portfolio site for an interiors studio, letting the work breathe.",
       meta: "Interiors studio · Rebrand, website",
       href: "https://example.com/work/nestwell",
-      imageUrl:
-        "https://jspqdyqdbczgwyorxcvi.supabase.co/storage/v1/object/public/techlumous/templates/lumous-studio-one/recent_2.png",
+      imageUrl: `https://${process.env.NEXT_PUBLIC_IMAGE_HOSTNAME}/storage/v1/object/public/techlumous/templates/lumous-studio-one/recent_2.webp`,
       imageAlt: "The Nestwell interiors website",
     },
     {
@@ -853,8 +846,7 @@ export const defaultContent: LumousStudioOneContent = {
       body: "Messaging and a product website for a software company explaining a technical tool in plain language.",
       meta: "Software · Messaging, website",
       href: "https://example.com/work/flux-analytics",
-      imageUrl:
-        "https://jspqdyqdbczgwyorxcvi.supabase.co/storage/v1/object/public/techlumous/templates/lumous-studio-one/recent_3.png",
+      imageUrl: `https://${process.env.NEXT_PUBLIC_IMAGE_HOSTNAME}/storage/v1/object/public/techlumous/templates/lumous-studio-one/recent_3.webp`,
       imageAlt: "The Flux Analytics product website",
     },
   ],
@@ -875,8 +867,7 @@ export const defaultContent: LumousStudioOneContent = {
         "Naming support",
       ],
       body: "Go to market with a brand and website that make you look established from day one, and a system that grows with you.",
-      imageUrl:
-        "https://jspqdyqdbczgwyorxcvi.supabase.co/storage/v1/object/public/techlumous/templates/lumous-studio-one/work_with_2.png",
+      imageUrl: `https://${process.env.NEXT_PUBLIC_IMAGE_HOSTNAME}/storage/v1/object/public/techlumous/templates/lumous-studio-one/work_with_2.webp`,
       imageAlt:
         "Chrome compass star inside a ring with a lime centre and a lavender segment",
     },
@@ -884,24 +875,21 @@ export const defaultContent: LumousStudioOneContent = {
       title: "Service businesses",
       tags: ["Rebrand", "Website redesign", "Messaging"],
       body: "Your work has moved on and your website hasn’t. We bring your brand up to the standard of the service you deliver.",
-      imageUrl:
-        "https://jspqdyqdbczgwyorxcvi.supabase.co/storage/v1/object/public/techlumous/templates/lumous-studio-one/work_with_1.png",
+      imageUrl: `https://${process.env.NEXT_PUBLIC_IMAGE_HOSTNAME}/storage/v1/object/public/techlumous/templates/lumous-studio-one/work_with_1.webp`,
       imageAlt: "Chrome ribbons twisting around a glowing lime sphere",
     },
     {
       title: "Marketing teams",
       tags: ["Landing pages", "Campaign assets"],
       body: "Extra design capacity for launches and campaigns, with pages that stay on brand and ship on time.",
-      imageUrl:
-        "https://jspqdyqdbczgwyorxcvi.supabase.co/storage/v1/object/public/techlumous/templates/lumous-studio-one/work_with_3.png",
+      imageUrl: `https://${process.env.NEXT_PUBLIC_IMAGE_HOSTNAME}/storage/v1/object/public/techlumous/templates/lumous-studio-one/work_with_3.webp`,
       imageAlt: "Interlocking chrome, lime and lavender loops forming a knot",
     },
     {
       title: "Consultants and advisors",
       tags: ["Personal brand", "Credibility"],
       body: "Turn expertise into a clear, credible presence that helps the right clients find you and trust you quickly.",
-      imageUrl:
-        "https://jspqdyqdbczgwyorxcvi.supabase.co/storage/v1/object/public/techlumous/templates/lumous-studio-one/work_with_4.png",
+      imageUrl: `https://${process.env.NEXT_PUBLIC_IMAGE_HOSTNAME}/storage/v1/object/public/techlumous/templates/lumous-studio-one/work_with_4.webp`,
       imageAlt:
         "Chrome web page mockup with a lime arrow curving upwards around it",
     },
@@ -909,8 +897,7 @@ export const defaultContent: LumousStudioOneContent = {
       title: "Product-led companies",
       tags: ["Marketing site", "Design system"],
       body: "Explain a complex product in plain language with a site that turns visitors into sign-ups.",
-      imageUrl:
-        "https://jspqdyqdbczgwyorxcvi.supabase.co/storage/v1/object/public/techlumous/templates/lumous-studio-one/work_with_5.png",
+      imageUrl: `https://${process.env.NEXT_PUBLIC_IMAGE_HOSTNAME}/storage/v1/object/public/techlumous/templates/lumous-studio-one/work_with_5.webp`,
       imageAlt:
         "Chrome desktop monitor and phone showing the same lime and cream website",
     },
@@ -950,8 +937,7 @@ export const defaultContent: LumousStudioOneContent = {
     secondaryHref: "#work",
     showImage: true,
     imagePadding: "none",
-    imageUrl:
-      "https://jspqdyqdbczgwyorxcvi.supabase.co/storage/v1/object/public/techlumous/templates/lumous-studio-one/ready_to_start.png",
+    imageUrl: `https://${process.env.NEXT_PUBLIC_IMAGE_HOSTNAME}/storage/v1/object/public/techlumous/templates/lumous-studio-one/ready_to_start.webp`,
     imageAlt: "Traffic light glowing green, signalling it's time to go",
   },
 
