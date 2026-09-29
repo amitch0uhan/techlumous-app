@@ -498,30 +498,26 @@ export const defaultContent: LumousTravelOneContent = {
 
   showHero: true,
   heroHeadline: "Crafted journeys to the places that stay with you",
-  heroImageUrl:
-    "https://jspqdyqdbczgwyorxcvi.supabase.co/storage/v1/object/public/techlumous/templates/lumous-travel-one/hero-lodge.png",
+  heroImageUrl: `https://${process.env.NEXT_PUBLIC_IMAGE_HOSTNAME}/storage/v1/object/public/techlumous/templates/lumous-travel-one/hero-lodge.webp`,
   heroImageAlt: "A lodge at dusk beneath the mountains",
   heroTags: ["Mountains", "Wilderness", "Cities", "Coast", "Rivers"],
   heroCards: [
     {
       title: "A lodge in the Dolomites",
       meta: "8 nights · from $3,900",
-      imageUrl:
-        "https://jspqdyqdbczgwyorxcvi.supabase.co/storage/v1/object/public/techlumous/templates/lumous-travel-one/dolomites.png",
+      imageUrl: `https://${process.env.NEXT_PUBLIC_IMAGE_HOSTNAME}/storage/v1/object/public/techlumous/templates/lumous-travel-one/dolomites.webp`,
       imageAlt: "A lodge in the Dolomites",
     },
     {
       title: "Patagonia end to end",
       meta: "11 nights · from $4,600",
-      imageUrl:
-        "https://jspqdyqdbczgwyorxcvi.supabase.co/storage/v1/object/public/techlumous/templates/lumous-travel-one/patagonia.png",
+      imageUrl: `https://${process.env.NEXT_PUBLIC_IMAGE_HOSTNAME}/storage/v1/object/public/techlumous/templates/lumous-travel-one/patagonia.webp`,
       imageAlt: "Patagonia end to end",
     },
     {
       title: "Kyoto, out of season",
       meta: "6 nights · from $2,780",
-      imageUrl:
-        "https://jspqdyqdbczgwyorxcvi.supabase.co/storage/v1/object/public/techlumous/templates/lumous-travel-one/kyoto.png",
+      imageUrl: `https://${process.env.NEXT_PUBLIC_IMAGE_HOSTNAME}/storage/v1/object/public/techlumous/templates/lumous-travel-one/kyoto.webp`,
       imageAlt: "Kyoto, out of season",
     },
   ],
@@ -543,40 +539,35 @@ export const defaultContent: LumousTravelOneContent = {
       region: "Mountains",
       title: "Italy — Dolomites",
       body: "Hut to hut above Cortina, with the lit valley to come down to at the end of the week.",
-      imageUrl:
-        "https://jspqdyqdbczgwyorxcvi.supabase.co/storage/v1/object/public/techlumous/templates/lumous-travel-one/dolomites.png",
+      imageUrl: `https://${process.env.NEXT_PUBLIC_IMAGE_HOSTNAME}/storage/v1/object/public/techlumous/templates/lumous-travel-one/dolomites.webp`,
       imageAlt: "Dolomites, Italy",
     },
     {
       region: "Wilderness",
       title: "Chile — Patagonia",
       body: "Torres del Paine to El Chaltén, timed for the long light and the shoulder-season crowds.",
-      imageUrl:
-        "https://jspqdyqdbczgwyorxcvi.supabase.co/storage/v1/object/public/techlumous/templates/lumous-travel-one/patagonia.png",
+      imageUrl: `https://${process.env.NEXT_PUBLIC_IMAGE_HOSTNAME}/storage/v1/object/public/techlumous/templates/lumous-travel-one/patagonia.webp`,
       imageAlt: "Patagonia, Chile",
     },
     {
       region: "Cities",
       title: "Japan — Kyoto and Nara",
       body: "Rail between the two, ryokan nights, and temples before the coaches arrive.",
-      imageUrl:
-        "https://jspqdyqdbczgwyorxcvi.supabase.co/storage/v1/object/public/techlumous/templates/lumous-travel-one/kyoto.png",
+      imageUrl: `https://${process.env.NEXT_PUBLIC_IMAGE_HOSTNAME}/storage/v1/object/public/techlumous/templates/lumous-travel-one/kyoto.webp`,
       imageAlt: "Kyoto, Japan",
     },
     {
       region: "Coast",
       title: "Italy — Amalfi and Cilento",
       body: "The coast road in shoulder season, with three nights south where it empties out.",
-      imageUrl:
-        "https://jspqdyqdbczgwyorxcvi.supabase.co/storage/v1/object/public/techlumous/templates/lumous-travel-one/coast.png",
+      imageUrl: `https://${process.env.NEXT_PUBLIC_IMAGE_HOSTNAME}/storage/v1/object/public/techlumous/templates/lumous-travel-one/coast.webp`,
       imageAlt: "Amalfi coast, Italy",
     },
     {
       region: "Rivers",
       title: "Central Europe — river cities",
       body: "Prague, Meissen and Dresden by river and rail, all of it walkable after dark.",
-      imageUrl:
-        "https://jspqdyqdbczgwyorxcvi.supabase.co/storage/v1/object/public/techlumous/templates/lumous-travel-one/city.png",
+      imageUrl: `https://${process.env.NEXT_PUBLIC_IMAGE_HOSTNAME}/storage/v1/object/public/techlumous/templates/lumous-travel-one/city.webp`,
       imageAlt: "River cities, central Europe",
     },
   ],
@@ -592,24 +583,21 @@ export const defaultContent: LumousTravelOneContent = {
         "Two weeks in Japan with a five year old and not one wasted afternoon. The train notes alone were worth the fee.",
       name: "Anika Rasheed",
       trip: "Kyoto · Nara · Kanazawa",
-      avatarUrl:
-        "https://jspqdyqdbczgwyorxcvi.supabase.co/storage/v1/object/public/techlumous/templates/lumous-travel-one/travelers.png",
+      avatarUrl: `https://${process.env.NEXT_PUBLIC_IMAGE_HOSTNAME}/storage/v1/object/public/techlumous/templates/lumous-travel-one/travelers.webp`,
     },
     {
       quote:
         "Our flight out of Punta Arenas was cancelled at midnight. Rebooked and a room held before we reached the desk.",
       name: "Tomás Oliveira",
       trip: "Chile · Torres del Paine",
-      avatarUrl:
-        "https://jspqdyqdbczgwyorxcvi.supabase.co/storage/v1/object/public/techlumous/templates/lumous-travel-one/travelers.png",
+      avatarUrl: `https://${process.env.NEXT_PUBLIC_IMAGE_HOSTNAME}/storage/v1/object/public/techlumous/templates/lumous-travel-one/travelers.webp`,
     },
     {
       quote:
         "They talked us out of two hotels we had our hearts set on. They were right about both.",
       name: "Priya and Sam Whitfield",
       trip: "Italy · Dolomites",
-      avatarUrl:
-        "https://jspqdyqdbczgwyorxcvi.supabase.co/storage/v1/object/public/techlumous/templates/lumous-travel-one/travelers.png",
+      avatarUrl: `https://${process.env.NEXT_PUBLIC_IMAGE_HOSTNAME}/storage/v1/object/public/techlumous/templates/lumous-travel-one/travelers.webp`,
     },
   ],
 
@@ -649,8 +637,7 @@ export const defaultContent: LumousTravelOneContent = {
       body: "Rifugio to rifugio above Cortina, with a private guide for the via ferrata days and two nights down in the valley.",
       price: "FROM $3,900",
       tags: ["9 nights", "Small group", "Max 8"],
-      imageUrl:
-        "https://jspqdyqdbczgwyorxcvi.supabase.co/storage/v1/object/public/techlumous/templates/lumous-travel-one/dolomites.png",
+      imageUrl: `https://${process.env.NEXT_PUBLIC_IMAGE_HOSTNAME}/storage/v1/object/public/techlumous/templates/lumous-travel-one/dolomites.webp`,
       imageAlt: "Dolomite huts and dark skies",
     },
     {
@@ -658,8 +645,7 @@ export const defaultContent: LumousTravelOneContent = {
       body: "Six nights in the quiet months, with rail passes, two ryokan and a morning at the fish market.",
       price: "FROM $2,780",
       tags: ["6 nights", "Private", "Rail included"],
-      imageUrl:
-        "https://jspqdyqdbczgwyorxcvi.supabase.co/storage/v1/object/public/techlumous/templates/lumous-travel-one/kyoto.png",
+      imageUrl: `https://${process.env.NEXT_PUBLIC_IMAGE_HOSTNAME}/storage/v1/object/public/techlumous/templates/lumous-travel-one/kyoto.webp`,
       imageAlt: "Kyoto, out of season",
     },
     {
@@ -667,8 +653,7 @@ export const defaultContent: LumousTravelOneContent = {
       body: "Eleven nights from Torres del Paine to El Chaltén, with transfers, park permits and a guide on the long days.",
       price: "FROM $4,600",
       tags: ["11 nights", "Small group", "Max 8"],
-      imageUrl:
-        "https://jspqdyqdbczgwyorxcvi.supabase.co/storage/v1/object/public/techlumous/templates/lumous-travel-one/patagonia.png",
+      imageUrl: `https://${process.env.NEXT_PUBLIC_IMAGE_HOSTNAME}/storage/v1/object/public/techlumous/templates/lumous-travel-one/patagonia.webp`,
       imageAlt: "Patagonia end to end",
     },
     {
@@ -676,8 +661,7 @@ export const defaultContent: LumousTravelOneContent = {
       body: "Nine nights between Positano and Cilento, with a car for the coast road and a boat day off Capri.",
       price: "FROM $3,250",
       tags: ["9 nights", "Self-drive", "Boat day"],
-      imageUrl:
-        "https://jspqdyqdbczgwyorxcvi.supabase.co/storage/v1/object/public/techlumous/templates/lumous-travel-one/coast.png",
+      imageUrl: `https://${process.env.NEXT_PUBLIC_IMAGE_HOSTNAME}/storage/v1/object/public/techlumous/templates/lumous-travel-one/coast.webp`,
       imageAlt: "The Amalfi coast road",
     },
     {
@@ -685,8 +669,7 @@ export const defaultContent: LumousTravelOneContent = {
       body: "Prague, Dresden and Meissen in ten nights, all by train, each of them walkable after dark.",
       price: "FROM $2,540",
       tags: ["10 nights", "Rail only", "City stays"],
-      imageUrl:
-        "https://jspqdyqdbczgwyorxcvi.supabase.co/storage/v1/object/public/techlumous/templates/lumous-travel-one/city.png",
+      imageUrl: `https://${process.env.NEXT_PUBLIC_IMAGE_HOSTNAME}/storage/v1/object/public/techlumous/templates/lumous-travel-one/city.webp`,
       imageAlt: "River cities by rail",
     },
   ],

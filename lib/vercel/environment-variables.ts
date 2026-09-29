@@ -5,6 +5,7 @@ export const DEPLOYMENT_ENVIRONMENT_KEYS = [
   "SUPABASE_ANON_KEY",
   "PROJECT_ID",
   "TEMPLATE_SLUG",
+  "NEXT_PUBLIC_IMAGE_HOSTNAME",
 ] as const
 
 export type DeploymentEnvironmentKey =

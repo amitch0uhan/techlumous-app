@@ -9,7 +9,7 @@ value; it renders the inputs and hands you the next value on every edit.
 "use client"
 import { useState } from "react"
 import { SchemaForm } from "@/lib/schema-form"
-import { contentSchema, defaultContent } from "@/templates/hello-world/schema"
+import { contentSchema, defaultContent } from "@/templates/lumous-travel-one/schema"
 
 export function Editor() {
   const [value, setValue] = useState(defaultContent)

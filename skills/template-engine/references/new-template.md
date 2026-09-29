@@ -117,6 +117,11 @@ export const defaultContent: MyTemplateContent = {
 
 Schema design checklist:
 
+- A default image URL never uses a static host. Write the env variable directly
+  in the URL:
+  `` `https://${process.env.NEXT_PUBLIC_IMAGE_HOSTNAME}/storage/v1/object/public/<bucket>/<path>` ``
+  (`NEXT_PUBLIC_IMAGE_HOSTNAME` lives in the template-engine env file; no
+  helper functions).
 - Keep props flat and easy to edit. The one standing exception is a single
   collapsible object per page section (`hero`, `about`, `contact`, `footer`,
   …) grouping only that section's own flat fields — this is best practice,
@@ -373,8 +378,8 @@ unrenderable.
 Every module exports two inferred Zod types, two schemas and two defaults. Both
 defaults must parse. Use `designSchema = z.object({})` and `defaultDesign = {}`
 when there are no design controls. Travel One stores its 17-color palette in
-`design.colors`; Hello World's theme remains content, and Mark One's fixed CSS
-palette is unchanged. Register both schemas and design defaults in the studio
+`design.colors`. Templates without design controls keep
+an empty design schema. Register both schemas and design defaults in the studio
 schema registry without importing renderers.
 
 The studio uses independent Content/Design tabs with one save and publish flow.

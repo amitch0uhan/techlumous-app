@@ -6,7 +6,7 @@ import { LoginForm } from "@/components/login-form"
 import { Logo } from "@/components/logo"
 import { Skeleton } from "@/components/ui/skeleton"
 import { requireAuthenticatedUserId } from "@/lib/supabase/auth"
-import loginBackground from "@/public/assets/glowing-bg-potrait.png"
+import loginBackground from "@/public/assets/glowing-bg-potrait.webp"
 
 async function LoginGate() {
   const userId = await requireAuthenticatedUserId()

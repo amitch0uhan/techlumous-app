@@ -385,6 +385,7 @@ export async function orchestrateProjectDeployment(
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+  const imageHostname = process.env.NEXT_PUBLIC_IMAGE_HOSTNAME || ""
   if (!supabaseUrl || !supabaseAnonKey) {
     return failure("ENVIRONMENT_SYNC_FAILED", existingDeployment)
   }
@@ -394,6 +395,7 @@ export async function orchestrateProjectDeployment(
     SUPABASE_ANON_KEY: supabaseAnonKey,
     PROJECT_ID: project.id,
     TEMPLATE_SLUG: template.slug,
+    NEXT_PUBLIC_IMAGE_HOSTNAME: imageHostname,
   }
 
   // Stage 6: Resolve the Vercel project and synchronize its environment.

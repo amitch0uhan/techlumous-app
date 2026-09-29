@@ -183,7 +183,23 @@ completion:
 - A filled component without its `foreground`, or no `effects.ring` focus
   colour.
 
-## 6. Required Review Before Completion
+## 6. Default Image URLs Use the Host Env Variable
+
+Never write a static image host in a template's default schema values or
+default props. Every default image URL must take its host from the
+`NEXT_PUBLIC_IMAGE_HOSTNAME` variable defined in the template-engine env file
+(`template-engine/.env.local`, documented in `.env.example`):
+
+```ts
+heroImageUrl: `https://${process.env.NEXT_PUBLIC_IMAGE_HOSTNAME}/storage/v1/object/public/techlumous/templates/<slug>/hero.png`,
+```
+
+- Write the variable directly inside the URL string. Do not add a function,
+  helper, or wrapper to build image URLs.
+- Only the URL values change. Do not edit `next.config.ts` or other config to
+  make the host dynamic; host names in config and env are managed by the user.
+
+## 7. Required Review Before Completion
 
 Before reporting a template change complete:
 
@@ -202,6 +218,10 @@ Before reporting a template change complete:
    content so the renderer remains usable instead of crashing.
 8. Run the colour audit from rule 5: every rendered element maps to exactly
    one surface or component group, recorded in the template README.
+9. Search the template's default schema values and default props for static
+   image hosts (`supabase.co`, `https://` followed by a fixed host); every
+   default image URL must use `${process.env.NEXT_PUBLIC_IMAGE_HOSTNAME}` per
+   rule 6.
 
 If a requirement conflicts with these rules, pause and report the conflict. A
 feature request does not silently waive either the closed dependency allowlist
@@ -212,8 +232,8 @@ or defensive content rendering.
 Every module exports two inferred Zod types, two schemas and two defaults. Both
 defaults must parse. Use `designSchema = z.object({})` and `defaultDesign = {}`
 when there are no design controls. Travel One stores its surface + component
-palette in nested `design.colors` groups; Hello World's theme remains content, and Mark One's fixed CSS
-palette is unchanged. Register both schemas and design defaults in the studio
+palette in nested `design.colors` groups. Templates without design controls keep
+an empty design schema. Register both schemas and design defaults in the studio
 schema registry without importing renderers.
 
 The studio uses independent Content/Design tabs with one save and publish flow.

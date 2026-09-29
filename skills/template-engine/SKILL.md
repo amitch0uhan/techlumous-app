@@ -138,6 +138,11 @@ folder instead.
 - Add `"use client"` only when the template requires state, effects, browser
   APIs, or event handlers. Keep static templates as server-compatible
   components.
+- Default image URLs in a template's schema defaults or default props must not
+  use a static host. Write the host as the env variable directly in the URL:
+  `` `https://${process.env.NEXT_PUBLIC_IMAGE_HOSTNAME}/storage/v1/object/public/<bucket>/<path>` ``,
+  with `NEXT_PUBLIC_IMAGE_HOSTNAME` set in the template-engine env file. No
+  helper functions. See `template-engine-strict` rule 6.
 - Use `next/image` for optimized images. If content can reference a new remote
   host, update `template-engine/next.config.ts` deliberately and verify that the
   host restriction is no broader than required.
@@ -434,8 +439,8 @@ State:
 Every module exports two inferred Zod types, two schemas and two defaults. Both
 defaults must parse. Use `designSchema = z.object({})` and `defaultDesign = {}`
 when there are no design controls. Travel One stores its surface + component
-palette in nested `design.colors` groups (see Colour system rules); Hello World's theme remains content, and Mark One's fixed CSS
-palette is unchanged. Register both schemas and design defaults in the studio
+palette in nested `design.colors` groups (see Colour system rules). Templates without design controls keep
+an empty design schema. Register both schemas and design defaults in the studio
 schema registry without importing renderers.
 
 The studio uses independent Content/Design tabs with one save and publish flow.

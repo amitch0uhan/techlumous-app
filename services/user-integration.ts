@@ -190,7 +190,5 @@ export async function deleteUserIntegration(id: string): Promise<void> {
     .eq("id", id)
     .eq("provider", PROVIDER)
 
-  console.log("HERER")
-
   if (error) throw new Error(`Failed to delete integration: ${error.message}`)
 }
