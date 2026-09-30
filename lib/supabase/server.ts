@@ -1,4 +1,4 @@
-"use server"
+import "server-only"
 
 import { createServerClient } from "@supabase/ssr"
 import { createClient as createAdmin } from "@supabase/supabase-js"
@@ -20,7 +20,7 @@ export async function createClient() {
             cookiesToSet.forEach(({ name, value, options }) =>
               cookieStore.set(name, value, options)
             )
-          } catch (error) {
+          } catch {
             // Called from a Server Component — safe to ignore since middleware
             // handles session refresh.
             // console.error(error)

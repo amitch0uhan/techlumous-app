@@ -10,8 +10,21 @@ interface FieldMeta {
   collapsed?: boolean
 }
 
+interface ZodDefLike {
+  type: string
+  shape: Record<string, unknown>
+  element: ZodType
+  entries: Record<string, string>
+  innerType: ZodType
+}
+
+interface ZodSchemaLike {
+  meta?: () => unknown
+  def: ZodDefLike
+}
+
 export function normalize(schema: ZodType, key = ""): FieldDescriptor {
-  const s = schema as any
+  const s = schema as unknown as ZodSchemaLike
   const meta = (s.meta?.() ?? {}) as FieldMeta
   const def = s.def
   const base = {

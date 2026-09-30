@@ -1,6 +1,4 @@
 import { Header } from "@/components/header"
-import { requireAuthenticatedUserId } from "@/lib/supabase/auth"
-import { redirect } from "next/navigation"
 
 export default async function DashboardLayout({
   children,
