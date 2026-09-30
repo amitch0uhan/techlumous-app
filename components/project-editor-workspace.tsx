@@ -171,7 +171,6 @@ export function ProjectEditorWorkspace({
         inspectorUrl:
           result.deployment.inspectorUrl ?? current.inspectorUrl ?? null,
       }))
-      console.log("Vercel deployment status", result.response)
     } finally {
       setIsFetchingStatus(false)
     }

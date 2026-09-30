@@ -16,6 +16,8 @@ const eslintConfig = defineConfig([
     "template-engine/.next/**",
     "template-engine/out/**",
     "template-engine/next-env.d.ts",
+    // Git worktrees (gitignored) contain their own copies and build output:
+    ".worktrees/**",
   ]),
 ]);
 

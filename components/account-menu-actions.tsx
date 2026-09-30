@@ -36,7 +36,7 @@ export function AccountMenuActions() {
           toast.error(result.error)
         }
         router.push("/login")
-      } catch (error) {
+      } catch {
         toast.error("Unable to sign out. Please try again.")
       }
     })

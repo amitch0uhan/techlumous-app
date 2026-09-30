@@ -100,10 +100,12 @@ export async function updateProject(
     .from(TABLE)
     .update({ ...payload, updated_at: new Date().toISOString() })
     .eq("id", id)
+    .eq("user_id", userId)
     .select()
-    .single()
+    .maybeSingle()
 
   if (error) throw new Error(`${error.message}`)
+  if (!data) throw new Error("Project not found")
 
   return data
 }

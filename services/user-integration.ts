@@ -133,11 +133,14 @@ export async function getUserIntegrationByProvider(
   options: GetUserIntegrationOptions = {}
 ): Promise<UserIntegration | null> {
   const supabase = await createClient()
+  const userId = await requireAuthenticatedUserId(supabase)
+  if (!userId) return null
 
   const { data, error } = await supabase
     .from(TABLE)
     .select()
     .eq("provider", PROVIDER)
+    .eq("user_id", userId)
     .maybeSingle()
 
   if (error)
@@ -167,6 +170,7 @@ export async function updateUserIntegration(
     .update(payload)
     .eq("id", id)
     .eq("provider", PROVIDER)
+    .eq("user_id", userId)
     .select()
     .single()
 
@@ -189,6 +193,7 @@ export async function deleteUserIntegration(id: string): Promise<void> {
     .delete()
     .eq("id", id)
     .eq("provider", PROVIDER)
+    .eq("user_id", userId)
 
   console.log("HERER")
 

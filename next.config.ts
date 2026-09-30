@@ -18,6 +18,7 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   cacheComponents: true,
+  output: "standalone",
   async headers() {
     // Production only, so local development is unaffected.
     if (process.env.NODE_ENV !== "production") return []

@@ -433,7 +433,6 @@ export function ProjectCard({
                     toast.error(result.message)
                     return
                   }
-                  console.log("Vercel deployment status", result.response)
                 })
               }
             >

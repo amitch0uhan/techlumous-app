@@ -14,7 +14,7 @@ export async function signOut(): Promise<{
     if (error) {
       return { status: "error", error: error.message }
     }
-  } catch (error) {
+  } catch {
     return { status: "error", error: "Something went wrong during sign-out." }
   }
 

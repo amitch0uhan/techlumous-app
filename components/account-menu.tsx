@@ -27,7 +27,6 @@ export async function AccountMenu({ className }: { className?: string }) {
 
   const {
     data: { user },
-    error,
   } = await supabase.auth.getUser()
 
   const name = user?.user_metadata?.name || user?.email || ""
