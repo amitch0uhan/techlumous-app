@@ -1,4 +1,4 @@
-"use server"
+import "server-only"
 
 import { createServerClient } from "@supabase/ssr"
 import { createClient as createAdmin } from "@supabase/supabase-js"
