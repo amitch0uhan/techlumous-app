@@ -1,6 +1,7 @@
 import { cookies } from "next/headers"
 import { NextResponse } from "next/server"
 
+import { getRequestOrigin } from "@/lib/request-origin"
 import { requireAuthenticatedUserId } from "@/lib/supabase/auth"
 import {
   VERCEL_STATE_COOKIE,
@@ -22,7 +23,8 @@ import {
 const PROVIDER = "vercel"
 
 export async function GET(request: Request) {
-  const { searchParams, origin } = new URL(request.url)
+  const { searchParams } = new URL(request.url)
+  const origin = getRequestOrigin(request)
   const code = searchParams.get("code")
   const state = searchParams.get("state")
   const configurationId = searchParams.get("configurationId")
