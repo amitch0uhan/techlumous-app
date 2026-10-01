@@ -1,13 +1,12 @@
 # Builds the Next.js app on GitHub and deploys it to the VPS (app.techlumous.com).
-#   pull_request -> main : build job only (lint, build, typecheck) — no deploy
 #   push to main / manual : build, then deploy a new release under PM2
+# Runs only in techlumous-maker/app, which holds the secrets; on forks both
+# jobs are skipped. Code checks for PRs and forks live in ci.yml.
 # Guide: docs/vps-deployment.md
 
 name: Deploy app
 
 on:
-  pull_request:
-    branches: [main]
   push:
     branches: [main]
   workflow_dispatch:
@@ -15,11 +14,10 @@ on:
 permissions:
   contents: read
 
-# PR runs for the same branch cancel each other; deploys queue one at a time
-# and are never cancelled half-way.
+# Deploys queue one at a time and are never cancelled half-way.
 concurrency:
-  group: ${{ github.event_name == 'pull_request' && format('verify-{0}', github.ref) || 'deploy-app-production' }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+  group: deploy-app-production
+  cancel-in-progress: false
 
 env:
   NODE_VERSION: "22"
@@ -28,6 +26,7 @@ env:
 jobs:
   build:
     name: Build
+    if: github.repository == 'techlumous-maker/app'
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     outputs:
@@ -81,7 +80,6 @@ jobs:
 
       - name: Package release
         id: package
-        if: github.event_name != 'pull_request'
         run: |
           set -euo pipefail
           release_id="$(date -u +%Y%m%d%H%M%S)-${GITHUB_SHA::7}"
@@ -110,7 +108,6 @@ jobs:
           echo "Packaged release $release_id ($(du -h app-release.tar.gz | cut -f1))"
 
       - name: Upload release artifact
-        if: github.event_name != 'pull_request'
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.ARTIFACT_NAME }}
@@ -121,7 +118,7 @@ jobs:
   deploy:
     name: Deploy to VPS
     needs: build
-    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    if: github.repository == 'techlumous-maker/app' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     env:
