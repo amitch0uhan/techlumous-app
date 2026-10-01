@@ -1,0 +1,205 @@
+# Builds the Next.js app on GitHub and deploys it to the VPS (app.techlumous.com).
+#   pull_request -> main : build job only (lint, build, typecheck) — no deploy
+#   push to main / manual : build, then deploy a new release under PM2
+# Guide: docs/vps-deployment.md
+
+name: Deploy app
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# PR runs for the same branch cancel each other; deploys queue one at a time
+# and are never cancelled half-way.
+concurrency:
+  group: ${{ github.event_name == 'pull_request' && format('verify-{0}', github.ref) || 'deploy-app-production' }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  NODE_VERSION: "22"
+  ARTIFACT_NAME: app-release
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    outputs:
+      release_id: ${{ steps.package.outputs.release_id }}
+    env:
+      # NEXT_PUBLIC_* values are inlined into the bundle at build time.
+      NEXT_PUBLIC_SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ vars.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
+      NEXT_PUBLIC_SUPABASE_IMAGE_BUCKET: ${{ vars.NEXT_PUBLIC_SUPABASE_IMAGE_BUCKET }}
+      NEXT_PUBLIC_IMAGE_HOSTNAME: ${{ vars.NEXT_PUBLIC_IMAGE_HOSTNAME }}
+      # Needed at build time: "/" prerenders the template catalog via the admin client.
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      NEXT_TELEMETRY_DISABLED: "1"
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v5
+
+      - name: Check build configuration
+        run: |
+          missing=0
+          for name in NEXT_PUBLIC_SUPABASE_URL NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY \
+            NEXT_PUBLIC_SUPABASE_IMAGE_BUCKET NEXT_PUBLIC_IMAGE_HOSTNAME SUPABASE_SERVICE_ROLE_KEY; do
+            if [ -z "${!name}" ]; then
+              echo "::error::Missing repository variable/secret: $name"
+              missing=1
+            fi
+          done
+          exit $missing
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4 # version comes from package.json "packageManager"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Build
+        run: pnpm build
+
+      # After the build, because `next build` generates next-env.d.ts.
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Package release
+        id: package
+        if: github.event_name != 'pull_request'
+        run: |
+          set -euo pipefail
+          release_id="$(date -u +%Y%m%d%H%M%S)-${GITHUB_SHA::7}"
+
+          rm -rf release && mkdir release
+          cp -a .next/standalone/. release/
+          mkdir -p release/.next
+          cp -a .next/static release/.next/static
+          cp -a public release/public
+
+          # lib/vercel/collect-files.ts reads template-engine/ from disk at
+          # runtime; ship exactly the tracked files.
+          rm -rf release/template-engine
+          git archive --format=tar HEAD template-engine | tar -x -C release
+
+          cp deploy/ecosystem.config.cjs release/
+
+          # Never ship env files; runtime secrets live on the VPS in shared/.env.
+          rm -f release/.env*
+
+          test -f release/server.js
+          test -f release/template-engine/.gitignore
+
+          tar -czf app-release.tar.gz -C release .
+          echo "release_id=$release_id" >> "$GITHUB_OUTPUT"
+          echo "Packaged release $release_id ($(du -h app-release.tar.gz | cut -f1))"
+
+      - name: Upload release artifact
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.ARTIFACT_NAME }}
+          path: app-release.tar.gz
+          retention-days: 7
+          if-no-files-found: error
+
+  deploy:
+    name: Deploy to VPS
+    needs: build
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      DEPLOY_PATH: ${{ vars.APP_DEPLOY_PATH }}
+      SITE_URL: ${{ vars.APP_SITE_URL }}
+      RELEASE_ID: ${{ needs.build.outputs.release_id }}
+    steps:
+      - name: Check out deploy scripts
+        uses: actions/checkout@v5
+        with:
+          sparse-checkout: deploy
+
+      - name: Check deploy configuration
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+        run: |
+          missing=0
+          for name in DEPLOY_PATH SITE_URL RELEASE_ID SSH_PRIVATE_KEY SSH_KNOWN_HOSTS SSH_HOST SSH_PORT SSH_USER; do
+            if [ -z "${!name}" ]; then
+              echo "::error::Missing configuration: $name"
+              missing=1
+            fi
+          done
+          exit $missing
+
+      - name: Download release artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.ARTIFACT_NAME }}
+
+      - name: Configure SSH
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          printf '%s\n' "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
+          cat > ~/.ssh/config <<EOF
+          Host vps
+            HostName $SSH_HOST
+            Port $SSH_PORT
+            User $SSH_USER
+            IdentityFile ~/.ssh/deploy_key
+            IdentitiesOnly yes
+            StrictHostKeyChecking yes
+          EOF
+          chmod 600 ~/.ssh/config
+
+      - name: Upload release to VPS
+        run: |
+          ssh vps "mkdir -p '$DEPLOY_PATH/incoming' '$DEPLOY_PATH/releases'"
+          rsync -az app-release.tar.gz "vps:$DEPLOY_PATH/incoming/$RELEASE_ID.tar.gz"
+
+      # Unpacks, swaps `current`, restarts PM2 and health-checks on the VPS.
+      # On a failed health check it restores the previous release itself.
+      - name: Activate release
+        id: activate
+        run: ssh vps "bash -s -- activate '$DEPLOY_PATH' '$RELEASE_ID'" < deploy/release.sh
+
+      - name: Smoke test
+        run: |
+          curl -fsS -o /dev/null --max-time 15 \
+            --retry 5 --retry-delay 3 --retry-all-errors \
+            "$SITE_URL/login"
+          echo "Smoke test passed: $SITE_URL"
+
+      # Only reached when the release went live on the VPS but the public URL
+      # check failed; activation failures are already rolled back on the VPS.
+      - name: Roll back to previous release
+        if: failure() && steps.activate.outcome == 'success'
+        run: ssh vps "bash -s -- rollback '$DEPLOY_PATH' '$RELEASE_ID'" < deploy/release.sh
