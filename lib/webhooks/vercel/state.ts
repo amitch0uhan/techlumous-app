@@ -10,7 +10,7 @@ export function buildVercelProjectUpdate(event: VercelDeploymentEvent) {
 
   return {
     deploy_status: event.status,
-    deployment_url: event.url,
+    ...(event.publicUrl && { deployment_url: event.publicUrl }),
     deploy_error: deployError,
     last_deployed_at: event.createdAt,
   }

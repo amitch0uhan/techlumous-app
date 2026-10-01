@@ -29,8 +29,8 @@ export async function AccountMenu({ className }: { className?: string }) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  const name = user?.user_metadata?.name || user?.email || ""
   const email = user?.email || ""
+  const name = user?.user_metadata?.name || email.split("@")[0]
   const avatarUrl = user?.user_metadata?.avatar_url || ""
 
   return (
