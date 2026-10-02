@@ -1,7 +1,7 @@
 import "server-only"
 
 import { requireAuthenticatedUserId } from "@/lib/supabase/auth"
-import { createClient } from "@/lib/supabase/server"
+import { createAdminClient, createClient } from "@/lib/supabase/server"
 import { verifyVercelToken } from "@/lib/vercel/oauth"
 import { getVaultSecret } from "@/services/vault-secret"
 import {
@@ -149,6 +149,36 @@ export async function getUserIntegrationByProvider(
   if (!data || options.validateToken === false) return data
 
   return validateConnectedIntegration(data)
+}
+
+/**
+ * Vercel credentials for a given user, for server contexts with no session
+ * (e.g. webhooks). Returns null unless the integration is connected.
+ */
+export async function getVercelCredentialsByUserId(
+  userId: string
+): Promise<{ token: string; teamId?: string } | null> {
+  const supabase = await createAdminClient()
+
+  const { data, error } = await supabase
+    .from(TABLE)
+    .select("token, credentials, status")
+    .eq("provider", PROVIDER)
+    .eq("user_id", userId)
+    .maybeSingle()
+
+  if (error)
+    throw new Error(`Failed to get integration for user: ${error.message}`)
+  if (!data || data.status !== "CONNECTED") return null
+
+  const token = await getVaultSecret(data.token)
+  if (!token) return null
+
+  const teamId = data.credentials?.team_id
+  return {
+    token,
+    teamId: typeof teamId === "string" ? teamId : undefined,
+  }
 }
 
 export async function updateUserIntegration(

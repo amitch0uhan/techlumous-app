@@ -29,8 +29,6 @@ const deploymentPayloadSchema = z.object({
     errorCode: z.string().nullish(),
     errorMessage: z.string().nullish(),
   }),
-
-  alias: z.array(z.string()).nullish(),
   links: z
     .object({
       deployment: z.string().nullish(),
@@ -53,8 +51,6 @@ export interface VercelDeploymentEvent {
   projectId: string
   deploymentId: string
   status: "building" | "ready" | "error" | "canceled"
-
-  publicUrl: string | null
   inspectorUrl: string | null
   errorCode: string | null
   errorMessage: string | null
@@ -77,12 +73,6 @@ function normalizeTimestamp(value: number | string): string | null {
 function normalizeUrl(value: string | null | undefined): string | null {
   if (!value) return null
   return /^https?:\/\//i.test(value) ? value : `https://${value}`
-}
-
-function shortestAliasUrl(aliases: string[] | null | undefined): string | null {
-  if (!aliases?.length) return null
-  const [shortest] = [...aliases].sort((a, b) => a.length - b.length)
-  return normalizeUrl(shortest)
 }
 
 function statusForEvent(
@@ -114,7 +104,7 @@ export function parseVercelDeploymentEvent(
   const createdAt = normalizeTimestamp(envelope.createdAt)
   if (!payloadResult.success || !createdAt) return { kind: "invalid" }
 
-  const { deployment, alias, links, error } = payloadResult.data
+  const { deployment, links, error } = payloadResult.data
   const projectId =
     payloadResult.data.project?.id ?? payloadResult.data.projectId
   if (!projectId) return { kind: "invalid" }
@@ -128,7 +118,6 @@ export function parseVercelDeploymentEvent(
       projectId,
       deploymentId: deployment.id,
       status: statusForEvent(envelope.type),
-      publicUrl: shortestAliasUrl(alias),
       inspectorUrl: normalizeUrl(deployment.inspectorUrl ?? links?.deployment),
       errorCode: deployment.errorCode ?? error?.code ?? null,
       errorMessage: deployment.errorMessage ?? error?.message ?? null,

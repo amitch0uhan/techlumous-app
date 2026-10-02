@@ -67,6 +67,7 @@ interface VercelDeployment {
   id: string
   url?: string
   alias?: string[]
+  aliasAssigned?: boolean | number | null
   readyState: VercelReadyState
   inspectorUrl?: string
   errorMessage?: string
@@ -79,6 +80,7 @@ export type DeploymentStatusResult = Pick<
   | "id"
   | "url"
   | "alias"
+  | "aliasAssigned"
   | "readyState"
   | "inspectorUrl"
   | "errorMessage"
@@ -86,14 +88,14 @@ export type DeploymentStatusResult = Pick<
   | "buildContainerFinishedAt"
 >
 
-/**
- * The public URL of a live deployment (e.g. "https://project.vercel.app").
- * `url` is the unique per-deployment host, so the shortest alias is used instead.
- */
 export function getPublicUrl(
-  deployment: Pick<VercelDeployment, "readyState" | "alias">
+  deployment: Pick<VercelDeployment, "readyState" | "alias" | "aliasAssigned">
 ): string | undefined {
-  if (deployment.readyState !== "READY" || !deployment.alias?.length) {
+  if (
+    deployment.readyState !== "READY" ||
+    !deployment.aliasAssigned ||
+    !deployment.alias?.length
+  ) {
     return undefined
   }
 

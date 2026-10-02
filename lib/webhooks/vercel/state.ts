@@ -1,6 +1,9 @@
 import type { VercelDeploymentEvent } from "./event"
 
-export function buildVercelProjectUpdate(event: VercelDeploymentEvent) {
+export function buildVercelProjectUpdate(
+  event: VercelDeploymentEvent,
+  publicUrl?: string | null
+) {
   let deployError = event.errorMessage
   if (event.errorCode && event.errorMessage) {
     deployError = `${event.errorCode}: ${event.errorMessage}`
@@ -10,7 +13,7 @@ export function buildVercelProjectUpdate(event: VercelDeploymentEvent) {
 
   return {
     deploy_status: event.status,
-    ...(event.publicUrl && { deployment_url: event.publicUrl }),
+    ...(publicUrl && { deployment_url: publicUrl }),
     deploy_error: deployError,
     last_deployed_at: event.createdAt,
   }
