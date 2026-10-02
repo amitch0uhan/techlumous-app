@@ -38,9 +38,13 @@ export async function updateSession(request: NextRequest) {
   const pathname = request.nextUrl.pathname
   const isVercelWebhook = pathname === "/api/webhooks/vercel"
 
+  const isTemplateRender =
+    pathname === "/render" || pathname.startsWith("/render/")
+
   if (
     !userId &&
     !isVercelWebhook &&
+    !isTemplateRender &&
     !pathname.startsWith("/login") &&
     !pathname.startsWith("/auth") &&
     !pathname.startsWith("/api/auth")
